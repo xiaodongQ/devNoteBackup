@@ -9,7 +9,7 @@
 
 Act with Prudence(Prudence 英 /ˈpruːdns/ 审慎，谨慎)
 
->"无论你从事着什么，行事谨慎并考虑后果" Anon
+>"无论你做什么，都要行事谨慎并考虑后果" Anon
 
 "Whatever you undertake, act with prudence and consider the consequences" Anon
 
