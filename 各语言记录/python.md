@@ -1,0 +1,442 @@
+## python3
+
+[Python 3 教程](https://www.runoob.com/python3/python3-tutorial.html)
+
+Python的3.0版本，常被称为Python 3000，或简称Py3k。
+相对于Python的早期版本，这是一个较大的升级。为了不带入过多的累赘，Python 3.0在设计的时候没有考虑向下兼容。
+
+[Python2.x与3​​.x版本区别](https://www.runoob.com/python/python-2x-3x.html)
+    许多针对早期Python版本设计的程式都无法在Python 3.0上正常执行。
+    Python 2.6作为一个过渡版本，基本使用了Python 2.x的语法和库，同时考虑了向Python 3.0的迁移，允许使用部分Python 3.0的语法与函数。
+    新的Python程式建议使用Python 3.0版本的语法。
+    Python3 print语句没有了，取而代之的是print()函数
+
+### linux终端
+tab自动补全:
+新建 .pythonstartup.py
+
+```python
+# Add auto-completion and a stored history file of commands to your Python
+# interactive interpreter. Requires Python 2.0+, readline. Autocomplete is
+# bound to the Esc key by default (you can change it - see readline docs).
+#
+# Store the file in ~/.pystartup, and set an environment variable to point
+# to it:  "export PYTHONSTARTUP=~/.pystartup" in bash.
+import atexit
+import os
+import readline
+import rlcompleter
+readline.parse_and_bind('tab: complete')
+historyPath = os.path.expanduser("~/.pyhistory")
+def save_history(historyPath=historyPath):
+    import readline
+    readline.write_history_file(historyPath)
+if os.path.exists(historyPath):
+    readline.read_history_file(historyPath)
+atexit.register(save_history)
+del os, atexit, readline, rlcompleter, save_history, historyPath
+```
+
+bashrc中，export PYTHONSTARTUP=~/.pythonstartup.py
+
+## Python3 基础语法
+
+默认情况下，Python 3 源码文件以 UTF-8 编码
+也可以为源码文件指定不同的编码：    `# -*- coding: cp-1252 -*-`  //Windows-1252
+
+### 注释
+Python中单行注释以 # 开头
+多行注释可以用多个 # 号，还有 ''' 和 """：
+
+```python
+    # 第一个注释
+    # 第二个注释
+
+    '''
+    第三注释
+    第四注释
+    '''
+
+    """
+    第五注释
+    第六注释
+    """
+```
+
+### 行与缩进
+
+python最具特色的就是使用缩进来表示代码块，不需要使用大括号 {} 。
+缩进的空格数是可变的，但是同一个代码块的语句必须包含相同的缩进空格数。
+    缩进不一致，会导致运行错误
+
+```python
+if True:
+    print ("True")
+else:
+    print ("False")
+```
+
+
+Python 通常是一行写完一条语句，但如果语句很长，我们可以使用反斜杠(\)来实现多行语句
+    在 [], {}, 或 () 中的多行语句，不需要使用反斜杠(\)
+
+```python
+total = item_one + \
+        item_two + \
+        item_three
+
+total = ['item_one', 'item_two', 'item_three',
+        'item_four', 'item_five']
+```
+
+### 数字类型
+
+python中数字有四种类型：整数、布尔型、浮点数和复数。
+    int (整数), 如 1, 只有一种整数类型 int，表示为长整型，没有 python2 中的 Long。
+    bool (布尔), 如 True。
+    float (浮点数), 如 1.23、3E-2
+    complex (复数), 如 1 + 2j、 1.1 + 2.2j
+
+### 字符串
+
+python中单引号和双引号使用完全相同。
+使用三引号('''或""")可以指定一个多行字符串。
+
+```python
+    word = '字符串'
+    sentence = "这是一个句子。"
+    paragraph = """这是一个段落，
+    可以由多行组成"""
+```
+
+转义符 '\'
+反斜杠可以用来转义，使用r可以让反斜杠不发生转义 (这里的 r 指 raw，即 raw string)
+    `如 r"this is a line with \n" 则\n会显示，并不是换行。`
+
+```python
+    print('hello\nrunoob')      # 使用反斜杠(\)+n转义特殊字符
+    print(r'hello\nrunoob')     # 在字符串前面添加一个 r，表示原始字符串，不会发生转义
+```
+
+按字面意义级联字符串，如"this " "is " "string"会被自动转换为this is string。   *??*
+字符串可以用 + 运算符连接在一起，用 * 运算符重复
+    `print(str * 2)             # 输出字符串两次`
+    `print(str + '你好')        # 连接字符串`
+Python 中的字符串有两种索引方式，从左往右以 0 开始，从右往左以 -1 开始
+    `print(str[0:-1])           # 输出第一个到倒数第二个的所有字符`
+    `print(str[0])              # 输出字符串第一个字符`
+    `print(str[2:5])            # 输出从第三个开始到第五个的字符`
+    `print(str[2:])             # 输出从第三个开始的后的所有字符`
+
+Python 没有单独的字符类型，一个字符就是长度为 1 的字符串 **没有char**
+
+### 空行
+
+空行与代码缩进不同，空行并不是Python语法的一部分。
+
+书写时不插入空行，Python解释器运行也不会出错。但是空行的作用在于分隔两段不同功能或含义的代码，便于日后代码的维护或重构。
+
+记住：空行也是程序代码的一部分。
+
+
+### 语句分割
+
+Python可以在同一行中使用多条语句，语句之间使用分号(;)分割
+    `import sys; x = 'runoob'; sys.stdout.write(x + '\n')`
+
+**每条语句不需要用;结尾**
+
+缩进相同的一组语句构成一个代码块，我们称之*代码组*。
+
+print 默认输出是换行的，如果要实现不换行需要在变量末尾加上 end=""
+
+```python
+    """ 换行输出
+    """
+    print( x )
+    # 不换行输出
+    print( x, end=" " )
+```
+
+### import 与 from...import
+
+在 python 用 import 或者 from...import 来导入相应的模块。
+
+```python
+将整个模块(somemodule)导入，格式为： import somemodule
+从某个模块中导入某个函数,格式为： from somemodule import somefunction
+从某个模块中导入多个函数,格式为： from somemodule import firstfunc, secondfunc, thirdfunc
+将某个模块中的全部函数导入，格式为： from somemodule import *
+```
+
+```python
+导入 sys 模块:
+import sys
+
+导入 sys 模块的 argv,path 成员
+from sys import argv,path  #  导入特定的成员
+print('path:',path) # 因为已经导入path成员，所以此处引用时不需要加sys.path
+```
+
+## Python3 基本数据类型
+
+Python 中的变量不需要声明。每个变量在使用前都必须赋值，变量赋值以后该变量才会被创建。
+    `counter = 100          # 整型变量`
+    `miles   = 1000.0       # 浮点型变量`
+    `name    = "runoob"     # 字符串`
+
+在 Python 中，变量就是变量，它没有类型，我们所说的"类型"是变量所指的内存中对象的类型。
+
+可以为多个对象指定多个变量
+    `a, b, c = 1, 2, "runoob"`
+
+### 标准数据类型
+
+不可变数据（3 个）：Number（数字）、String（字符串）、Tuple（元组）；
+可变数据（3 个）：List（列表）、Dictionary（字典）、Set（集合）。
+
+* Number（数字）
+
+    int、float、bool、complex（复数）
+    > 注意：在 Python2 中是没有布尔型的，它用数字 0 表示 False，用 1 表示 True。到 Python3 中，把 True 和 False 定义成关键字了，但它们的值还是 1 和 0，它们可以和数字相加。
+
+    两种除法运算符及乘方运算符：
+
+```python
+    >>> 2 / 4  # 除法，得到一个浮点数
+    0.5
+    >>> 2 // 4 # 除法，得到一个整数
+    0
+    >>> 2 ** 5 # 乘方
+    32
+```
+
+* String（字符串）
+    与 C 字符串不同的是，Python 字符串不能被改变。向一个索引位置赋值，比如word[0] = 'm' **会导致错误。**
+
+```python
+    >>>word = 'Python'
+    word[0] = 'm'      # 会导致错误
+```
+
+    Python中的字符串有两种索引方式，从左往右以0开始，从右往左以-1开始。
+
+```python
+    >>>word = 'Python'
+    >>> print(word[0], word[5])
+    P n
+    >>> print(word[-1], word[-6]) ？？？
+    n P
+```
+
+* List（列表）
+    List（列表） 是 Python 中使用最频繁的数据类型。
+    索引值以 0 为开始值，-1 为从末尾的开始位置。
+    写在方括号 [] 之间
+    `tinylist = [123, 'runoob']`
+
+* Tuple（元组）
+    元组（tuple）与列表类似，不同之处在于元组的元素不能修改。
+    元组写在小括号 () 里
+    `tinytuple = (123, 'runoob')`
+
+* Set（集合）
+    集合（set）是由一个或数个形态各异的大小整体组成的，构成集合的事物或对象称作*元素*或是*成员*。
+    基本功能是进行成员关系测试和删除重复元素。
+    可以使用大括号 { } 或者 set() 函数创建集合
+        注意：创建一个空集合必须用 set() 而不是 { }，因为 { } 是用来创建一个空字典。
+        `student = {'Tom', 'Jim', 'Mary', 'Tom', 'Jack', 'Rose'}`
+        `print(student)   # 输出集合，重复的元素被自动去掉`
+
+    set可以进行集合运算
+        a = set('abracadabra')
+        b = set('alacazam')
+        print(a)         # 集合会自动去掉重复元素, {'b', 'a', 'c', 'r', 'd'}
+        print(a - b)     # a 和 b 的差集 {'b', 'd', 'r'}
+        print(a | b)     # a 和 b 的并集 {'l', 'r', 'a', 'c', 'z', 'm', 'b', 'd'}
+        print(a & b)     # a 和 b 的交集 {'a', 'c'}
+        print(a ^ b)     # a 和 b 中不同时存在的元素，类似异或 {'l', 'r', 'z', 'm', 'b', 'd'}
+* Dictionary（字典）
+    字典（dictionary）是Python中另一个非常有用的内置数据类型。
+    列表是有序的对象集合，字典是无序的对象集合。
+    两者之间的区别在于：字典当中的元素是通过键来存取的，而不是通过偏移存取。
+    字典是一种映射类型，字典用 { } 标识，它是一个无序的 键(key) : 值(value) 的集合。
+        键(key)必须使用不可变类型
+        在同一个字典中，键(key)必须是唯一的。
+
+```python
+    dict = {}     #空字典，注意此处{}不是集合
+    dict['one'] = "1 - 菜鸟教程"
+
+    tinydict = {'name': 'runoob','code':1, 'site': 'www.runoob.com'} #字典元素为key:value，集合为单个类型成员
+```
+    构造函数 dict() 可以直接从键值对序列中构建字典
+
+```python
+    >>>dict([('Runoob', 1), ('Google', 2), ('Taobao', 3)])
+    {'Taobao': 3, 'Runoob': 1, 'Google': 2}
+
+    >>> dict(Runoob=1, Google=2, Taobao=3)
+    {'Runoob': 1, 'Google': 2, 'Taobao': 3}
+```
+
+    另外，字典类型也有一些内置的函数，例如clear()、keys()、values()等
+
+Python数据类型转换 [Python数据类型转换](https://www.runoob.com/python3/python3-data-type.html)
+    int()
+    float
+    dict(d)
+    list(s)
+    tuple(s)
+    repr(x)
+    oct(x)
+    hex(x)
+
+## 控制语句
+
+### 条件控制
+
+Python 中用 elif 代替了 else if，所以if语句的关键字为：if – elif – else。
+    每个条件后面要使用冒号 :
+    使用缩进来划分语句块
+    在Python中没有switch – case语句
+
+```python
+if condition_1:
+    statement_block_1
+elif condition_2:
+    statement_block_2
+else:
+    statement_block_3
+```
+
+### 循环语句
+
+Python中的循环语句有 for 和 while
+    在 Python 中没有 do..while 循环。
+
+```python
+    #!/usr/bin/env python3
+
+    n = 100
+    sum = 0
+    counter = 1
+    while counter <= n:
+        sum = sum + counter
+        counter += 1
+
+    print("1 到 %d 之和为: %d" % (n,sum))
+```
+
+* while 循环使用 else 语句
+
+```python
+#!/usr/bin/python3
+
+count = 0
+while count < 5:
+   print (count, " 小于 5")
+   count = count + 1
+else:
+   print (count, " 大于或等于 5")
+```
+
+* for语句
+    break 语句用于跳出当前循环体
+
+```python
+    for <variable> in <sequence>:
+        <statements>
+    else:
+        <statements>
+```
+
+e.g.
+
+```python
+#!/usr/bin/python3
+
+sites = ["Baidu", "Google","Runoob","Taobao"]
+for site in sites:
+    if site == "Runoob":
+        print("菜鸟教程!")
+        break
+    print("循环数据 " + site)
+else:
+    print("没有循环数据!")
+print("完成循环!")
+```
+
+* 内置range()函数 生成数列
+    `for i in range(5):`         0-4
+    `for i in range(5,9) :`      5-8
+    `for i in range(0, 10, 3) :` 指定步长3，[0,3,6,9]
+    `for i in range(-10, -100, -30) :` [-10,-40,-70]
+
+#### break和continue语句及循环中的else子句
+如果你从 for 或 while 循环中终止，任何对应的循环 else 块将不执行
+循环语句可以有 else 子句，它在穷尽列表(以for循环)或条件变为 false (以while循环)导致循环终止时被执行,但循环被break终止时不执行。
+
+```python
+#!/usr/bin/python3
+
+for n in range(2, 10):
+    for x in range(2, n):
+        if n % x == 0:
+            print(n, '等于', x, '*', n//x)
+            break
+    else:
+        # 循环中没有找到元素
+        print(n, ' 是质数')
+```
+
+### pass 语句
+Python pass是空语句，是为了保持程序结构的完整性。
+    pass 不做任何事情，一般用做占位语句
+
+```python
+    if letter == 'o':
+        pass
+        print ('执行 pass 块')
+```
+
+## Python3 迭代器与生成器
+
+迭代是Python最强大的功能之一，是访问集合元素的一种方式。
+迭代器有两个基本的方法：iter() 和 next()。
+
+```python
+>>> list=[1,2,3,4]
+>>> it = iter(list)    # 创建迭代器对象
+>>> print (next(it))   # 输出迭代器的下一个元素
+1
+>>> print (next(it))
+2
+```
+
+遍历：
+
+常规for语句进行遍历: it创建后，for in it循环中不用再对it操作
+
+```python
+list=[1,2,3,4]
+it = iter(list)    # 创建迭代器对象
+for x in it:
+    print (x, end=" ")
+```
+
+next函数遍历：
+
+```python
+list=[1,2,3,4]
+it = iter(list)    # 创建迭代器对象
+
+while True:
+    try:
+        print (next(it))
+    except StopIteration:
+        sys.exit()
+```
+
+把一个类作为一个迭代器使用需要在类中实现两个方法 __iter__() 与 __next__() 。
+
