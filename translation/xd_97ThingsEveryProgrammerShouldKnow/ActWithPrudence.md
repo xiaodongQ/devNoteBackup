@@ -25,7 +25,7 @@ No matter how comfortable a schedule looks at the beginning of an iteration(迭�
 Technical debt is like a loan(英 /ləʊn/ 贷款): You benefit from it in the short-term, but you have to pay interest on it until it is fully paid off. Shortcuts(快捷键，捷径) in the code make it harder to add features or refactor(重构) your code. They are breeding(繁殖，生产) grounds for defects(缺点，瑕疵，不合格) and brittle(脆弱的) test cases. The longer you leave it, the worse it gets. By the time(等到，到...时候) you get around to(get around to, 抽出时间做，开始考虑做) undertaking the original fix there may be a whole stack(一整堆) of not-quite-right(不完全正确) design choices layered(分层的) on top of the original problem making the code much harder to refactor and correct(改正vt. 正确的adj.). In fact, it is often only when things have got so bad that you must fix it, that you actually do go back to fix it. And by then it is often so hard to fix that you really can't afford the time or the risk.
 
 ~~在你必须引发技术债来赶上截止日期或者实现特性的一小部分时，你还有时间。~~  
-有时候，你必须承担技术债务来赶上截止日期或者实现功能的一小部分。尽力不要处于这种情形，但是形势完全要求这样，那就继续吧。但是(而且这是个很大的但是)，你必须跟进技术债务并且马上偿还，要不事情会急转直下。一旦你做了妥协的决定，纪要把它写在任务卡上，或者记录在你发问题追踪系统中，以确保它不被忘记。
+有时候，你必须承担技术债务来赶上截止日期或者实现功能的一小部分。尽量不要处在这种位置，~~但是形势完全要求这样~~ 但是如果情况绝对需要，那就继续吧。但是(而且这是个很大的但是)，你必须跟进技术债务并且马上偿还，要不事情会急转直下。一旦你做了妥协的决定，纪要把它写在任务卡上，或者记录在你发问题追踪系统中，以确保它不被忘记。
 
 There are times when you must incur(/ɪn'kɜː/ 引发，蒙受) technical debt to meet a deadline or implement a thin slice of a feature. Try not to be in this position, but if the situation absolutely demands(要求) it, then go ahead. But (and this is a big BUT) you must track technical debt and pay it back quickly or things go rapidly downhill. As soon as(一...就) you make the decision to compromise(/'kɒmprəmaɪz/ 妥协), write a task card or log it in your issue(发行，问题) tracking system to ensure that it does not get forgotten.
 
@@ -43,3 +43,13 @@ Seb Rose, 顾问，教练，设计师，分析师，和超过30年的开发者�
 参考：[Seb Rose](https://leanpub.com/u/sebrose)
 
 By Seb Rose
+
+### 思考
+
+有时候必须承担技术债务才能赶上截止日期，但是必须跟进它，并且尽快偿还。
+
+项目里经常有这种妥协，有问题的功能点这一轮先不发布，留到下一轮。  
+但是下一轮又关注别的可能更紧急的事情去了，导致时间越久，相关联的新功能只能基于这个问题做各种兼容性的设计。  
+最后结果是积重难返。
+
+缺乏的事一个技术债务追踪系统，和更重要的：技术债务清单的解决排期。在评估项目周期时，需要各个模块将这部分时间加到评估耗时当中。
