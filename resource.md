@@ -14,3 +14,7 @@
     - StackOverflow 上如何问问题的一些提示 [FAQ for Stack Exchange sites](https://meta.stackexchange.com/questions/7931/faq-for-stack-exchange-sites)
 
 
+后续看一手的技术相关文档：
+
+boost的TR1：
+[Library Technical Report](http://open-std.org/jtc1/sc22/wg21/docs/library_technical_report.html)

@@ -1439,4 +1439,14 @@ A()
 0
 ```
 
+### std::numeric_limits
 
+* 查询各种算术类型属性的标准化方式（例如 int 类型的最大可能值是 std::numeric_limits<int>::max() ）
+    - cppreference：[std::numeric_limits](https://zh.cppreference.com/w/cpp/types/numeric_limits)
+
+* 在库编译平台提供基础算术类型的极值(数值极限，最大值、最小值)等属性信息
+    - [C++/C++11中std::numeric_limits的使用](https://blog.csdn.net/fengbingchun/article/details/77922558)
+    - 比较常用的使用是对于给定的基础类型用来判断在当前系统上的最大值、最小值。若使用此类，需包含<limits>头文件。
+    - 数学上极值的定义：若函数f(x)在x₀的一个邻域D有定义，且对D中除x₀的所有点，都有f(x)<f(x₀)，则称f(x₀)是函数f(x)的一个极大值；若都有f(x)>f(x₀)，则称极小值。
+
+和C语言中`CHAR_MIN`、`CHAR_MAX`、`INT_MAX`等宏定义效果一样，表示 char类型或其他数值类型的数值最小和最大值
