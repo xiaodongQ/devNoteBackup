@@ -240,6 +240,15 @@ ctrl+x 不选中内容时，删除当前行
 安装mingw (Minimalist GNU for Windows)
 http://mingw-w64.org/doku.php/download -> MingW-W64-builds ->
 
+## Go插件安装
+
+由于wall导致gocode等一些扩展自动安装不了。手动下载安装。
+
+```
+// gocode
+https://github.com/mdempsky/gocode
+```
+
 ## koroFileHeader的user配置备份
 
 ```json
