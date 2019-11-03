@@ -128,6 +128,6 @@ QT5自带的 windeployqt
 
 注释选中的内容 Ctrl+/
 查找和替换   Ctrl+F
-ctrl+shift+f 
+ctrl+shift+f 全部查找
 向下查找    F3
 向上查找    Shift+F3
