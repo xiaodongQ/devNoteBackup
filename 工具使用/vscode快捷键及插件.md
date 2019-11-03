@@ -279,11 +279,25 @@ ctrl+x 不选中内容时，删除当前行
 
 ## Go插件安装
 
-由于wall导致gocode等一些扩展自动安装不了。手动下载安装。
+由于wall导致gocode等一些扩展自动安装不了。手动下载安装。如果已经手动下载了包到go_path对应src下，则go install进行安装(go get=clone+install)
 
-```
+```cpp
 // gocode
 https://github.com/mdempsky/gocode
+
+// 下载下来的部分插件的作者可能不同，find模糊查对应插件名即可
+go install github.com/nsf/gocode
+go install github.com/rogpeppe/godef
+go install github.com/zmb3/gogetdoc //暂时没装
+go install github.com/golang/lint/golint
+go install github.com/lukehoban/go-outline
+go install sourcegraph.com/sqs/goreturns
+go install golang.org/x/tools/cmd/gorename
+go install github.com/uudashr/gopkgs
+go install github.com/newhook/go-symbols
+go install github.com/cweill/gotests/...
+go install golang.org/x/tools/cmd/guru
+go install github.com/go-delve/delve/cmd/dlv
 ```
 
 ## koroFileHeader的user配置备份
