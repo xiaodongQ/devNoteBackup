@@ -254,3 +254,25 @@ tips：
 例：[[ "a" != "b" && 10 > 2 ]] 判断结果就不正常。
 
 诸如 [ 2 \< 10 ]、[[ 2 < 10 ]] 都是不要使用。使用算术扩展最好用 (( 99+1 == 100 )) ，而不要使用[[ 99+1 -eq 100 ]] 。
+
+## 编码规范
+
+参考Google 的 Shell 脚本编程规范:
+[Shell Style Guide](https://google.github.io/styleguide/shell.xml)
+
+* 必须使用bash，以`#!/bin/bash`开头
+* Shell仅用于一些简单的包装脚本，超过100行的脚本最好用Python来代替
+* 所有错误信息都打印到STDERR，建议如下格式
+
+```sh
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $@" >&2
+}
+
+if ! do_something; then
+  err "Unable to do_something"
+  exit "${E_DID_NOTHING}"
+fi
+```
+
+* 每个文件必须有一个顶层的注释，其中包含内容的简要概述

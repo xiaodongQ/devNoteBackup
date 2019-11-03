@@ -21,4 +21,11 @@ boost的TR1：
 
 ## TODO List
 
-1. 脚本库，罗列编写常用sh功能脚本(Windows下可使用cmder或其他shell终端)
+* 脚本库，罗列编写常用sh功能脚本(Windows下可使用cmder或其他shell终端)
+
+## 待看
+
+* 编程规范, 参考：[程序员练级攻略：程序员修养](https://time.geekbang.org/column/article/8700)
+    - C++, [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
+    - Google 的 Shell 脚本编程规范, [Shell Style Guide](https://google.github.io/styleguide/shell.xml)
+    - Effective Go, [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
