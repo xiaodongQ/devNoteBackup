@@ -277,6 +277,15 @@ ctrl+x 不选中内容时，删除当前行
     - 在DEBUG CONSOLE控制台，如果要输入一些命令：`-exec xxx`形式，e.g. `-exec info threads` (尝试调用不了stl成员函数:像map.size())
 
 
+## Go插件安装
+
+由于wall导致gocode等一些扩展自动安装不了。手动下载安装。
+
+```
+// gocode
+https://github.com/mdempsky/gocode
+```
+
 ## koroFileHeader的user配置备份
 
 ```json

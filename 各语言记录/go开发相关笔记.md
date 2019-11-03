@@ -4,7 +4,7 @@
 
 #### 变量声明
 
-```go
+```golang
 
 第一种，指定变量类型，如果没有初始化，则变量默认为零值。
     var v_name v_type
@@ -58,6 +58,33 @@ int、float、bool 和 string 这些基本类型都属于值类型，使用这�
 Golang中只有三种引用类型：slice(切片)、map(字典)、channel(管道)；
 
 #### map
+
+[Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
+
+* 创建和使用
+
+```golang
+// 创建
+map1 := make(map[string]string)
+var map2 map[string]string
+// 插入
+map1["zhangsan"] = "a"
+map1["lisi"] = "b"
+// 访问
+map1["lisi"] = "assign"             // map是引用类型
+fmt.Printf("map:%s", map1["none"])  // 找不到的记录，map会返回零值(对不同类型对应零值是有区别的)
+// 遍历
+for key,value := range map1 {
+
+}
+// 检测一个键是否存在于一个 map 
+value, ok := map1["haha"] // 如果 ok 是 true，则键存在，value 被赋值为对应的值。如果 ok 为 false，则表示键不存在
+if !ok {
+    fmt.Println("not exist")
+}
+```
+
+**注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 range for 遍历 map 的顺序总是一致的。**
 
 
 
@@ -514,9 +541,12 @@ dlv
 按推荐的go get安装下载很慢，老是失败。
 直接下载https://github.com/go-delve/delve，放到$GO_PATH/github.com/go-delve/delve，
 进行编译安装即得到执行文件，并自动放到了$GO_PATH/bin
-# cd delve/cmd/dlv/
-# go build
-# go install
+
+```
+cd delve/cmd/dlv/
+go build
+go install
+```
 
 ### 获取时间 time包
 
@@ -535,3 +565,10 @@ golang提供以下两种基础类型
 
      (1) currentTime:=time.Now()     //获取当前时间，类型是Go的时间类型Time
 
+### Golang工程结构和编译
+
+go build : 编译出可执行文件
+
+go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
+
+go get : git clone + go install
