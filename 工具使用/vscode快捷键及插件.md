@@ -237,8 +237,45 @@ ctrl+x 不选中内容时，删除当前行
 
 ## C++开发环境
 
-安装mingw (Minimalist GNU for Windows)
-http://mingw-w64.org/doku.php/download -> MingW-W64-builds ->
+参考VS Code官方文档：
+[Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
+
+安装mingw (Minimalist GNU for Windows)，(当前自己用的是安装QT时一并安装的mingw730_64)
+
+1. 安装C/C++插件
+2. `c_cpp_properties.json`配置文件，ctrl+shift+p 输入C/C++ edit... ，会自动生成`c_cpp_properties.json`配置文件，可视化的配置界面可以进行配置(不用手动创建文件，若手动创建空文件，则输入命令跳转后是空的。删除文件重新输入命令自动生成)
+    - compilerPath 编译器路径(vscode自动识别当前系统可用的编译器，gcc/vs的cl/g++等)
+    - IntelliSense 智能提示模式
+    - includePath，把boost头文件路径添加到这里，左键可以跳转
+3. `tasks.json` 告诉VS Code怎么编译程序
+    - 步骤：View > Command Palette and then type "task" and choose Tasks: Configure Default Build Task. In the dropdown, select Create tasks.json file from template, then choose Others
+
+```sh
+# tasks.json
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build firstTask",
+        "type": "shell",
+        "command": "g++",
+        "args": ["-g", "-o", "helloworld", "test_auto.cpp"],
+        "group": {
+          "kind": "build",
+          "isDefault": true   # 用于ctrl+shift+b启动，只是为了方便，置为false则每次手动输入执行命令"Run Build Tasks"
+        }
+      }
+    ]
+}
+```
+
+4. `launch.json` gdb调试，按F5进入配置
+    - "program" 输入要调试的程序
+    - "miDebuggerPath" 设置为gdb程序的完整路径
+    - "stopAtEntry" 设置为true时，程序在目标的入口点停止(功能是：即使没有设置断点，也会停留在main函数开始处，等待继续)
+    - "externalConsole" 是否在外部控制台运行(输出在终端上的结果可以用外部窗口显示，vs自身的debug控制台用于跟进代码执行)
+    - 在DEBUG CONSOLE控制台，如果要输入一些命令：`-exec xxx`形式，e.g. `-exec info threads` (尝试调用不了stl成员函数:像map.size())
+
 
 ## koroFileHeader的user配置备份
 
