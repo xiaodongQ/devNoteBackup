@@ -7,6 +7,8 @@
 
 #### 应用函数式编程原理
 
+函数式编程最近已经被主流编程社区喜好并且重新引起了兴趣。
+
 Functional programming has recently enjoyed renewed interest from the mainstream programming community. Part of the reason is because emergent properties of the functional paradigm are well positioned to address the challenges posed by our industry's shift toward multi-core. However, while that is certainly an important application, it is not the reason this piece admonishes you to know thy functional programming.
 
 Mastery of the functional programming paradigm can greatly improve the quality of the code you write in other contexts. If you deeply understand and apply the functional paradigm, your designs will exhibit a much higher degree of referential transparency.
