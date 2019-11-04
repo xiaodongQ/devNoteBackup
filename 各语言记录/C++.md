@@ -108,6 +108,79 @@ test_const_func.cpp: 在成员函数‘void Apple::print() const’中:
 test_const_func.cpp:19:8: 错误：将‘const Apple’作为‘void Apple::func2()’的‘this’实参时丢弃了类型限定 [-fpermissive]
 ```
 
+### 重载、重写
+
+[C++重载重写和多态区别](https://www.cnblogs.com/zhaodun/p/6984479.html)
+
+* 重载overload
+    - 在同一个类中，函数名相同，参数列表不同，编译器会根据这些函数的不同参数列表，将同名的函数名称做修饰，从而生成一些不同名称的预处理函数，
+    - 未体现多态。
+* 重写override
+    - 也叫覆盖，子类重新定义父类中有相同名称相同参数的虚函数，
+    - 主要是在继承关系中出现的，被重写的函数**必须是virtual**的，
+    - 重写函数的访问修饰符可以不同，尽管virtual是private的，子类中重写函数改为public,protected也可以，
+    - 体现了多态。
+* 重定义redefining
+    - 也叫隐藏，子类重新定义父类中有相同名称的非虚函数，参数列表可以相同可以不同，会覆盖其父类的方法，
+    - 未体现多态。
+
+### 虚基类、虚函数、纯虚函数
+
+[虚基类、虚函数和纯虚基类](https://blog.csdn.net/lovemysea/article/details/5298589)
+
+* 在继承的类的前面加上virtual关键字表示被继承的类是一个**虚基类**，它的被继承成员在派生类中只保留一个实例
+    - 一个类可以在一个类族中既被用作虚基类，也被用作非虚基类
+
+```cpp
+class A
+{
+public:
+    int iValue;
+};
+
+class B: virtual public A    //注意是virtual public ，virtual 在 public 前面；
+{
+public:
+    void bPrintf(){cout<<"This is class B"<<endl;};
+};
+```
+
+* 在基类的成员函数前加virtual关键字表示这个函数是一个**虚函数**
+    - 所谓虚函数就是在编译的时候不确定要调用哪个函数，而是动态决定将要调用哪个函数
+    - 要实现虚函数必须派生类的函数名与基类相同，参数名参数类型等也要与基类相同。
+    - 派生类中的virtual关键字可以省略，也表示这是一个虚函数
+
+```cpp
+class A
+{
+public:
+    virtual void funPrint(){cout<<"funPrint of class A"<<endl;};
+};
+
+class B:public A
+{
+public:
+    virtual void funPrint(){cout<<"funPrint of class B"<<endl;};
+};
+```
+
+* **纯虚函数**
+    - 与其叫纯虚函数还不如叫抽象类,它 只是 声明一个函数但不实现它，让派生类去实现它
+
+```cpp
+class Vehicle
+{
+public:
+    virtual void PrintTyre() = 0; //纯虚函数是这样定义的
+};
+
+class Camion:public Vehicle
+{
+public:
+    virtual void PrintTyre(){cout<<"Camion tyre four"<<endl;};
+};
+```
+
 ### 抽象类
 
 [C++的抽象类详解](https://blog.csdn.net/lidiya007/article/details/53220786)
@@ -123,13 +196,14 @@ class <基类名>
 };
 ```
 
-含有纯虚函数的类被称为抽象类
+含有纯虚函数的类被称为**抽象类**
 
 抽象类只能作为派生类的基类，不能定义对象，但可以定义指针。
 
 继承于抽象类的派生类如果不能实现基类中所有的纯虚函数，那么这个派生类也就成了抽象类。
 
 ### override 和 final
+
 C++11 新特性：显式 override 和 final
 
 #### final
@@ -1450,3 +1524,23 @@ A()
     - 数学上极值的定义：若函数f(x)在x₀的一个邻域D有定义，且对D中除x₀的所有点，都有f(x)<f(x₀)，则称f(x₀)是函数f(x)的一个极大值；若都有f(x)>f(x₀)，则称极小值。
 
 和C语言中`CHAR_MIN`、`CHAR_MAX`、`INT_MAX`等宏定义效果一样，表示 char类型或其他数值类型的数值最小和最大值
+
+### std::distance
+
+[std::distance](https://zh.cppreference.com/w/cpp/iterator/distance)
+
+定义于头文件 <iterator>，返回两个迭代器间的距离
+
+```
+template< class InputIt >
+typename std::iterator_traits<InputIt>::difference_type
+    distance( InputIt first, InputIt last );
+```
+
+返回从 first 到 last 的路程
+
+```cpp
+std::vector<int> v{ 3, 1, 4 };
+std::distance(v.begin(), v.end())  // 3，end()指向最后一个元素的下一个位置
+std::distance(v.end(), v.begin())  // -3
+```

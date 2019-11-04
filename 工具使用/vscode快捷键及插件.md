@@ -246,7 +246,8 @@ ctrl+x 不选中内容时，删除当前行
 2. `c_cpp_properties.json`配置文件，ctrl+shift+p 输入C/C++ edit... ，会自动生成`c_cpp_properties.json`配置文件，可视化的配置界面可以进行配置(不用手动创建文件，若手动创建空文件，则输入命令跳转后是空的。删除文件重新输入命令自动生成)
     - compilerPath 编译器路径(vscode自动识别当前系统可用的编译器，gcc/vs的cl/g++等)
     - IntelliSense 智能提示模式
-    - includePath，把boost头文件路径添加到这里，左键可以跳转
+    - includePath，IntelliSense智能提示需要的路径，把boost头文件路径添加到这里，左键可以跳转 (貌似还需要在browse中的path添加头文件路径，搜索路径)
+    - browse 默认情况下，按递归方式搜索这些路径。指定 `"*"` 可指示非递归搜索。例如: `"/usr/include"` 将搜索所有子目录，而 `"/usr/include/*"` 将不搜索所有子目录。
 3. `tasks.json` 告诉VS Code怎么编译程序
     - 步骤：View > Command Palette and then type "task" and choose Tasks: Configure Default Build Task. In the dropdown, select Create tasks.json file from template, then choose Others
 
