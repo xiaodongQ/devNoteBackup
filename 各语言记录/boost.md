@@ -220,3 +220,9 @@ Boost test库提供了一个用于单元测试的基于命令行界面的测试�
 
 `BOOST_AUTO_TEST_CASE` 创建测试用例
 `BOOST_TEST_MESSAGE`   打印消息
+
+四个断言宏可以使用：
+`BOOST_CHECK(predicate)`      // 断言表达式通过，如不通过不影响程序继续执行
+`BOOST_REQUIRE(predicate)`    // 断言表达式必须通过，如不通过程序终止
+`BOOST_ERROR(message)`        // 给出一个错误信息，程序继续执行
+`BOOST_FAIL(message)`         // 给出一个错误信息，程序终止执行
