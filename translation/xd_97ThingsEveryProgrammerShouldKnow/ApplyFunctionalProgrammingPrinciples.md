@@ -24,9 +24,9 @@ Referential transparency is a very desirable(值得拥有的) property(财产;�
 
 A leading(主要的;领导的;行距) cause of defects(缺点;瑕疵) in imperative(必要的;极重要的;命令的) code is attributable(/ə'trɪbjətəbl/ 可归因于的;由于) to mutable variables. Everyone reading this will have investigated(调查) why some value is not as expected in a particular situation. Visibility semantics(/sɪ'mæntɪks/ 语义学) can help to mitigate(减轻) these insidious(/ɪn'sɪdɪəs/ 潜在的) defects, or at least to drastically(大大地) narrow(狭窄;变窄) down their location, but their true culprit(/'kʌlprɪt/ 犯人,罪犯) may in fact be the providence(/'prɒvɪd(ə)ns/ 远见;天意) of designs that employ(使用;雇佣) inordinate(/ɪ'nɔːdɪnət/ 过度的,过量的) mutability(易变性).
 
-在这方面，我们当然不会从行业中获得太多帮助。对面向对象的介绍默认地促进了这种设计，因为它们经常有由生存周期相对较长的对象组成的、对象间互相愉快地调用设值类方法的示例，这可能很危险。然而，使用敏捷测试驱动的设计，特别是对确切的模拟角色，而不是对象时，可以设计消除掉不必要的可变性。
+在这方面，我们当然不会从行业中获得太多帮助。对面向对象的采用默认地促进了这种设计，因为它们经常有由生存周期相对较长的对象组成的、对象间互相愉快地调用设值方法的示例，这可能很危险。然而，使用敏捷测试驱动的设计，特别是对确切的模拟角色，而不是对象时，可以设计消除掉不必要的可变性。
 
-And we certainly don't get much help from industry in this regard(问候;尊重;注意)(in this regard在这方面). Introductions to object orientation tacitly(/'tæsitli/ 沉默地) promote(提升;推动) such design, because they often show examples composed of graphs(图表) of relatively long-lived objects that happily call mutator(['mju:teitə] 改变对象属性的方法,设值方法) methods on each other(互相), which can be dangerous. However, with astute(/ə'stjuːt/ 机敏的,精明的) test-driven design, particularly when being sure to "Mock Roles, not Objects", unnecessary mutability can be designed away.
+And we certainly don't get much help from industry in this regard(问候;尊重;注意)(in this regard在这方面). Introductions(介绍;引进;采用) to object orientation tacitly(/'tæsitli/ 沉默地) promote(提升;推动) such design, because they often show examples composed of graphs(图表) of relatively long-lived objects that happily call mutator(['mju:teitə] 改变对象属性的方法,设值方法) methods on each other(互相), which can be dangerous. However, with astute(/ə'stjuːt/ 机敏的,精明的) test-driven design, particularly when being sure to "Mock Roles, not Objects", unnecessary mutability can be designed away.
 
 最终的结果是，这种设计通常具有更好的责任分配，并使用更多更小的函数来处理传入的参数，而不是引用可变的成员变量。这样缺陷将会更少，而且它们通常更容易调试，因为在这些设计中找到引入非法值的位置，要比推断引起错误赋值的特定上下文更容易。这增加了更高程度的引用透明性，而且没有什么比学习函数式编程语言更能深入您的骨髓了，在函数式编程语言中，这种计算模型是标准的。
 
@@ -36,7 +36,7 @@ The net(网;得到;净余的) result is a design that typically(典型地) has b
 
 Of course, this approach(/ə'prəʊtʃ/ 方法;入口) is not optimal(/'ɒptɪm(ə)l/ 最佳的) in all situations. For example, in object-oriented systems this style often yields better results with domain model development (i.e., where collaborations(/kə'læbəreɪt/ 合作) serve to break down the complexity of business rules) than with user-interface development.
 
-掌握函数式编程范式，这样您就能够明智地将学到的经验应用于其他领域。您的目标系统(对于一个)将同时拥有引用透明性的优点，并且比你想要的对应功能更接近。实际上，甚至有人断言，函数式编程的顶点和面向对象只是彼此的反映，是一种计算阴和阳的形式
+掌握函数式编程范式，这样您就能够明智地将学到的经验应用于其他领域。您的目标系统(对于一个)将同时拥有引用透明性的优点，并且比你预期想要的更接近对应的功能。实际上，甚至有人断言，函数式编程的顶点和面向对象只是彼此的反映，是一种计算阴和阳的形式。
 
 Master the functional programming paradigm so you are able to judiciously(/dʒu:'diʃəsli/ 明断地;明智地) apply the lessons learned to other domains. Your object systems (for one) will resonate(/'rez(ə)neɪt/ 共鸣;共振) with referential transparency goodness(精华;良好;上帝) and be much closer to their functional counterparts(/'kaʊntəpɑːt/ 与对方地位相当的人) than many would have you believe. In fact, some would even assert that the apex(/'eɪpeks/ 定点;顶端) of functional programming and object orientation are merely(仅仅) a reflection of each other, a form of computational(/ˌkɑmpju'teʃənl/ 计算的) yin and yang.
 
@@ -52,3 +52,11 @@ By Edward Garson
 对于函数式编程不大了解，看得还是有点懵。。
 
 只是大概知道C++中的lambda和Golang里的匿名函数可以往这方面靠，目前还没适应这种用法。
+
+* 引用透明性
+	- 参考：[函数的引用透明性（referential transparency）](https://blog.csdn.net/lanchunhui/article/details/52473003)
+	- 函数的返回值只依赖于其输入值，这种特性就称为引用透明性（referential transparency）(不受全局变量等其他因素的影响)
+
+* 使用函数式编程范式来编程，有助于提高函数的引用透明性。
+* 在非函数式编程中，设计上也应该是用更多更小的功能函数来进行明确的功能责任划分。
+* 减少函数间的耦合关系，设计时各函数尽量只依赖输入值
