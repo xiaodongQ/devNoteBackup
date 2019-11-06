@@ -248,11 +248,10 @@ ctrl+x 不选中内容时，删除当前行
     - IntelliSense 智能提示模式
     - includePath，IntelliSense智能提示需要的路径，把boost头文件路径添加到这里，左键可以跳转 (貌似还需要在browse中的path添加头文件路径，搜索路径)
     - browse 默认情况下，按递归方式搜索这些路径。指定 `"*"` 可指示非递归搜索。例如: `"/usr/include"` 将搜索所有子目录，而 `"/usr/include/*"` 将不搜索所有子目录。
-3. `tasks.json` 告诉VS Code怎么编译程序
+3. `tasks.json` 告诉VS Code怎么编译程序(使用ctrl+shift+b触发编译，或者命令中输入run build task)
     - 步骤：View > Command Palette and then type "task" and choose Tasks: Configure Default Build Task. In the dropdown, select Create tasks.json file from template, then choose Others
 
-```sh
-# tasks.json
+```json
 {
     "version": "2.0.0",
     "tasks": [
@@ -260,10 +259,17 @@ ctrl+x 不选中内容时，删除当前行
         "label": "build firstTask",
         "type": "shell",
         "command": "g++",
-        "args": ["-g", "-o", "helloworld", "test_auto.cpp"],
+        // ${file}表示正编辑的文件(假设xdtest.cpp)，效果是：g++ -g xdtest.cpp -o xdtest.exe -I "C:/boost/include -lxxx"
+        //此处可以加一些其他gcc/g++选项，如-I指定编译时头文件路径, -l指定链接库(环境LIBRARY_PATH未指定编译时链接库路径则可-L指定)
+        "args": [
+            "-g", "${file}",
+            "-o", "${fileBasenameNoExtension}.exe",
+            "-I", "F:/boost_1_70_0/mingw/include/boost-1_70",
+            "-l", "libboost_date_time-mgw73-mt-d-x64-1_70"
+        ],
         "group": {
           "kind": "build",
-          "isDefault": true   # 用于ctrl+shift+b启动，只是为了方便，置为false则每次手动输入执行命令"Run Build Tasks"
+          "isDefault": true,   // 用于ctrl+shift+b启动，只是为了方便，置为false则每次手动输入执行命令"Run Build Tasks"
         }
       }
     ]
@@ -276,6 +282,34 @@ ctrl+x 不选中内容时，删除当前行
     - "stopAtEntry" 设置为true时，程序在目标的入口点停止(功能是：即使没有设置断点，也会停留在main函数开始处，等待继续)
     - "externalConsole" 是否在外部控制台运行(输出在终端上的结果可以用外部窗口显示，vs自身的debug控制台用于跟进代码执行)
     - 在DEBUG CONSOLE控制台，如果要输入一些命令：`-exec xxx`形式，e.g. `-exec info threads` (尝试调用不了stl成员函数:像map.size())
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) 启动",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileBasenameNoExtension}.exe", //不带扩展名的宏
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "F:/mingw730_64/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}
+```
 
 
 ## Go插件安装

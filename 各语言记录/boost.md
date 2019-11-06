@@ -38,17 +38,30 @@ boost库大多数组件不需要编译链接就可以使用，在自己的工程
     - `b2 --show-libraries`命令可查看所有必须编译才能使用的库
 * 完全安装boost
     - `bjam --buildtype=complete`
-    - 本机安装用了：`./b2.exe install --prefix=F:/boost_1_70_0/mingw --build-type=complete toolset=gcc threading=multi`
+    - windows本机安装(全量,可以缩减只用date_time,test)用了：`./b2.exe install --prefix=F:/boost_1_70_0/mingw --build-type=complete toolset=gcc threading=multi` （--build-type=complete在unix用不了，需要单独编译动态静态和调试版本)
 * 定制安装boost
     - 完整编译boost费时费力，而且这些库在并不可能在开发中全部用到，因此只需编译需要的库即可
     - `bjam --show-libraries` 查看所有必须编译才能使用的库
-    - e.g. 单独编译安装regex库，`bjam stage --with-regex link=static runtime-link=shared threading=multi`
+    - e.g. 单独编译安装regex库(建议stage)，`bjam stage --with-regex link=static runtime-link=shared threading=multi`
         + 编译结果在stage\lib目录下生成regex库(Debug/Release两个版本)
+        + 本linux仅装date_time和test:
+            * 动态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=shared runtime-link=shared threading=multi`
+            * 静态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=static runtime-link=static threading=multi`
+            * `./b2 install` 安装会把`boost_1_70_0/boost`(156MB)里面大部分(154MB)内容拷贝到指定的prefix下面的include中，不如手动创建include后将boost(包含boost)拷贝过去
+
+* 关于link和runtime-link的组合关系：
+    - [link 和 runtime-link，搭配shared 和 static](https://blog.csdn.net/yasi_xi/article/details/8660549)
+    - **假设：** 一个库A依赖于库B，我们自己的程序client依赖于库A
+    - link=static、runtime-link=static  client通过A.a (A.lib)静态包含A；A通过B.a (B.lib)静态包含B；不关 .so .dll的事
+    - link=static、runtime-link=shared  client通过A.a (A.lib)静态包含A；在运行时，client要动态调用B.so (B.dll)
+    - link=shared、runtime-link=shared  client会包含A.a (A.lib)；A会包含 B.a (B.lib)；但都只保存动态库的真正实现的stub，运行时通过stub去动态加载 A.so (A.dll), B.so (B.dll) 中的实现
+        + stub，桩代码，满足形式要求但没有实现实际功能的占坑/代理代码
+    - link=shared、runtime-link=static  client会包含A.a (A.lib)，但只包含真正实现的stub；A通过B.a (B.lib)静态包含B；运行时，client会动态调用A.so (A.dll)
 
 参数含义：
 
 ```
---prefix=<PREFIX>   编译后安装路径，默认C:\Boost
+--prefix/--stagedir=<PREFIX>   编译后安装路径，默认C:\Boost
 --build-type=<type> 编译类型，可选minimal（最小）、complete（完整），默认minimal。
 --with-<library>    加入此参数，代表只编译的库。 假如只安装regex `--with-regex`
 --without-<library> 加入此参数，代表忽略编译的库。
@@ -226,3 +239,40 @@ Boost test库提供了一个用于单元测试的基于命令行界面的测试�
 `BOOST_REQUIRE(predicate)`    // 断言表达式必须通过，如不通过程序终止
 `BOOST_ERROR(message)`        // 给出一个错误信息，程序继续执行
 `BOOST_FAIL(message)`         // 给出一个错误信息，程序终止执行
+
+## lexical_cast
+
+`#include <boost/lexical_cast.hpp> `
+
+[boost之lexical_cast简易说明](http://www.habadog.com/2011/05/07/boost-lexical_cast-intro/)
+
+lexical_cast使用统一的接口实现字符串与目标类型之间的转换。
+
+lexical_cast依赖于字符流std::stringstream，其原理相当简单：把源类型读入到字符流中，再写到目标类型中
+
+```cpp
+//字符串->数值
+int a = lexical_cast<int>("123");
+double b = lexical_cast<double>("123.12");
+
+//数值->字符串
+const double d = 123.12;
+string s = boost::lexical_cast<string>(d);
+
+//如果转换发生了意外，lexical_cast会抛出一个bad_lexical_cast异常，因此程序中需要对其进行捕捉
+try
+{
+    i = boost::lexical_cast<int>("xyz");
+}
+catch(boost::bad_lexical_cast& e)
+{
+    cout<<e.what()<<endl;
+    return 1;
+}
+```
+
+* 和C++11中的stou/i/l
+    - [Is boost::lexical_cast redundant with c++11 stoi, stof and family?](https://stackoverflow.com/questions/23582089/is-boostlexical-cast-redundant-with-c11-stoi-stof-and-family)
+    - 处理更多类型的转换，包括迭代器对、数组、C字符串等
+    - 提供相同的通用接口(sto*对不同类型有不同的名称)
+    - 是本地语言环境敏感的(`sto*`/`to_string`只是部分的，例如`lexical_cast`可以处理数千个分隔符，而stoul通常不能)

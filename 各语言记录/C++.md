@@ -1544,3 +1544,16 @@ std::vector<int> v{ 3, 1, 4 };
 std::distance(v.begin(), v.end())  // 3，end()指向最后一个元素的下一个位置
 std::distance(v.end(), v.begin())  // -3
 ```
+
+### 输入输出流 iostream
+
+imbue
+
+`std::locale imbue( const std::locale& loc );`
+
+设置本地环境
+设置流的关联本地环境为给定值。
+
+std::locale 定义于头文件 <locale>
+
+C++ 输入/输出库的每个流对象与一个 std::locale 对象关联，并用其平面分析及格式化所有数据。
