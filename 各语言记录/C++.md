@@ -1557,3 +1557,45 @@ imbue
 std::locale 定义于头文件 <locale>
 
 C++ 输入/输出库的每个流对象与一个 std::locale 对象关联，并用其平面分析及格式化所有数据。
+
+### 重载()
+
+#### functor 仿函数
+[深入理解仿函数(functor或function object)](https://blog.csdn.net/kezunhai/article/details/38514099)
+
+* functor 仿函数
+    - 仿函数(functor)又称之为函数对象(function object)，其实就是重载了operator()操作符的struct或class
+    - 仿函数(functor)使一个类的使用看上去象一个函数，这个类就有了类似函数的行为，就是一个仿函数类了
+    - 仿函数比一般的函数灵活
+    - 仿函数有类型识别，可以作为模板参数
+    - 执行速度上仿函数比函数和指针要更快的。
+
+```cpp
+struct IntLess
+{
+    bool operator()(int _left, int _right) const
+    {
+        return _left<_right;
+    }
+};
+```
+
+除了在stl里，别的地方你很少会看到仿函数的身影。而在stl里仿函数最常用的就是作为函数的参数，或者模板的参数。
+
+#### list unique()
+
+从容器移除所有相邻的重复元素。只留下相等元素组中的第一个元素。
+
+如果要去重所有的：  
+在使用unique之前(不论是list的unique还是泛型的unique)，先对容器内的元素进行排序，因为unique()是比较相邻的元素. 去掉相邻元素中重复的
+
+类似linux中的shell命令 uniq，如果不排序，那么还是可能有重复的元素，uniq只移除相邻的重复
+e.g. `a a b a a`，uniq之后是 `a b a`
+
+
+### std::advance
+
+std::advance用来对迭代器做偏移操作
+
+// std::advance用来对迭代器做偏移操作, 相当于splitIter=splitIter+splitPos
+std::advance(splitIter,splitPos);
