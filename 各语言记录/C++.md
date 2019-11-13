@@ -880,6 +880,9 @@ K&R C语言到ANSI/ISO标准C语言 (C89/C90)的改进包括：
 
 > 但是各个公司对C99的支持所表现出来的兴趣不同。当GCC和其它一些商业编译器支持C99的大部分特性的时候[4]，微软和Borland却似乎对此不感兴趣。
 
+
+`__FILE__, __LINE__, __FUNCTION__`
+
 #### C11
 
 参考：
@@ -1545,6 +1548,13 @@ std::distance(v.begin(), v.end())  // 3，end()指向最后一个元素的下一
 std::distance(v.end(), v.begin())  // -3
 ```
 
+### std::advance
+
+std::advance用来对迭代器做偏移操作
+
+// std::advance用来对迭代器做偏移操作, 相当于splitIter=splitIter+splitPos
+std::advance(splitIter,splitPos);
+
 ### 输入输出流 iostream
 
 imbue
@@ -1557,6 +1567,31 @@ imbue
 std::locale 定义于头文件 <locale>
 
 C++ 输入/输出库的每个流对象与一个 std::locale 对象关联，并用其平面分析及格式化所有数据。
+
+### stringstream
+
+#### std::ostringstream
+
+```cpp
+const boost::posix_time::ptime dateToFormat;
+
+time_facet *facet = new time_facet("%Y-%m-%d %H:%M:%S");
+std::ostringstream oss;
+oss.imbue(std::locale(oss.getloc(), facet));
+
+oss << dateToFormat;
+
+return oss.str();
+```
+
+#### std::stringstream
+
+```cpp
+std::stringstream ssstarttime;
+ssstarttime << dateToFormat;
+std::string sTime = ssstarttime.str();
+```
+
 
 ### 重载()
 
@@ -1592,10 +1627,3 @@ struct IntLess
 类似linux中的shell命令 uniq，如果不排序，那么还是可能有重复的元素，uniq只移除相邻的重复
 e.g. `a a b a a`，uniq之后是 `a b a`
 
-
-### std::advance
-
-std::advance用来对迭代器做偏移操作
-
-// std::advance用来对迭代器做偏移操作, 相当于splitIter=splitIter+splitPos
-std::advance(splitIter,splitPos);

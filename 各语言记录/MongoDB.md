@@ -495,7 +495,7 @@ bool mongocxx::database::has_collection (   bsoncxx::string::view_or_value  name
 
 ### collection
 
-**计数问题**
+**计数问题** 数量
 
 count() 这个方法已经被弃用，取而代之的是count_documents()和estimated_document_count()。
     对应终端js shell: db.collection.count(query, options)

@@ -176,8 +176,26 @@ ptime t(d, hour(1));
 t.date() // --> 2002-Jan-10;
 t.time_of_day() // --> 01:00:00;
 
+boost/date_time/posix_time/time_formatters.hpp
+boost::posix_time::to_simple_string(ptime)
 std::string to_simple_string(ptime); // 2002-Jan-01 10:00:01.123456789
 ```
+
+时间叠加(链接中有示例)：
+
+重载了 ptime operator+(days)
+
+```cpp
+date d(2002,Jan,1);
+// 加minutes (通过vscode跳转到minutes定义的hpp文件，可看到还有hours, seconds等, 都是继承自time_duration)
+// boost::posix_time::minutes类定义的文件：boost-1_70\boost\date_time\posix_time\posix_time_duration.hpp
+ptime t(d,minutes(5));
+// days定义的文件：boost-1_70\boost\date_time\gregorian\greg_duration.hpp
+// boost::gregorian::days 是date_duration的别名：typedef date_duration days;
+days dd(1);
+ptime t2 = t + dd;
+```
+
 
 `boost::posix_time::time_duration`
 
@@ -198,17 +216,30 @@ time_duration td(1,2,3,4); //01:02:03.000004 when resolution is micro seconds
 
 #### Date Time Input/Output
 
+定义输入输出格式(格式化的 %S %M 这类信息定义在此处)：  
 [Date Time IO System](https://www.boost.org/doc/libs/1_71_0/doc/html/date_time/date_time_io.html)
 
-* Time Facet: `boost::date_time::time_facet`
+* date_facet
+    - `boost::date_time::date_facet` 该类为日期类型提供基于I/O方面的格式
+    - 这个类允许使用格式字符串来格式化日期, A,a,B,b,x,Y-b-d等等，其他各种具体格式参考上面的链接
+    - `%y`, `%Y`  年，%y表示两位"05", %Y四位"2005"
+    - `%m` 数字表示月份, Month name as a decimal 01 to 12, "01" => January
+    - `%b`, `%B`,月份名称 %b是简略名"Feb", %B "February"
+    - `%d` Day of the month as decimal 01 to 31
+    - `%w` 数字表示星期, Weekday as decimal number 0 to 6, "0" => Sunday
+    - `%a`, `%A` 星期名称 "Mon" 表示星期一, %A 完整的星期名 "Monday"
+    - `%D !` 相当于一个组合，Equivalent to %m/%d/%y
+    - 还有一些表示固定的搭配格式
+* time_facet
+    - `boost::date_time::time_facet` 指定时间方面的IO格式
     - `boost::date_time::time_facet`是`boost::date_time::date_facet`的扩展。
     - `time_facet`在`posix_time`名称空间中被类型定义为`time_facet`和`wtime_facet`
     - 它在`local_time`名称空间中被类型定义为`local_time_facet`和`wlocal_time_facet`
-
-* date_facet
-    - [Class template date_facet](https://www.boost.org/doc/libs/1_71_0/doc/html/boost/date_time/date_facet.html)
-    - `boost::date_time::date_facet` 该类为日期类型提供基于I/O方面的格式
-    - 这个类允许使用格式字符串来格式化日期, A,a,B,b,x,Y-b-d
+    - `%H:%M:%S%F` 输入时默认格式，Default time_duration format for input. "13:14:15.003400"
+    - `%S` 秒"59"
+    - `%f` "13:15:16.000000"
+    - `%Y-%m-%d %H:%M:%S%F%Q`  "2005-10-15 13:12:11-07:00"
+    - `%T !` The time in 24-hour notation (%H:%M:%S)
 
 ## Boost单元测试框架
 
