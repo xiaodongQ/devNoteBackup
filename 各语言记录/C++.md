@@ -108,6 +108,8 @@ test_const_func.cpp: 在成员函数‘void Apple::print() const’中:
 test_const_func.cpp:19:8: 错误：将‘const Apple’作为‘void Apple::func2()’的‘this’实参时丢弃了类型限定 [-fpermissive]
 ```
 
+>对于传入的const容器，可以定义const迭代器进行遍历：const_iterator
+
 ### 重载、重写
 
 [C++重载重写和多态区别](https://www.cnblogs.com/zhaodun/p/6984479.html)
@@ -1594,6 +1596,8 @@ std::string sTime = ssstarttime.str();
 
 
 ### 重载()
+
+类A重载()后(可以有不同的形参形式)，A(p1, p2) 形式即使用到重载的operator(P1,P2)形式
 
 #### functor 仿函数
 [深入理解仿函数(functor或function object)](https://blog.csdn.net/kezunhai/article/details/38514099)
