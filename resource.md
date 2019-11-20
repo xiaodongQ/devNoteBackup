@@ -22,6 +22,7 @@ boost的TR1：
 ## TODO List
 
 * 脚本库，罗列编写常用sh功能脚本(Windows下可使用cmder或其他shell终端)
+* 一个新的开发环境需要查看的cpu(物理cpu个数、每个cpu核心数、逻辑核数、是否支持超线程)，内存，磁盘信息
 
 ## 待看
 
