@@ -184,7 +184,7 @@ std::string to_simple_string(ptime); // 2002-Jan-01 10:00:01.123456789
 ```cpp
 const boost::posix_time::ptime dateToFormat;
 
-time_facet *facet = new time_facet("%Y-%m-%d %H:%M:%S");
+time_facet *facet = new time_facet("%Y-%m-%d %H:%M:%S");  //new不用手动释放？，ostringstream中会释放？
 std::ostringstream oss;
 oss.imbue(std::locale(oss.getloc(), facet));
 
