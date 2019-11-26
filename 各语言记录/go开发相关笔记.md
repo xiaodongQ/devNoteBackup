@@ -548,6 +548,14 @@ go build
 go install
 ```
 
+### Golang工程结构和编译
+
+go build : 编译出可执行文件
+
+go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
+
+go get : git clone + go install
+
 ### 获取时间 time包
 
 [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
@@ -565,10 +573,30 @@ golang提供以下两种基础类型
 
      (1) currentTime:=time.Now()     //获取当前时间，类型是Go的时间类型Time
 
-### Golang工程结构和编译
+时间格式化：
 
-go build : 编译出可执行文件
+```golang
+BeginTime := "20191126 145500"
+// 2006-01-02 15:04:05 必须是这个时间点, 记忆方法:6-1-2-3-4-5
+// 01/02 03:04:05PM '06 -0700(时区), go语言中使用该递增的格式来解析各时间位
+// 此处有个简单的源码分析：[Golang神奇的2006-01-02 15:04:05](https://www.jianshu.com/p/c7f7fbb16932)
+formatTime, _ := time.Parse("20060102 150405", BeginTime)
+fmt.Printf("ori time:%v, parse:%v\n", BeginTime, formatTime.Format("2006-01-02 15:04:05"))
+```
 
-go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
+## string
 
-go get : git clone + go install
+
+
+### string、int、int64互相转换
+
+```golang
+int,err:=strconv.Atoi(string)
+#string到int64
+int64, err := strconv.ParseInt(string, 10, 64)
+#int到string
+string:=strconv.Itoa(int)
+#int64到string
+string:=strconv.FormatInt(int64,10)
+```
+
