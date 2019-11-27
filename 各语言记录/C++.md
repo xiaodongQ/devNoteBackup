@@ -290,6 +290,10 @@ vector没有find()成员函数，其find是依靠algorithm来实现的
 vector<int>::iterator it = find(vec.begin(), vec.end(), 6);
 ```
 
+* 对于vector/list
+    - front() 第一个元素的const_reference(const引用，非指针)
+    - back() 最后一个元素
+
 ### 删除
 
 使用`vector.erase(迭代器)`删除成员，如果是循环注意指针陷阱
@@ -1636,3 +1640,48 @@ e.g. `a a b a a`，uniq之后是 `a b a`
 
 * 警告：在此处初始化后被初始化 [-Wreorder]
     - 初始化列表中，初始化的顺序和成员定义的顺序不同，会报该警告(有时变量初始化会有依赖关系，一般保持顺序一致)
+
+* std::bad_alloc
+    - 最后找到问题是头文件中类更新了(类加了个字段)但是make的时候没有生效，导致库中的.h类结构和调用库程序用的.h类结构不一致，内存越界
+        + lib.a静态库单独编译，提供.a和.h头文件给程序使用
+        + 程序编译时-l链接.a库，并使用其提供的.h文件(并没有复制文件，静态库的源码放在程序目录中，编译时直接找目录中的文件)
+        + 若库中的.h修改，除了库要重新编译外，建议外部编译时先make clean一下再编译
+        + 对于makefile的依赖规则，还要再查询整理下。已存在.o时若.h修改，再次编译不用新的.h？但此处外部程序会用到.h中类的新增字段，不用新的.h也说不过去
+
+```
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffef70d700 (LWP 9323)]
+0x00007ffff5573207 in raise () from /lib64/libc.so.6
+Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7.x86_64 glibc-2.17-260.el7.x86_64 keyutils-libs-1.5.8-3.el7.x86_64 krb5-libs-1.15.1-34.el7.x86_64 libcom_err-1.42.9-13.el7.x86_64 libselinux-2.5-14.1.el7.x86_64 libuuid-2.23.2-59.el7.x86_64 nss-softokn-freebl-3.36.0-5.el7_5.x86_64 openssl-libs-1.0.2k-16.el7.x86_64 pcre-8.32-17.el7.x86_64 zlib-1.2.7-18.el7.x86_64
+(gdb) 
+(gdb) 
+(gdb) bt
+#0  0x00007ffff5573207 in raise () from /lib64/libc.so.6
+#1  0x00007ffff55748f8 in abort () from /lib64/libc.so.6
+#2  0x00007ffff609d445 in __gnu_cxx::__verbose_terminate_handler () at ../../../../libstdc++-v3/libsupc++/vterminate.cc:95
+#3  0x00007ffff609b5d6 in __cxxabiv1::__terminate (handler=<optimized out>)
+    at ../../../../libstdc++-v3/libsupc++/eh_terminate.cc:38
+#4  0x00007ffff609b603 in std::terminate () at ../../../../libstdc++-v3/libsupc++/eh_terminate.cc:48
+#5  0x00007ffff609b823 in __cxxabiv1::__cxa_throw (obj=0x7fffe40141a0, tinfo=0x7ffff6322b00 <typeinfo for std::bad_alloc>, 
+    dest=0x7ffff6099cd0 <std::bad_alloc::~bad_alloc()>) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:87
+#6  0x00007ffff609bd1d in operator new (sz=18446744073709551600) at ../../../../libstdc++-v3/libsupc++/new_op.cc:56
+#7  0x0000000000427cb2 in __gnu_cxx::new_allocator<TestResult>::allocate (this=0x7fffef70caf0, __n=177372539170284150)
+    at /usr/local/include/c++/4.8.5/ext/new_allocator.h:104
+#8  0x00000000004242d5 in std::_Vector_base<TestResult, std::allocator<TestResult> >::_M_allocate (
+    this=0x7fffef70caf0, __n=177372539170284150) at /usr/local/include/c++/4.8.5/bits/stl_vector.h:168
+#9  0x00000000005512f0 in std::vector<TestResult, std::allocator<TestResult> >::_M_emplace_back_aux<TestResult const&> (this=0x7fffef70caf0) at /usr/local/include/c++/4.8.5/bits/vector.tcc:404
+#10 0x000000000054c8ed in std::vector<TestResult, std::allocator<TestResult> >::push_back (
+    this=0x7fffef70caf0, __x=...) at /usr/local/include/c++/4.8.5/bits/stl_vector.h:911
+```
+
+* 编译错误：使用了被删除的函数‘std::mutex& std::mutex::operator=(const std::mutex&)’
+    - 定义了类的map，其中类成员包含一个std::mutex成员
+    - 由于std::mutex的拷贝构造函数和赋值运算符被禁用了： `mutex( const mutex& ) = delete;`
+    - `std::mutex& std::mutex::operator=(const std::mutex&) = delete`
+    - 而 std::vector 和 std::map 都是要求 类型 必须包含拷贝构造函数，所以就报错了。
+    - 可以把 `std::mutex _mutex` 改成 `std::shared_ptr<std::mutex> _mutex`，使用时`std::lock_guard<std::mutex> _lock{*解引用};`
+    - [std::mutex 引起的 C2280 尝试引用已删除的函数](https://www.cnblogs.com/lzpong/p/10138872.html)
+
