@@ -324,6 +324,30 @@ li.remove(99);   // 除去所有等于99的元素：
     // 所以它的大小可能改变了
 ```
 
+### 性能优化
+
+[C++ vector 性能优化](https://blog.csdn.net/ShellDawn/article/details/87906632)
+
+* 若提前知道空间大小，提前分配会提高性能
+    - `vector<int> v; v.reserve(10000);` reserve预留空间，但不创建对象
+        + 区别于`resize()`，resize()会创建对象。
+    - 对于vector和string，在需要更多空间时，会做与realloc等效的事情
+        + 分配一个新内存块，其容量时当前容量的数倍。多数实现中，vector和string容量提升因子在1.5至2之间
+        + 将原内存中数据拷贝至新内存(很费时间)
+        + 释放原有内存对象
+        + 释放原有内存
+* 彻底释放vector内存时，使用`swap()`，而不是clear()或erase():
+    - `vector<int>().swap(v); printf("%lu\n", v.capacity());` 容量会变为0
+    - `v.clear()` 容量并不会改变
+* vector填充时，赋值(=/assignment)最快，insert()次之，push_back()最慢。
+    - assignment知道要拷贝的 vector 有多大，然后只需要通过内存管理一次性拷贝 vector 内部的缓存
+* 遍历vector时，下标最快
+* 避免在vector前部插入元素
+    - 避免：`vector<int> v; v.insert(v.begin(), 1);`
+    - 避免：`list<int> li; li.push_front(1);`
+
+* 在向 vector 插入元素的时候使用 emplace_back() 而不是 push_back() ?
+
 ## list
 
 ```cpp
