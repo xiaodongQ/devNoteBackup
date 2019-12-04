@@ -324,6 +324,10 @@ li.remove(99);   // 除去所有等于99的元素：
     // 所以它的大小可能改变了
 ```
 
+### assign 赋值
+
+
+
 ### 性能优化
 
 [C++ vector 性能优化](https://blog.csdn.net/ShellDawn/article/details/87906632)

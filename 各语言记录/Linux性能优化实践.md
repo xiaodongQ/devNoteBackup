@@ -194,3 +194,81 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
  9  0      0 424868   2116 831880    0    0     0     0 50355 2080560 20 79  1  0  0
 ```
 
+## CPU使用率
+
+[基础篇：某个应用的CPU使用率居然达到100%，我该怎么办？](https://time.geekbang.org/column/article/70476)
+
+* CPU使用率
+    - 作为最常用也是最熟悉的 CPU 指标，你能说出 CPU 使用率到底是*怎么算出来的*吗？
+    - 为了维护 CPU 时间，Linux 通过事先定义的节拍率（内核中表示为 HZ），触发时间中断，并使用全局变量 *Jiffies* 记录了开机以来的节拍数。每发生一次时间中断，Jiffies 的值就加 1。
+    - 节拍率 HZ 是*内核的可配选项*，可以设置为 100、250、1000 等。不同的系统可能设置不同数值，你可以通过查询 /boot/config 内核选项来查看它的配置值。 (`CONFIG_HZ` 配置项，看自己的CentOS环境里：CONFIG_HZ=1000)
+    - 正因为节拍率 HZ 是内核选项，所以用户空间程序并不能直接访问。为了方便用户空间程序，内核还提供了一个用户空间节拍率 USER_HZ，它总是固定为 100，也就是 1/100 秒
+    - **Linux 通过 /proc 虚拟文件系统，向用户空间提供了系统内部状态的信息**，而 `/proc/stat` 提供的就是系统的 CPU 和任务统计信息。
+        + `man 5 proc` 查看proc具体目录文件结构和说明
+    - 我们通常所说的 CPU 使用率，就是除了空闲时间外的其他时间占总 CPU 时间的百分比，
+        + `CPU使用率 = 1 - (空闲时间/总CPU时间)`
+        + 根据这个公式，我们就可以从 /proc/stat 中的数据，很容易地计算出每个场景的 CPU 使用率
+        + 这是开机以来的节拍数累加值，所以直接算出来的，是*开机以来*的平均 CPU 使用率，*一般没啥参考价值*。
+    - 事实上，为了计算 CPU 使用率，性能工具一般都会取间隔一段时间（比如 3 秒）的两次值，作差后，再计算出这段时间内的平均 CPU 使用率
+        + `平均CPU使用率 = 1 - ((空闲时间new-空闲时间old)/(总CPU时间new-总CPU时间old))`
+        + 这个公式，就是我们用各种性能工具所看到的 CPU 使用率的*实际*计算方法。
+    - 性能分析工具给出的都是间隔一段时间的平均 CPU 使用率，所以要注意间隔时间的设置，特别是用多个工具对比分析时，你一定要保证它们用的是相同的间隔时间。
+
+* 分析进程的 CPU 问题
+    - 通过 top、ps、pidstat 等工具，你能够轻松找到 CPU 使用率较高（比如 100% ）的进程。接下来，你可能又想知道，占用 CPU 的到底是代码里的哪个函数呢？
+    - gdb?
+        + 我猜你第一个想到的，应该是 GDB（The GNU Project Debugger）， 这个功能强大的程序调试利器。的确，GDB 在调试程序错误方面很强大。但是，我又要来“挑刺”了。请你记住，GDB 并不适合在性能分析的早期应用。
+        + 因为 GDB 调试程序的过程会中断程序运行，这在线上环境往往是不允许的
+        + pstack/gstack 是一个shell脚本，里面使用gdb bt和sed过滤统计一些程序调用栈，pstack是指向gstack的软连接
+    - `perf`
+        + 那么哪种工具适合在第一时间分析进程的 CPU 问题呢？我的推荐是 perf。perf 是 Linux 2.6.31 以后内置的性能分析工具
+        + 使用 perf 分析 CPU 性能问题，两种最常见的用法(root用户下使用)
+            * 第一种常见用法是 `perf top`
+                - 类似于 top，它能够实时显示占用 CPU 时钟最多的函数或者指令，因此可以用来查找热点函数
+                - 第一行包含三个数据，分别是采样数（Samples, CPU 时钟事件）、事件类型（event）和事件总数量（Event count） 采样数需要我们特别注意。如果采样数过少（比如只有十几个），那下面的排序和百分比就没什么实际参考价值了。
+                - 下面表格式样的数据每一行包含四列
+                    + 第一列 Overhead ，是该符号的性能事件在所有采样中的比例，用百分比来表示。
+                    + 第二列 Shared ，是该函数或指令所在的动态共享对象（Dynamic Shared Object），如内核、进程名、动态链接库名、内核模块名等。
+                    + 第三列 Object ，是动态共享对象的类型。比如 [.] 表示用户空间的可执行程序、或者动态链接库，而 [k] 则表示内核空间。
+                    + 最后一列 Symbol 是符号名，也就是函数名。当函数名未知时，用十六进制的地址来表示。
+            * 第二种常见用法 `perf record` 和 `perf report`
+                - `perf top` 虽然实时展示了系统的性能信息，但它的缺点是并不保存数据，也就无法用于离线或者后续的分析。
+                - 而 `perf record` 则提供了保存数据的功能，保存后的数据，需要你用 `perf report` 解析展示
+                - `perf record [-g]`，一段时间后按Ctrl+C终止采样； 再执行`perf report [-g]`，展示类似于perf top的报告
+                    + 在实际使用中，我们还经常为其加上-g参数，开启调用关系的采样，方便我们根据调用链来分析性能问题。
+
+
+* perf top执行示例1 (注意Shared 和 Object 是不同的两列, [.]是Object列的内容)：
+
+```
+Samples: 3M of event 'cpu-clock', Event count (approx.): 11007468281
+Overhead  Shared Object                       Symbol
+  23.49%  testServer                      [.] std::_List_iterator<testStruct>::operator++
+  10.80%  testServer                      [.] std::_List_iterator<testStruct>::operator!=
+```
+
+* perf top执行示例2：
+
+```
+Samples: 817K of event 'cpu-clock', Event count (approx.): 5959404592
+Overhead  Shared Object                 Symbol
+  10.96%  [unknown]                 [.] 0x000000000059f1fa
+   7.63%  [kernel]                  [k] __do_softirq
+   3.96%  [unknown]                 [.] 0x000000000059f1f7
+   2.38%  [unknown]                 [.] 0x000000000059ccf7
+```
+
+* 以 Nginx + PHP 的 Web 服务为例
+    - 前置准备： 预先安装 docker、sysstat、perf、ab 等工具
+        + docker安装(CentOS)
+            * 查看是否已经安装过docker `yum list installed | grep docker`
+            * 若安装过要重新安装：`yum remove –y docker.xxx` (xxx含docker.x86_64、docker-client.x86_64、docker-common.x86_64)
+            * 安装：`yum install docker` (可加-y选项，安装过程提示都默认选yes)
+            * `docker -v`, (自测CentOS环境)执行得到 Docker version 1.13.1, build 7f2769b/1.13.1
+            * 启动docker：`service docker start`
+                - make build构建docker镜像需要先启动docker
+                - 否则报错："Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?"
+        + ab
+            * ab（apache bench）是一个常用的 HTTP 服务性能测试工具，这里用来模拟 Ngnix 的客户端。
+        + Nginx 和 PHP环境
+            * 配置比较麻烦，使用参考链接中的docker镜像：[linux-perf-examples](https://github.com/feiskyer/linux-perf-examples/tree/master/nginx-high-cpu)
