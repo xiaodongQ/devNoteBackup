@@ -1,8 +1,6 @@
 ## go
 
-### 基础
-
-#### 变量声明
+### 变量声明
 
 ```golang
 
@@ -49,46 +47,92 @@
 _ 实际上是一个只写变量，你不能得到它的值。
 ```
 
-#### 值类型
+### 值类型
 
 int、float、bool 和 string 这些基本类型都属于值类型，使用这些类型的变量直接指向存在内存中的值
 
-#### 引用类型
+### 引用类型
 
 Golang中只有三种引用类型：slice(切片)、map(字典)、channel(管道)；
+
+#### slice
+
+* 初始化方式
+    - make([]int, 3, 8)
+    - var sl []int
+
+* slice切片截取赋值时，修改新变量成员会影响之前的切片(共享存储空间)
+    - year := []string{"Jan", "Feb", "Mar", "Apr", "May", "6", "7", "8", "9", "10", "11", "12"}
+    - Q2 := year[3:6]      //下标从3到5(注意不包含6, [3,6))，结果：[Apr May 6]
+    - summer := year[5:8]  // 结果[6 7 8]
+    - summer[0] = "Unknow" // 修改summer成员，Q2和year都会受影响，都变成 "Unknow"
+
+* 遍历
+    - for index, v := range arr {}
+
+* append
+    - arr = append(arr, 3)  // 把值3添加到[]int，len()新增，cap()按2^n可能受影响
 
 #### map
 
 [Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
+
+**cap()不能用于求map**
 
 * 创建和使用
 
 ```golang
 // 创建
 map1 := make(map[string]string)
-var map2 map[string]string
+var map2 map[string]string{"lisi":"xxx"}  // 定义时初始化
 // 插入
 map1["zhangsan"] = "a"
 map1["lisi"] = "b"
-// 访问
+```
+
+* 访问(key不存在时返回零值)
+
+```
 map1["lisi"] = "assign"             // map是引用类型
 fmt.Printf("map:%s", map1["none"])  // 找不到的记录，map会返回零值(对不同类型对应零值是有区别的)
-// 遍历
+```
+
+*  遍历
+
+```
 for key,value := range map1 {
 
 }
-// 检测一个键是否存在于一个 map 
+```
+
+* 检测是否存在(不存在时map[unexistkey]会返回零值，不能通过nil来判断是否存在)
+
+```
+// 检测一个键是否存在于一个 map
 value, ok := map1["haha"] // 如果 ok 是 true，则键存在，value 被赋值为对应的值。如果 ok 为 false，则表示键不存在
 if !ok {
     fmt.Println("not exist")
 }
 ```
 
-**注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 range for 遍历 map 的顺序总是一致的。**
+**注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 for range 遍历 map 的顺序总是一致的。**
 
+* 使用map实现set (go中没有set基本类型)
+    - map[anytype]bool
 
+* 利用value为函数时实现工厂模式
 
-#### 接口
+```
+func TestMapWithFuncValue(t *testing.T) {
+    m := map[int]func(op int) int{} //定义一个map, key为int,value为函数(函数是一等公民)
+    m[1] = func(op int) int { return op }
+    m[2] = func(op int) int { return op * op }
+    m[3] = func(op int) int { return op * op * op }
+    t.Log(m[1](3), m[2](3), m[3](3))
+}
+```
+
+### 接口
 
 接口的实现
 自定义类型实现接口，需要实现接口中声明的所有方法
@@ -127,8 +171,6 @@ git clone https://github.com/golang/sys.git
 参考：
 [golang.org/x/sys/unix: unrecognized](https://blog.csdn.net/wzygis/article/details/89030353)
 
-### strings
-1. idMemberList := strings.Split(instrumentId, "-")
 
 ### struct json标签
 
@@ -586,9 +628,53 @@ fmt.Printf("ori time:%v, parse:%v\n", BeginTime, formatTime.Format("2006-01-02 1
 
 ## string
 
+是一个不可变的byte切片，初始化后不能修改成员
+
+* unicode和utf-8
+    - unicode是一种编码，utf-8是unicode的一种存储实现
+
+```golang
+var s string = "中"   // len(s):3
+c := []rune(s)        // len(c):1
+t.Logf("中 unicode %x", c[0])  // 4e2d
+t.Logf("中 UTF8 %x", s)        // e4b8ad
+```
+
+* utf8和unicode关系
+
+由上面的例子
+
+```
+字符           "中"
+Unicode        0x4E2D
+UTF-8          0xE4B8AD (在string中分成了3个byte，如下)
+string/[]byte  [0xE4, 0xB8, 0xAD]
+```
+
+* 一种格式化打印用法：
+    - t.Logf("%[1]x, %[1]s", s)  // 打印："e4b8ad, 中"，[1]指定第一个参数
+
+* 常用字符串函数(包)
+    - strings 包
+    - strconv 包
 
 
-### string、int、int64互相转换
+### strings 包 和 strconv 包
+
+* strings
+    - 切割
+        + strings.Split(s, ",")
+            * s := "A,B,C"
+            * parts := strings.Split(s, ",")
+    - 连接
+        + strings.Join(parts, "-")
+
+* strconv
+    - 转换
+        + s := strconv.Itoa(10)       // int到string, 转成字符串
+        + i,err := strconv.Atoi("10") // string到int，注意还会返回error
+
+* string、int、int64互相转换示例：
 
 ```golang
 int,err:=strconv.Atoi(string)

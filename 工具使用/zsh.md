@@ -67,10 +67,30 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 
 ```sh
 # 把 c 改为 d，c 表示当前目录，d 表示绝对路径，显示格式"[➜ /home/xd ]$"
-PROMPT='[%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
+PROMPT='[%{$fg_bold[red]%}%n➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
 # 把 c 改为 d，c 表示当前目录，d 表示绝对路径，另外在末尾增加了一个「 > 」
 #PROMPT='%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}>'
 #PROMPT='%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} % %{$reset_color%}'
+```
+
+* 参考设置
+    - [oh-my-zsh终端用户名设置（PS1）](https://www.jianshu.com/p/bf488bf22cba)
+    - 为了显示用户名，把 %n 加到➜前面
+
+```
+code    info
+%T  系统时间（时：分）
+%*  系统时间（时：分：秒）
+%D  系统日期（年-月-日）
+%n  你的用户名
+%B - %b 开始到结束使用粗体打印
+%U - %u 开始到结束使用下划线打印
+%d  你目前的工作目录
+%~  你目前的工作目录相对于～的相对路径
+%M  计算机的主机名
+%m  计算机的主机名（在第一个句号之前截断）
+%l  你当前的tty
+%n  登录名
 ```
 
 ### 主题

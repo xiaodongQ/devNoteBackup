@@ -270,5 +270,77 @@ Overhead  Shared Object                 Symbol
                 - 否则报错："Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?"
         + ab
             * ab（apache bench）是一个常用的 HTTP 服务性能测试工具，这里用来模拟 Ngnix 的客户端。
+            * CentOS下安装：`yum -y install httpd-tools`
         + Nginx 和 PHP环境
             * 配置比较麻烦，使用参考链接中的docker镜像：[linux-perf-examples](https://github.com/feiskyer/linux-perf-examples/tree/master/nginx-high-cpu)
+    - 操作和分析
+        + 打开两个终端，分别 SSH 登录到两台机器上
+        + 首先，在第一个终端a执行下面的命令来运行 Nginx 和 PHP 应用：
+            * `docker run --name nginx -p 10000:80 -itd feisky/nginx`
+            * `docker run --name phpfpm -itd --network container:nginx feisky/php-fpm`
+        + 然后，在第二个终端b使用 curl 访问 http://[VM1 的 IP]:10000，确认 Nginx 已正常启动。
+            * `curl http://192.168.50.118:10000` 结果响应：It works!
+        + 接着，测试一下这个 Nginx 服务的性能。在第二个终端运行下面的 ab 命令：
+            * `ab -c 10 -n 100 http://192.168.50.118:10000/` 结果如下
+        + 分析
+            * 在b执行新的 `ab -c 10 -n 10000 http://10.240.0.5:10000/`
+            * 在a找到 php-fpm 进程号(有多个，找一个分析)
+                - `perf top -g -p 19318`
+            * 在容器外perf top只能看到十六进制地址，所以先在外面保存perf信息，再放到容器中分析
+                - 参考：[CPU使用率达到100% 精选留言](https://time.geekbang.org/column/article/70476)
+                - `perf record -g -p 19402` 运行一段时间后打断，生成 perf.data 文件，拷贝到容器中，在容器中进行分析
+                - `docker cp perf.data phpfpm:/tmp` 拷贝到容器phpfpm
+                - `docker exec -i -t phpfpm bash`   进入容器bash终端
+                - `cd /tmp/`, 安装perf工具：`apt-get update && apt-get install -y linux-perf linux-tools procps`
+                - 分析perf.data, `perf_4.9 report`
+                    + 注意：最后运行的工具名字是容器内部安装的版本 perf_4.9，而不是 perf 命令，这是因为 perf 会去跟内核的版本进行匹配，但镜像里面安装的perf版本有可能跟虚拟机的内核版本不一致。
+
+* `ab -c 10 -n 100 http://192.168.50.118:10000/`运行结果(虚拟机在跑别的程序，消耗了大部分CPU)：
+
+```
+[root@localhost build]# ab -c 10 -n 100 http://192.168.50.118:10000/
+This is ApacheBench, Version 2.3 <$Revision: 1430300 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 192.168.50.118 (be patient)...
+..done
+
+
+Server Software:        nginx/1.15.4
+Server Hostname:        192.168.50.118
+Server Port:            10000
+
+Document Path:          /
+Document Length:        9 bytes
+
+Concurrency Level:      10
+Time taken for tests:   78.361 seconds
+Complete requests:      100
+Failed requests:        0
+Write errors:           0
+Total transferred:      17200 bytes
+HTML transferred:       900 bytes
+Requests per second:    1.28 [#/sec] (mean)
+Time per request:       7836.124 [ms] (mean)
+Time per request:       783.612 [ms] (mean, across all concurrent requests)
+Transfer rate:          0.21 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   2.3      0      14
+Processing:   832 7556 1197.7   7666   10593
+Waiting:      831 7553 1197.6   7641   10528
+Total:        832 7557 1198.2   7666   10606
+
+Percentage of the requests served within a certain time (ms)
+  50%   7666
+  66%   7800
+  75%   8032
+  80%   8208
+  90%   8372
+  95%   8477
+  98%   8588
+  99%  10606
+ 100%  10606 (longest request)
+```
