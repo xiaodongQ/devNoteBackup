@@ -137,7 +137,7 @@ plugins=(git autojump)
 # autojump
 [[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && . ~/.autojump/etc/profile.d/autojump.sh
 # 提示
-PROMPT='[%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
+PROMPT='[%{$fg_bold[red]%}%n➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
 
 alias rm='rm -i'
 alias cp='cp -i'
