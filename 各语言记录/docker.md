@@ -1,8 +1,10 @@
 # docker
 
+## 入门
+
 [Docker 入门教程](http://www.ruanyifeng.com/blog/2018/02/docker-tutorial.html)
 
-## 背景
+### 背景
 
 * 背景
 	- 2013年发布至今， Docker 一直广受瞩目，被认为可能会改变软件行业。
@@ -33,7 +35,7 @@
 		+ Docker 将应用程序与该程序的依赖，打包在一个文件里面。运行这个文件，就会生成一个虚拟容器。程序在这个虚拟容器里运行，就好像在真实的物理机上运行一样。有了 Docker，就不用担心环境问题。
 		+ 总体来说，Docker 的接口相当简单，用户可以方便地创建和使用容器，把自己的应用放入容器。容器还可以进行版本管理、复制、分享、修改，就像管理普通的代码一样。
 
-## Docker用途
+### Docker用途
 
 * Docker用途
 	- Docker 的主要用途，目前有三大类。
@@ -44,7 +46,7 @@
 	- 3. 组建微服务架构。
 		+ 通过多个容器，一台机器可以跑多个服务，因此在本机就可以模拟出微服务架构。
 
-## Docker安装
+### Docker安装
 
 * Docker安装
 	- Docker 是一个开源的商业产品，有两个版本：社区版（Community Edition，缩写为 CE）和企业版（Enterprise Edition，缩写为 EE）。企业版包含了一些收费服务，个人开发者一般用不到。下面的介绍都**针对社区版**。
@@ -92,7 +94,7 @@
 	- Docker 是服务器----客户端架构。命令行运行docker命令的时候，需要本机有 Docker 服务。如果这项服务没有启动，可以用下面的命令启动
 		+ `sudo service docker start` 或 `sudo systemctl start docker`
 
-## image文件
+### image文件
 
 * image文件
 	- Docker 把应用程序及其依赖，打包在 image 文件里面。只有通过这个文件，才能生成 Docker 容器。image 文件可以看作是容器的模板。Docker 根据 image 文件生成容器的实例。同一个 image 文件，可以生成多个同时运行的容器实例。
@@ -103,7 +105,7 @@
 		+ 一般来说，为了节省时间，我们应该尽量使用别人制作好的 image 文件，而不是自己制作。即使要定制，也应该基于别人的 image 文件进行加工，而不是从零开始制作。
 		+ 为了方便共享，image 文件制作完成后，可以上传到网上的仓库。Docker 的官方仓库 [Docker Hub](https://hub.docker.com/) 是最重要、最常用的 image 仓库。
 
-## 实例
+### 实例
 
 * 仓库修改
 	- 需要说明的是，国内连接 Docker 的官方仓库很慢，还会断线，需要将默认仓库改成国内的镜像网站。这里推荐使用官方镜像 registry.docker-cn.com 。
@@ -111,9 +113,19 @@
 		+ 然后，重启 Docker 服务。`sudo service docker restart`，就会自动从镜像仓库下载 image 文件了
 	- 修改参考：[Docker 微服务教程](http://www.ruanyifeng.com/blog/2018/02/docker-wordpress-tutorial.html)
 
-* hello-world
+* 实例
 	- `docker image pull library/hello-world` 抓取 image 文件，library/hello-world是 image 文件在仓库里面的位置，其中library是 image 文件所在的组，hello-world是 image 文件的名字。
 		+ 由于 Docker 官方提供的 image 文件，都放在library组里面，所以它的是默认组，可以省略。因此，上面的命令可以写成：`docker image pull hello-world`
 	- `docker image ls` 查看
 	- `docker container run hello-world` 命令会从 image 文件，生成一个正在运行的容器实例。
 		+ 注意，`docker container run`命令具有自动抓取 image 文件的功能。如果发现本地没有指定的 image 文件，就会从仓库自动抓取。因此，前面的docker image pull命令并不是必需的步骤。
+	- 有些容器不会自动终止，因为提供的是服务。
+		+ 比如，安装运行 Ubuntu 的 image，就可以在命令行体验 Ubuntu 系统。
+			* `docker container run -it ubuntu bash`
+		+ 对于那些不会自动终止的容器，必须使用`docker container kill` 命令手动终止。
+			* `docker container kill [containID]`
+			* `docker ps -a ` 列出所有container，可以看到containerID
+
+## Docker 常用命令
+
+
