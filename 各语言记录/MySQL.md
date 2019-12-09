@@ -1,3 +1,7 @@
+## Windows MySQL部署
+
+
+
 ## linux mysql操作
 
 * Mysql启动、停止、重启常用命令

@@ -1,0 +1,394 @@
+## grpc
+
+### grpc介绍
+[Go使用grpc+http打造高性能微服务](https://blog.csdn.net/RA681t58CJxsgCkJ31/article/details/78601747)
+
+gRPC是由Google主导开发的RPC框架，使用HTTP/2协议并用Protobuf作为序列化工具
+
+与REST不同的是，REST是基于HTTP1.1 JOSN格式的一种轻量级服务模式
+
+#### JSON和Protobuf比较：
+
+* 首先可以从JOSN与Protobuf之间的差别入手进行对比，Protobuf很难读，它是面向机器的文字格式，而JSON则是面向人的；
+* Protobuf相对于JSON而言编解码速度都非常快；
+* 最后就是兼容性，现在基本所有浏览器都支持JOSN格式，而Protobuf目前仅部分语言支持。
+
+#### http1.1与http2比较
+
+* http1.1是文本方式，因此http的请求我们都可以很清楚的读懂；
+* http1.1中每一个请求会有一个新的connection，但是http2 是一个持续的http connection；
+* http1是持续repetitive，http2是compressed；
+* http1.1所有浏览器都默认支持，而http2只是部分支持。
+
+HTTP/1的主要问题
+[深度解析gRPC以及京东分布式服务框架跨语言实战](http://www.sohu.com/a/126977118_494947)
+
+Head-of-line blocking，新请求的发起必须等待服务器对前一个请求的回应，无法同时发起多个请求，导致很难充分利用TCP连接。
+* 头部冗余
+
+HTTP头部包含大量重复数据，比如cookies，多个请求的cookie可能完全一样
+
+
+### protocol buffer
+
+[Potocol Buffer详解](https://www.cnblogs.com/oumyye/p/4652780.html)
+
+Protobuf 编译器会将 .proto 文件编译生成对应的数据访问类以对 Protobuf 数据进行序列化、反序列化操作
+
+#### 定义第一个Protocol Buffer消息
+1. 创建扩展名为.proto的文件
+2. 将以下内容存入该文件中。
+      message LogonReqMessage {
+          required int64 acctID = 1;
+          required string passwd = 2;
+      }
+
+    说明:
+    message是消息定义的关键字
+    LogonReqMessage为消息的名字，等同于结构体名或类名。
+    required前缀表示该字段为必要字段，既在序列化和反序列化之前该字段必须已经被赋值
+      (另外两个类似的关键字:optional和repeated)
+    int64和string分别表示长整型和字符串型的消息字段
+      (在Protocol Buffer中存在一张类型对照表，该对照表中还将给出在不同的数据场景下，哪种类型更为高效。)
+    acctID和passwd分别表示消息字段名
+    标签数字1和2则表示不同的字段在序列化后的二进制数据中的布局位置。
+      (该值在同一message中不能重复，对于Protocol Buffer而言，标签值为1到15的字段在编码时可以得到优化，既标签值和类型信息仅占有一个byte，标签范围是16到2047的将占有两个bytes；在设计消息结构时，可以尽可能考虑让repeated类型的字段标签位于1到15之间，这样便可以有效的节省编码后的字节数量)
+
+#### 定义第二个（含有枚举字段）Protocol Buffer消息。
+
+enum UserStatus {
+          OFFLINE = 0;  //表示处于离线状态的用户
+          ONLINE = 1;   //表示处于在线状态的用户
+      }
+      message UserInfo {
+          required int64 acctID = 1;
+          required string name = 2;
+          required UserStatus status = 3;
+      }
+
+   以上消息定义的关键性说明:
+   enum是枚举类型定义的关键字
+   UserStatus为枚举的名字
+   枚举值之间的分隔符是分号，而不是逗号。
+   OFFLINE/ONLINE为枚举值
+   0和1表示枚举值所对应的实际整型值，可以为枚举值指定任意整型值，而无需总是从0开始定义
+
+#### 定义第三个（含有嵌套消息字段）Protocol Buffer消息
+
+可以在同一个.proto文件中定义多个message
+
+enum UserStatus {
+          OFFLINE = 0;
+          ONLINE = 1;
+      }
+message UserInfo {
+          required int64 acctID = 1;
+          required string name = 2;
+          required UserStatus status = 3;
+      }
+message LogonRespMessage {
+          required LoginResult logonResult = 1;
+          required UserInfo userInfo = 2;
+      }
+
+      说明：
+      LogonRespMessage消息的定义中包含另外一个消息类型作为其字段，如UserInfo userInfo
+      Protocol Buffer提供了另外一个关键字import，这样我们便可以将很多通用的message定义在同一个.proto文件中，而其他消息定义文件可以通过import的方式将该文件中定义的消息包含进来，如：
+      import "myproject/CommonMessages.proto"
+
+> Potocol Buffer部分概念原则
+
+#### 限定符(required/optional/repeated)的基本规则
+1. 在每个消息中必须至少留有一个required类型的字段。
+2. 每个消息中可以包含0个或多个optional类型的字段。
+3. repeated表示的字段可以包含0个或多个数据。需要说明的是，这一点有别于C++/Java中的数组，因为后两者中的数组必须包含至少一个元素。
+4. 如果打算在原有消息协议中添加新的字段，同时还要保证老版本的程序能够正常读取或写入，那么对于新添加的字段必须是optional或repeated。
+
+proto3中，去掉了required 和 optional
+
+>We dropped required fields in proto3 because required fields are generally considered harmful and violating protobuf's compatibility semantics.
+
+使用repeated时, protoc生成struct字段为指针数组，即成员都是指针
+e.g. MsgList              []*HelloRequest
+
+访问时，使用import包名加结构类型, e.g. 给结构体成员赋初值时: MsgList: []*(pt.HelloRequest){&(pt.HelloRequest{Name: "helloname"})}  (结构体变量的地址赋值给指针数组作为一个成员)
+
+#### 类型对照表
+见链接 [](https://www.cnblogs.com/oumyye/p/4652780.html)
+| .proto Type | Notes | C++ Type | Java Type  |
+| ----------- | ----- | -------- | ---------- |
+| double      |       |double    |double      |
+| float       |       |float     |float       |
+| int32       | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.|  int32   |int|
+| int64       | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.|  int64   |long|
+| uint32      |  Uses variable-length encoding.|   uint32  |int|
+| uint64      |  Uses variable-length encoding.|   uint64  |long|
+| sint32      |  Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.|   int32   |int|
+| sint64      |  Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.|   int64   |long|
+| fixed32     | Always four bytes. More efficient than uint32 if values are often greater than 228.|    uint32  |int|
+| fixed64     | Always eight bytes. More efficient than uint64 if values are often greater than 256.|   uint64  |long|
+| sfixed32    |  Always four bytes.|   int32   |int|
+| sfixed64    |  Always eight bytes.|  int64   |long|
+| bool        || bool  |boolean|
+| string      |A string must always contain UTF-8 encoded or 7-bit ASCII text.| string  |String|
+| bytes       |May contain any arbitrary sequence of bytes.|  string  |ByteString|
+
+
+#### Protocol Buffer消息升级原则
+
+在实际的开发中会存在这样一种应用场景，消息格式因为某些需求的变化而不得不进行必要的升级，但又需要基于新老消息格式的新老程序同时运行，一般遵循如下规则：
+
+1. 不要修改已经存在字段的标签号。
+2. 任何新添加的字段必须是optional和repeated限定符，否则无法保证新老程序在互相传递消息时的消息兼容性。
+3. 在原有的消息中，不能移除已经存在的required字段，optional和repeated类型的字段可以被移除，但是他们**之前使用的标签号必须被保留**，不能被新的字段重用。
+4. int32、uint32、int64、uint64和bool等类型之间是兼容的，sint32和sint64是兼容的，string和bytes是兼容的，fixed32和sfixed32，以及fixed64和sfixed64之间是兼容的，这意味着如果想修改原有字段的类型时，为了保证兼容性，**只能将其修改为与其原有类型兼容的类型**，否则就将打破新老消息格式的兼容性。
+5. optional和repeated限定符也是相互兼容的。
+
+#### packages
+
+我们可以在.proto文件中定义包名，如：
+      package ourproject.lyphone;
+      该包名在生成对应的C++文件时，将被替换为名字空间名称，既namespace ourproject { namespace lyphone。而在生成的Java代码文件中将成为包名。
+
+#### gRPC c++
+
+* 结构体成员问题
+
+参考：
+[对set_allocated_和mutable_的使用](https://blog.csdn.net/wujunokay/article/details/51287312)
+
+[gRPC Basics - C++](https://grpc.io/docs/tutorials/basic/cpp/)
+
+对于grpc中的结构体成员，通过：
+`request->mutable_B类型成员名b()` 的方式访问，
+
+查看分析grpc生成的.cpp和.h文件代码，生成的成员函数为`mutable_`、`set_allocated_`，通过这种方式访问和设置成员。
+
+下面代码演示(另外分析函数入参被限定为const时的访问情况)：
+
+* 程序伪代码：
+
+```cpp
+
+// 假设 B b; 是A的成员变量
+void func(const &B)
+{
+}
+...(const A *request) 
+{
+    // A类中的成员b作为入参，调用func函数，表面上需要解引用作为入参，但直接解引用会报错
+    func(*request->mutable_b());
+}
+
+// grpc访问结构体成员
+若request为const修饰的变量，要调用如下func函数的话，需要解引用，会出现const的this调用非const函数，编译报类似下面错误。
+```
+
+* 编译报错：
+
+```sh
+# const访问问题
+错误：将‘const A’作为‘B* A::mutable_Bstructfield()’的‘this’实参时丢弃了类型限定 [-fpermissive]
+```
+
+* 使用方式：
+
+可通过新增变量方式解引用：
+
+```cpp
+    auto a = new A;  //注意资源的释放，可以改成智能指针防止忘记
+    a->CopyFrom(*request)
+    func(*a->mutable_b)
+```
+
+* 定义返回为 stream时，成员中返回错误码问题
+    - 
+
+### CopyFrom 源码逻辑
+
+* CopyFrom 原码如下
+    - 调用CopyFrom时传入本身
+
+```cpp
+void TestStruct::CopyFrom(const TestStruct& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:testxd.TestStruct)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+```
+
+## gRPC go
+
+### gRPC环境和protoc.exe、protoc-gen-go.exe
+
+**gRPC调用时数据错位，可能是客户端pb协议和服务端不一致**
+
+[gRPC-go protoc](https://www.jianshu.com/p/ec3e75e5aad1)
+作者：Feng_Sir
+链接：https://www.jianshu.com/p/ec3e75e5aad1
+来源：简书
+简书著作权归作者所有，任何形式的转载都请联系作者获得授权并注明出处。
+
+1、下载protobuf的编译器protoc
+https://github.com/google/protobuf/releases
+window：
+  下载: protoc-3.3.0-win32.zip (本人protoc-3.9.0-win64.zip)
+  解压，把bin目录下的protoc.exe复制到GOPATH/bin下，GOPATH/bin加入环境变量。
+当然也可放在其他目录，需加入环境变量，能让系统找到protoc.exe (本人放到了C:\Go\bin)
+
+linux：
+    下载：protoc-3.3.0-linux-x86_64.zip 或 protoc-3.3.0-linux-x86_32.zip
+解压，把bin目录下的protoc复制到GOPATH/bin下，GOPATH/bin加入环境变量。
+如果喜欢编译安装的，也可下载源码自行安装，最后将可执行文件加入环境变量。
+
+2、获取protobuf的编译器插件protoc-gen-go
+  进入GOPATH目录
+  运行
+> go get -u github.com/golang/protobuf/protoc-gen-go
+  如果成功，会在GOPATH/bin下生成protoc-gen-go.exe文件 (在path中加下该环境变量)
+
+
+### 生成
+$ protoc --go_out=./ *.proto #不加gRPC插件               **不使用**
+$ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
+对比发现内容增加
+得到 helloServer.pb.go文件
+
+
+### 使用流程
+
+服务端:
+
+```go
+//监听端口
+    lis, err := net.Listen("tcp", ":8000")
+    if err != nil {
+        return
+    }
+    //创建一个gRPC 服务器
+    s := gRPC.NewServer()
+    //注册事件
+    log.Println("RegisterGreeterServer...")
+    pro.RegisterGreeterServer(s, &server{})
+    //处理链接
+    s.Serve(lis)
+```
+
+### 几种通信方式
+
+gRPC主要有4种请求／响应模式
+
+(1) 简单模式（Simple RPC）
+
+这种模式最为传统，即客户端发起一次请求，服务端响应一个数据，这和大家平时熟悉的RPC没有什么大的区别，所以不再详细介绍。
+
+(2) 服务端数据流模式（Server-side streaming RPC）
+
+这种模式是客户端发起一次请求，服务端返回一段连续的数据流。典型的例子是客户端向服务端发送一个股票代码，服务端就把该股票的实时数据源源不断的返回给客户端。
+
+(3) 客户端数据流模式（Client-side streaming RPC）
+
+与服务端数据流模式相反，这次是客户端源源不断的向服务端发送数据流，而在发送结束后，由服务端返回一个响应。典型的例子是物联网终端向服务器报送数据。
+
+(4) 双向数据流模式（Bidirectional streaming RPC）
+
+顾名思义，这是客户端和服务端都可以向对方发送数据流，这个时候双方的数据可以同时互相发送，也就是可以实现实时交互。典型的例子是聊天机器人。
+
+使用场景：
+在项目中如果是提供接口这种，比如查询账号是否存在之类的可以使用简单模式。
+但是如果需要长连接、相互通信那么简单模式就不行了。
+
+
+### gRPC stream
+
+srteam 顾名思义就是一种 流，可以源源不断的 推送数据
+很适合传输一些大数据，或者服务端和客户端*长时间*数据交互，比如客户端可以向服务端订阅 一个数据，服务端就可以利用stream，源源不断地推送数据。
+
+stream的种类:
+* 客户端推送服务端 rpc GetStream (StreamReqData) returns (stream StreamResData){}
+
+>客户端向服务器发送请求并获取流以读取消息序列；客户端从返回的流中读取，直到没有更多消息； gRPC 保证单个 RPC 调用中的消息排序。
+
+* 服务端推送客户端 rpc PutStream (stream StreamReqData) returns (StreamResData){}
+
+>客户端再次使用提供的流写入一系列消息并将其发送到服务器；一旦客户端写完消息，它就等待服务器读取它们并返回它的响应； gRPC 保证在单个 RPC 调用中的消息排序。
+
+* 客户端与服务端 互相 推送 rpc AllStream (stream StreamReqData) returns (stream StreamResData){}
+
+
+
+```go
+
+service Greeter {
+    /*
+    以下 分别是 服务端 推送流， 客户端 推送流 ，双向流。
+    */
+   rpc GetStream (StreamReqData) returns (stream StreamResData){}
+   rpc PutStream (stream StreamReqData) returns (StreamResData){}
+   rpc AllStream (stream StreamReqData) returns (stream StreamResData){}
+ }
+
+// GreeterClient is the client API for Greeter service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/gRPC#ClientConn.NewStream.
+type GreeterClient interface {
+	//
+	//以下 分别是 服务端 推送流， 客户端 推送流 ，双向流。
+	GetStream(ctx context.Context, in *StreamReqData, opts ...gRPC.CallOption) (Greeter_GetStreamClient, error)
+	PutStream(ctx context.Context, opts ...gRPC.CallOption) (Greeter_PutStreamClient, error)
+	AllStream(ctx context.Context, opts ...gRPC.CallOption) (Greeter_AllStreamClient, error)
+}
+
+func (c *greeterClient) PutStream(ctx context.Context, opts ...gRPC.CallOption) (Greeter_PutStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Greeter_serviceDesc.Streams[1], "/helloworld.Greeter/PutStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &greeterPutStreamClient{stream}
+	return x, nil
+}
+
+func (*UnimplementedGreeterServer) PutStream(srv Greeter_PutStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method PutStream not implemented")
+}
+```
+
+当return出函数，就说明此次 推送 或者 接收 结束了，client 会 对应的 收到消息
+
+
+### 不需要入参结构体或返回结构体的情况
+
+[不需要入参结构体或返回结构体的情况](https://www.cnblogs.com/mind-water/articles/10399995.html)
+
+1. 方法1:  可以在.proto文件中定义空的消息(也就是空结构体,这样做的好处是以后可以给结构体添加字段, 接口函数签名不变).
+
+```go
+message MyRespone {
+}
+
+务必注意,在源代码编写的时候,不能直接直接返回空指针, 否则会报"rpc error: code = Internal desc = gRPC: error while marshaling: proto: Marshal called with nil".  意思大概就是不能序列化nil指针
+
+if err != nil {
+       return nil, err  //错误! 正确写法 return &pb.MyRespone{},err
+}
+```
+
+2. 方法2: 使用protobuf的内置空类型.
+
+.proto文件需要类似这样定义(以上面非流式的例子做修改成不需要返回结构体为例子)
+
+```go
+syntax = "proto3";
+import "google/protobuf/empty.proto";  //这个就是protobuf内置的空类型
+package nonstream;
+
+service EchoIface {
+    rpc Echo (Ping) returns (google.protobuf.Empty) {}
+}
+
+message Ping {
+ string request = 1;
+}
+```
+
