@@ -128,4 +128,12 @@
 
 ## Docker 常用命令
 
+上面已经提到过一些：
 
+* `docker ps`
+	- 查看正在运行的容器实例
+* `docker logs 容器名`
+	- e.g. `docker logs mysql`
+* `docker exec -it`
+	- 进入容器
+	- e.g. `docker exec -it mysql bash`

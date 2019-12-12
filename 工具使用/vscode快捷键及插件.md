@@ -206,29 +206,43 @@ File->Preferences->User Snippets->选择某个语言或者global->进行配置
 
 ## 插件
 
-vim
-Code Runner               代码运行
-Bracket Pair Colorizer    让每个括号都有自己的颜色
-vscode-icon               给项目文件夹前边加上icon
-Import Cost：             显示导入的包的大小(前端，go不生效)
-highlight-words:          全局高亮字符串
-    Highlight Current
-    Highlight Remove
+* vim
+* Code Runner               代码运行
+* Bracket Pair Colorizer    让每个括号都有自己的颜色
+* vscode-icon               给项目文件夹前边加上icon
+* Import Cost：             显示导入的包的大小(前端，go不生效)
+* highlight-words:          全局高亮字符串
+    - Highlight Current
+    - Highlight Remove
 
-koroFileHeader 注释插件，关闭自动添加注释(配置文件放在最后章节)
-
-    快捷键： ctrl+alt+i 文件头部注释  (mac: ctrl+cmd+i)
-            ctrl+alt+t函数注释       (mac: ctrl+cmd+t)
+* koroFileHeader 注释插件，关闭自动添加注释(配置文件放在最后章节)
+    - 快捷键
+        + ctrl+alt+i 文件头部注释  (mac: ctrl+cmd+i)
+        + ctrl+alt+t函数注释       (mac: ctrl+cmd+t)
+    - 配置可以参考：[配置](https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE)
+* power mode 编辑代码动态效果，atom风格
+    - File->Preferences->Settings里面过滤powermode，可显示各配置项(修改后会自动同步到settings.json，建议修改用户空间，全局生效)
+        + Powermode: Enable Shake，可以去掉勾选，取消晃动效果
+        + Powermode: Explosion Duration，设置效果持续的时间(ms)，默认1000ms(1秒)，设为0则效果一直在(切换编辑窗口会消失)
+        + Powermode: Presets，powermode被激活时选择的gif效果，有以下效果可选
+            * particles，微粒效果，默认
+            * fireworks，烟花效果
+            * flames，火焰效果(个人选择，500ms)
+            * magic，魔法效果(云状的爆炸效果)
+            * clippy，回形针效果
+            * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
 
 ### 配置云端同步
 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
 (当前版本是3.4.3, 并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
 (网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
 
+```
 Gist ID
 3c9a1a862a60453426f214b94414fe81
 令牌token (token每次可能会变，提示token过期的话，通过重置配置->"login with github"->执行相应命令即可)
 b48fa742e2d6036c5ffca098c926942016bf3c02
+```
 
 ctrl+shift+p, 输入sync，
   之前有残留配置则reset extension settings;
