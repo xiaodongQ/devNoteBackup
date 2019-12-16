@@ -1,5 +1,21 @@
 ## Windows MySQL部署
 
+* 步骤
+    - 下载mysql zip
+    - 没有data目录，如果没有data目录，安装后`net start mysql`启动的时候就会报这个错：MySQL 服务无法启动。
+    - 需要使用命令生成data文件夹
+        + bin目录，mysqld -install
+        + `mysqld --initialize --user=root --console`初始化后可看到新的data目录(可能会产生一个默认生成的密码)
+        + 启动`net start mysql`
+        + 登录`mysql -uroot -p` 若生成默认密码则用其登录，若没有回车即可进入mysql控制台
+
+* Windows下检查mysql是否开机启动：
+    - 控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)-启动类型为"自动"则为开机启动
+* mysql远程连接mysql时报错： `Host * is not allowed to connect to this MySQL server`
+    - `mysql -h 192.xxx.xxx.xxx -u root -p` 报上述错误(检查防火墙对mysql的端口是否开放，有这个报错防火墙应该是支持入栈规则)
+    - 到本机上终端连接后执行：`select user,host from mysql.user;`，可以看到`host`列都是`localhost`
+    - `create user root identified by 'xxxx';`，可以看到host为`%`，且有两个`root`用户
+    - `grant all on *.* to root;`
 
 
 ## linux mysql操作
@@ -79,6 +95,23 @@
         + 查看用户表： `select user,host from mysql.user;`
         + 查看指定用户权限： `show grants for root@localhost;`
         + 删除用户：`drop user finley;`
+        + 用户的格式 root@% 和 root@localhost的区别
+            * 用户名格式：`'user_name'@'host_name'`
+                - 两部分，host_name指定允许什么样的主机用`user_name`连接
+                - 只有`user_name`的用户名，等价于：`'user_name'@'%'`，e.g. me 等价于 me@%
+                - 若去掉引号是合法的标识符则可去掉引号
+                - 若用户名或者host包含特殊符号，如`-`，则需要引号；
+                - 包含通配符也需要引号：`'test-user'@'%.com'`
+                - 注意引号范围，'me'@'localhost'和'me@localhost'，后者表示'me@localhost'@'%'
+            * `mysql.user`用户表里，User和Host是分开存的，两个一起组成了主键
+                - `desc mysql.user;`可以查看
+                - 所以root(root@%) 和 root@localhost 是不同的mysql.user表记录，可能会存在User列同名的记录
+            * `host_name`
+                - @ 后面即可以是主机名也可以是ip地址
+                - `%`和`_`通配符可以用在host_name中，表示 `like`语法
+                    + `'192.51.100.*'` 可表示网络地址下(/24)的所有主机(注意此时@后面是需要引号`'`的)
+                    + `'%.myusql.com'` 可表示任何在`mysql.com`域下的地址
+            * [6.2.4 Specifying Account Names](https://dev.mysql.com/doc/refman/8.0/en/account-names.html)
 * SQL使用
     - [3.3.1 Creating and Selecting a Database](https://dev.mysql.com/doc/refman/8.0/en/creating-database.html)
     - *关键字*大小写不敏感，以分号`;`(semicolon)结束语句，字符串使用 `'` 和 `"` 都可以
