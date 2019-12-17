@@ -11,6 +11,13 @@ Python的3.0版本，常被称为Python 3000，或简称Py3k。
     新的Python程式建议使用Python 3.0版本的语法。
     Python3 print语句没有了，取而代之的是print()函数
 
+### 安装pip
+
+* [install pip](https://pip.pypa.io/en/stable/installing/)
+    - `curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`
+    - 然后 `python get-pip.py`
+    - 如果是Windows下安装，安装在 $python_path/Scripts 下面(安装完会提示)，在系统环境变量path中添加一下路径
+
 ### linux终端
 tab自动补全:
 新建 .pythonstartup.py

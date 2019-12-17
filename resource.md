@@ -12,6 +12,8 @@
         + 没有去问怎么解决问题X，而是去问解决方案Y应该怎么去实现和操作
         + 在一个根本错误的方向上浪费他人大量的时间和精力！
     - StackOverflow 上如何问问题的一些提示 [FAQ for Stack Exchange sites](https://meta.stackexchange.com/questions/7931/faq-for-stack-exchange-sites)
+* 你不知道你不知道的
+    - [程序员的谎谬之言还是至理名言？](https://coolshell.cn/articles/4235.html)
 
 
 后续看一手的技术相关文档：
@@ -30,3 +32,13 @@ boost的TR1：
     - C++, [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
     - Google 的 Shell 脚本编程规范, [Shell Style Guide](https://google.github.io/styleguide/shell.xml)
     - Effective Go, [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
+* 博客
+    - Tony Bai，Go&C: https://tonybai.com/articles/
+        + [如何在Go语言中使用Websockets：最佳工具与行动指南](https://tonybai.com/2019/09/28/how-to-build-websockets-in-go/)
+* 官方
+    - [golang.org](https://golang.org/)
+        + go.dev发布之后，golang.org官网将更加聚焦go开源项目本身的开发、语言演化以及Go版本发布
+    - [go.dev](https://go.dev/)
+        + 该站点被Go核心团队寄望于成为全世界Gopher开发人员的中心
+        + go.dev将成为gopher日常使用go语言的中心，包括go学习、go方案、go应用案例等
+        + [Go官方发布的go.dev给gopher们带来了什么](https://tonybai.com/2019/11/14/what-the-godev-website-bring-to-gophers/)

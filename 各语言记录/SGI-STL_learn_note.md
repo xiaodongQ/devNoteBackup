@@ -112,13 +112,13 @@ github repository website:
     - vector 与 array 唯一区别是空间的运用的灵活性
     - 增加新元素，如果超过当时的容量，则容量会扩充至两倍。
 
-按自己的节奏来梳理，参考已有的笔记。不完全按已有笔记顺序来，印象和理解不深。
+按自己的节奏来梳理，参考已有的笔记。思路不完全照着已有笔记的顺序，否则印象和理解不深。
 
 ### vector
 
 目录: `SGI-STL\The Annotated STL Sources V3.3\container\sequence container\vector`
 
-#### bvector.h 文件
+* bvector.h 文件
 
 
 
