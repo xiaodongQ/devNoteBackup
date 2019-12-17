@@ -15,9 +15,11 @@ You've probably been there too. At the beginning of a project, everybody has lot
 
 When did things go wrong? Probably already at the kick-off meeting. Some of the project members didn't pay attention. Others didn't understand the point. Worse, some disagreed and were already planning their coding standard rebellion(英 /rɪˈbeljən/,反抗；不服从). Finally, some got the point and agreed but, when the pressure in the project got too high, they had to let something go. Well-formatted code doesn't earn you points with a customer that wants more functionality. Furthermore, following a coding standard can be quite a boring task if it isn't automated. Just try to indent a messy(凌乱；乱七八糟) class by hand to find out for yourself.
 
-但是如果还是这样的问题(有了规范还是一团糟)，那为什么一开始我们还是要有一个编码规范呢？以统一格式来格式化代码的一个原因是防止任何人都可以用他/她私有的方式来格式化一小块代码。为了避免一些常见的错误，我们可能会希望阻止开发者使用某些反模式。总之，一个编码标准应该使项目工作更容易，并且从始至终保持维护和开发的速度。因此，每个人也应该就编码规范达成一致--如果一个开发者用三个空格缩进代码而另一个用四个空格，这是没有什么帮助的。
+但是如果还是这样的问题(有了规范还是一团糟)，那为什么一开始我们还是要有一个编码规范呢？以统一格式来格式化代码的一个原因是防止任何人都可以用他/她私有的方式来格式化一小块代码。为了避免一些常见的错误，我们可能会希望阻止开发者使用某些反模式。总之，一个编码标准应该使项目工作更容易，并且从始至终保持维护和开发的速度。因此，每个人也应该就编码规范达成一致--如果一个开发者用三个空格缩进代码而另一个用四个空格，这对项目并没有什么帮助。
 
 But if it's such a problem, why is that we want to have a coding standard in the first place? One reason to format the code in a uniform way is so that nobody can "own" a piece of code just by formatting it in his or her private way. We may want to prevent developers using certain(必然的；某些) anti-patterns(anti,反对的), in order to avoid some common bugs. In all, a coding standard should make it easier to work in the project, and maintain development speed from the beginning to the end. It follows then that everybody should agree on the coding standard too — it does not help if one developer uses three spaces to indent code, and another one four.
+
+有许多可以用于生成代码质量报告和文档、并可用于维护编码规范的工具，但是那不是完整的解决方案。
 
 There exists a wealth of tools that can be used to produce code quality reports and to document and maintain the coding standard, but that isn't the whole solution. It should be automated and enforced where possible. Here are a few examples:
 
