@@ -33,7 +33,7 @@ boost的TR1：
     - Google 的 Shell 脚本编程规范, [Shell Style Guide](https://google.github.io/styleguide/shell.xml)
     - Effective Go, [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
 * 博客
-    - Tony Bai，Go&C: https://tonybai.com/articles/
+    - Tony Bai，Go&C: [Tony Bai](https://tonybai.com/articles/)
         + [如何在Go语言中使用Websockets：最佳工具与行动指南](https://tonybai.com/2019/09/28/how-to-build-websockets-in-go/)
 * 官方
     - [golang.org](https://golang.org/)

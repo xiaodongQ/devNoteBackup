@@ -29,12 +29,12 @@ You'll see users getting stuck(英 /stʌk/, 卡住的，卡壳). When you get st
 
 用户往往敷衍了事，他们会找到一个可行的方法，并且不管有多复杂他们都会坚持使用它。提供一种显而易见的做事方式比提供两三种捷径更好。你还会发现用户说他们想要什么和他们实际做的之间存在差距。这很令人担忧，因为正常的收集用户需求的方式就是询问他们。这就是为什么观察用户是抓住需求的最佳方式。花一个小时观察用户比花一天时间猜用户想要什么更能提供有用的信息。
 
-Giles Colborne
-
-(《简约至上》的作者。物理学出身，参与过航空航天项目，干过出版，现在开办了自己的设计公司cxpartners。
-参考：[简约至上》作者Giles Colborne：让用户变成设计的一部分](http://www.woshipm.com/pd/130807.html))
-
 Users tend to muddle(英 /ˈmʌdl/, 困惑；混乱。muddle through 混过去；走过场；敷衍了事) through. They'll find a way that works and stick with it no matter how convoluted(英 /ˈkɒnvəluːtɪd/, 复杂的). It's better to provide one really obvious way of doing things than two or three shortcuts. You'll also find that there's a gap(英 /ɡæp/, 差距；分歧) between what users say they want and what they actually do. That's worrying as the normal way of gathering(英 /ˈɡæðərɪŋ/,收集，聚集) user requirements is to ask them. It's why the best way to capture requirements is to watch users. Spending an hour watching users is more informative than spending a day guessing what they want.
+
+* Giles Colborne
+    - (《简约至上》的作者。物理学出身，参与过航空航天项目，干过出版，现在开办了自己的设计公司cxpartners。
+    - 参考：[简约至上》作者Giles Colborne：让用户变成设计的一部分](http://www.woshipm.com/pd/130807.html))
+
 by Giles Colborne
 
 ### 思考
