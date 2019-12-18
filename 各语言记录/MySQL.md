@@ -168,9 +168,17 @@ lftp -u $FTPU,$FTPP -e "mkdir /mysql/$NOW;cd /mysql/$NOW; mput /backup/mysql/*; 
 
 ## 27.8 MySQL C API
 
-[27.8 MySQL C API](https://dev.mysql.com/doc/refman/5.7/en/c-api.html)
-
-implemented in the libmysqlclient library
+* [27.8 MySQL C API](https://dev.mysql.com/doc/refman/5.7/en/c-api.html)
+    - 实现在库 libmysqlclient 里面(`libmysqlclient.so`、`libmysqlclient.a`)
+    - 可以用 `mysql_config` 来查看编译需要的选项
+        + 查看其内容是一个shell脚本，里面会获取mysql安装的位数，并执行根据位数拼接得到的脚本，e.g. `mysql_config-64`，而`mysql_config-64`中定义了各个路径/库名等信息，根据传入的选项进行echo输出(不传选项则会打印提示各选项会获取的内容)
+        + `mysql_config --include`, -I头文件路径
+        + `mysql_config --libs`, 编译需要链接的库名、库路径、依赖库等编译选项
+        + `--cflags`, 返回为："-I/usr/include/mysql -m64 "
+            * -m选项用来指定位数
+            * -m32 int、long、指针都指定为4字节(32bits)
+            * -m64 int指定为4字节，long、指针指定为8字节(64bits)
+        + `--cxxflags`, 返回为： "-I/usr/include/mysql -m64 "
 
 [27.8.6 C API Function Overview](https://dev.mysql.com/doc/refman/5.7/en/c-api-function-overview.html)
 
