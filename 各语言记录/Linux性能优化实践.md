@@ -234,7 +234,7 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
             * 第二种常见用法 `perf record` 和 `perf report`
                 - `perf top` 虽然实时展示了系统的性能信息，但它的缺点是并不保存数据，也就无法用于离线或者后续的分析。
                 - 而 `perf record` 则提供了保存数据的功能，保存后的数据，需要你用 `perf report` 解析展示
-                - `perf record [-g]`，一段时间后按Ctrl+C终止采样； 再执行`perf report [-g]`，展示类似于perf top的报告
+                - `perf record [-g]`，一段时间后按Ctrl+C终止采样； 再执行`perf report`，展示类似于perf top的报告
                     + 在实际使用中，我们还经常为其加上-g参数，开启调用关系的采样，方便我们根据调用链来分析性能问题。
 
 
@@ -344,3 +344,4 @@ Percentage of the requests served within a certain time (ms)
   99%  10606
  100%  10606 (longest request)
 ```
+
