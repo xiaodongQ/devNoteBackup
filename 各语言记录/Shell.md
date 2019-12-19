@@ -43,6 +43,10 @@ demoFun
 echo "-----函数执行完毕-----"
 ```
 
+###  参数
+
+$0 是命令本身
+
 ### Shell判断字符串包含关系的几种方法
 
 [Shell判断字符串包含关系的几种方法](https://www.cnblogs.com/AndyStudy/p/6064834.html)

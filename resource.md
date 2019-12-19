@@ -9,8 +9,9 @@
 * 英文能力
 * 问问题的能力
     - X-Y 问题：《[X-Y 问题](https://coolshell.cn/articles/10804.html)》
-        + 没有去问怎么解决问题X，而是去问解决方案Y应该怎么去实现和操作
+        + 没有去问怎么解决问题X，而是去问解决方案Y应该怎么去实现和操作(有，改之)
         + 在一个根本错误的方向上浪费他人大量的时间和精力！
+        + 这样问问题可能错过更好更合适的方案，除非你告诉大家X是什么
     - StackOverflow 上如何问问题的一些提示 [FAQ for Stack Exchange sites](https://meta.stackexchange.com/questions/7931/faq-for-stack-exchange-sites)
 * 你不知道你不知道的
     - [程序员的谎谬之言还是至理名言？](https://coolshell.cn/articles/4235.html)

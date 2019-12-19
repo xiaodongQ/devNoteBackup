@@ -29,6 +29,89 @@ Head-of-line blocking，新请求的发起必须等待服务器对前一个请�
 HTTP头部包含大量重复数据，比如cookies，多个请求的cookie可能完全一样
 
 
+### gRPC环境和protoc.exe、protoc-gen-go.exe
+
+**gRPC调用时数据错位，可能是客户端pb协议和服务端不一致**
+
+[gRPC-go protoc](https://www.jianshu.com/p/ec3e75e5aad1)
+
+1、下载protobuf的编译器protoc
+https://github.com/google/protobuf/releases
+window：
+  下载: protoc-3.3.0-win32.zip (本人protoc-3.9.0-win64.zip)
+  解压，把bin目录下的protoc.exe复制到GOPATH/bin下，GOPATH/bin加入环境变量。
+当然也可放在其他目录，需加入环境变量，能让系统找到protoc.exe (本人放到了C:\Go\bin)
+
+linux：
+    下载：protoc-3.3.0-linux-x86_64.zip 或 protoc-3.3.0-linux-x86_32.zip
+解压，把bin目录下的protoc复制到GOPATH/bin下，GOPATH/bin加入环境变量。
+如果喜欢编译安装的，也可下载源码自行安装，最后将可执行文件加入环境变量。
+
+2、获取protobuf的编译器插件protoc-gen-go
+  进入GOPATH目录
+  运行
+> go get -u github.com/golang/protobuf/protoc-gen-go
+  如果成功，会在GOPATH/bin下生成protoc-gen-go.exe文件 (在path中加下该环境变量)
+
+
+### 生成
+$ protoc --go_out=./ *.proto #不加gRPC插件               **不使用**
+$ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
+对比发现内容增加
+得到 helloServer.pb.go文件
+
+* `protoc` 命令
+    - 该命令工具用于解析proto文件并根据选项生成输出各语言对应的grpc文件
+    - (linux)直接键入`protoc`，会提示各个选项
+        + `-I PATH` 或者 `--proto_path=PATH` 指定查找import的路径，可以指定多次，会按顺序搜索
+        + `-o FILE` 指定生成的文件名
+        + `--plugin=EXECUTABLE` 指定一个可执行插件
+            * 一般来说`protoc`会查找PATH目录来获取插件，但是也可以使用这个标志来指定额外的可执行插件。
+            * 此外，`EXECUTABLE`可能是`NAME=PATH`的形式， 在这种情况下，给定的插件名被映射到给定的可执行文件，即使可执行文件本身的名称不同
+            * e.g. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin`
+        + `--cpp_out=OUT_DIR` 生成C++头文件和源文件，`OUT_DIR`指定生成文件放置的目录
+        + `--java_out/--js_out/--python_out=OUT_DIR` 生成Java/JavaScript/Python等
+* 示例
+    - Go `protoc --go_out=plugins=gRPC:./ *.proto`
+    - C++
+        + 官方示例：[Generating client and server code](https://grpc.io/docs/tutorials/basic/cpp/)
+        + 执行下面的生成命令，生成客户端和服务端代码
+        + 会生成四个文件
+            * route_guide.pb.h，该头文件声明了`message`定义的类
+            * route_guide.pb.cc，包含了`message`定义的类的实现
+            * route_guide.grpc.pb.h，该头文件声明了`service`定义的类
+            * route_guide.grpc.pb.cc，包含了`service`定义的类的实现
+        + 创建服务端，包含两部分
+            * 实现根据定义的`service`生成的服务接口，这里是服务中实际要做的工作
+                - `class RouteGuideImpl`继承实现`RouteGuide::Service`，这里是同步服务，也可以继承实现异步服务`RouteGuide::AsyncService`
+                - 需要实现所有`service`中定义的方法(成员函数)
+                    + e.g. 其中一个：`Status GetFeature(ServerContext* context, const Point* point, Feature* feature) override {}`
+                    + 传入一个用于RPC的`ServerContext* context`上下文对象
+                - 注意所有方法都可能被多线程调用，所以方法实现中需要保证线程安全
+            * 运行gRPC服务来监听客户端请求
+                - 启动服务需要用到一个 `ServerBuilder` 工厂类，需要以下步骤
+                    + 1. 根据上一步的实现的类`RouteGuideImpl`创建一个实例
+                    + 2. 创建一个 `ServerBuilder` 工厂类
+                    + 3. 调用工厂类的 `AddListeningPort()`方法 来指定要监听的地址和端口
+                    + 4. 调用工厂类的 `RegisterService()`方法 注册 定义的实现类
+                    + 5. 调用工厂类的 `BuildAndStart()`方法 为服务service创建和启动一个RPC服务端server
+                    + 6. 调用server的 `wait()` 方法 进行阻塞等待处理。 当调用`Shutdown()`时程序被kill
+        + 创建客户端
+            * 为了调用服务端的方法，需要创建一个`stub`存根
+                - 首先，为`stub`创建一个gRPC `channel`，`channel`指定服务端的地址和端口
+                    + `grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());`
+                    + grpc::InsecureChannelCredentials() 指定 非SSL
+                - 然后，调用根据.proto生成的类`RouteGuide`中的 `NewStub` 方法，使用上一步的`channel`来创建`stub`
+                    + `RouteGuideClient(std::shared_ptr<ChannelInterface> channel, const std::string& db): stub_(RouteGuide::NewStub(channel)) {}`
+            * 
+
+C++生成命令：
+
+```
+protoc -I ../protos --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` ./route_guide.proto
+protoc -I ../protos --cpp_out=. ./route_guide.proto
+```
+
 ### protocol buffer
 
 [Potocol Buffer详解](https://www.cnblogs.com/oumyye/p/4652780.html)
@@ -57,14 +140,14 @@ Protobuf 编译器会将 .proto 文件编译生成对应的数据访问类以对
 #### 定义第二个（含有枚举字段）Protocol Buffer消息。
 
 enum UserStatus {
-          OFFLINE = 0;  //表示处于离线状态的用户
-          ONLINE = 1;   //表示处于在线状态的用户
-      }
-      message UserInfo {
-          required int64 acctID = 1;
-          required string name = 2;
-          required UserStatus status = 3;
-      }
+    OFFLINE = 0;  //表示处于离线状态的用户
+    ONLINE = 1;   //表示处于在线状态的用户
+}
+message UserInfo {
+    required int64 acctID = 1;
+    required string name = 2;
+    required UserStatus status = 3;
+}
 
    以上消息定义的关键性说明:
    enum是枚举类型定义的关键字
@@ -78,23 +161,23 @@ enum UserStatus {
 可以在同一个.proto文件中定义多个message
 
 enum UserStatus {
-          OFFLINE = 0;
-          ONLINE = 1;
-      }
+    OFFLINE = 0;
+    ONLINE = 1;
+}
 message UserInfo {
-          required int64 acctID = 1;
-          required string name = 2;
-          required UserStatus status = 3;
-      }
+    required int64 acctID = 1;
+    required string name = 2;
+    required UserStatus status = 3;
+}
 message LogonRespMessage {
-          required LoginResult logonResult = 1;
-          required UserInfo userInfo = 2;
-      }
+    required LoginResult logonResult = 1;
+    required UserInfo userInfo = 2;
+}
 
-      说明：
-      LogonRespMessage消息的定义中包含另外一个消息类型作为其字段，如UserInfo userInfo
-      Protocol Buffer提供了另外一个关键字import，这样我们便可以将很多通用的message定义在同一个.proto文件中，而其他消息定义文件可以通过import的方式将该文件中定义的消息包含进来，如：
-      import "myproject/CommonMessages.proto"
+    说明：
+    LogonRespMessage消息的定义中包含另外一个消息类型作为其字段，如UserInfo userInfo
+    Protocol Buffer提供了另外一个关键字import，这样我们便可以将很多通用的message定义在同一个.proto文件中，而其他消息定义文件可以通过import的方式将该文件中定义的消息包含进来，如：
+    import "myproject/CommonMessages.proto"
 
 > Potocol Buffer部分概念原则
 
@@ -219,42 +302,6 @@ void TestStruct::CopyFrom(const TestStruct& from) {
 ```
 
 ## gRPC go
-
-### gRPC环境和protoc.exe、protoc-gen-go.exe
-
-**gRPC调用时数据错位，可能是客户端pb协议和服务端不一致**
-
-[gRPC-go protoc](https://www.jianshu.com/p/ec3e75e5aad1)
-作者：Feng_Sir
-链接：https://www.jianshu.com/p/ec3e75e5aad1
-来源：简书
-简书著作权归作者所有，任何形式的转载都请联系作者获得授权并注明出处。
-
-1、下载protobuf的编译器protoc
-https://github.com/google/protobuf/releases
-window：
-  下载: protoc-3.3.0-win32.zip (本人protoc-3.9.0-win64.zip)
-  解压，把bin目录下的protoc.exe复制到GOPATH/bin下，GOPATH/bin加入环境变量。
-当然也可放在其他目录，需加入环境变量，能让系统找到protoc.exe (本人放到了C:\Go\bin)
-
-linux：
-    下载：protoc-3.3.0-linux-x86_64.zip 或 protoc-3.3.0-linux-x86_32.zip
-解压，把bin目录下的protoc复制到GOPATH/bin下，GOPATH/bin加入环境变量。
-如果喜欢编译安装的，也可下载源码自行安装，最后将可执行文件加入环境变量。
-
-2、获取protobuf的编译器插件protoc-gen-go
-  进入GOPATH目录
-  运行
-> go get -u github.com/golang/protobuf/protoc-gen-go
-  如果成功，会在GOPATH/bin下生成protoc-gen-go.exe文件 (在path中加下该环境变量)
-
-
-### 生成
-$ protoc --go_out=./ *.proto #不加gRPC插件               **不使用**
-$ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
-对比发现内容增加
-得到 helloServer.pb.go文件
-
 
 ### 使用流程
 

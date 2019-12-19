@@ -199,7 +199,7 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
 [基础篇：某个应用的CPU使用率居然达到100%，我该怎么办？](https://time.geekbang.org/column/article/70476)
 
 * CPU使用率
-    - 作为最常用也是最熟悉的 CPU 指标，你能说出 CPU 使用率到底是*怎么算出来的*吗？
+    - 作为最常用也是最熟悉的 CPU 指标，你能说出 CPU 使用率到底是**怎么算出来的**吗？
     - 为了维护 CPU 时间，Linux 通过事先定义的节拍率（内核中表示为 HZ），触发时间中断，并使用全局变量 *Jiffies* 记录了开机以来的节拍数。每发生一次时间中断，Jiffies 的值就加 1。
     - 节拍率 HZ 是*内核的可配选项*，可以设置为 100、250、1000 等。不同的系统可能设置不同数值，你可以通过查询 /boot/config 内核选项来查看它的配置值。 (`CONFIG_HZ` 配置项，看自己的CentOS环境里：CONFIG_HZ=1000)
     - 正因为节拍率 HZ 是内核选项，所以用户空间程序并不能直接访问。为了方便用户空间程序，内核还提供了一个用户空间节拍率 USER_HZ，它总是固定为 100，也就是 1/100 秒
@@ -295,7 +295,7 @@ Overhead  Shared Object                 Symbol
                 - 分析perf.data, `perf_4.9 report`
                     + 注意：最后运行的工具名字是容器内部安装的版本 perf_4.9，而不是 perf 命令，这是因为 perf 会去跟内核的版本进行匹配，但镜像里面安装的perf版本有可能跟虚拟机的内核版本不一致。
 
-* `ab -c 10 -n 100 http://192.168.50.118:10000/`运行结果(虚拟机在跑别的程序，消耗了大部分CPU)：
+* `ab -c 10 -n 10000 http://192.168.50.118:10000/`运行结果(中途打断了，执行2703个请求)：
 
 ```
 [root@localhost build]# ab -c 10 -n 100 http://192.168.50.118:10000/
@@ -315,33 +315,33 @@ Document Path:          /
 Document Length:        9 bytes
 
 Concurrency Level:      10
-Time taken for tests:   78.361 seconds
-Complete requests:      100
+Time taken for tests:   172.423 seconds
+Complete requests:      2703
 Failed requests:        0
 Write errors:           0
-Total transferred:      17200 bytes
-HTML transferred:       900 bytes
-Requests per second:    1.28 [#/sec] (mean)
-Time per request:       7836.124 [ms] (mean)
-Time per request:       783.612 [ms] (mean, across all concurrent requests)
-Transfer rate:          0.21 [Kbytes/sec] received
+Total transferred:      464916 bytes
+HTML transferred:       24327 bytes
+Requests per second:    15.68 [#/sec] (mean)
+Time per request:       637.895 [ms] (mean)
+Time per request:       63.789 [ms] (mean, across all concurrent requests)
+Transfer rate:          2.63 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    1   2.3      0      14
-Processing:   832 7556 1197.7   7666   10593
-Waiting:      831 7553 1197.6   7641   10528
-Total:        832 7557 1198.2   7666   10606
+Connect:        0    1   1.4      0      17
+Processing:   126  635  82.9    639     910
+Waiting:      125  635  82.9    639     910
+Total:        126  636  82.9    639     910
 
 Percentage of the requests served within a certain time (ms)
-  50%   7666
-  66%   7800
-  75%   8032
-  80%   8208
-  90%   8372
-  95%   8477
-  98%   8588
-  99%  10606
- 100%  10606 (longest request)
+  50%    639
+  66%    676
+  75%    697
+  80%    708
+  90%    737
+  95%    762
+  98%    792
+  99%    817
+ 100%    910 (longest request)
 ```
 
