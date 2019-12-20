@@ -139,6 +139,8 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
                     + `ClientReaderWriter`对象既可以读也可以写消息，读写方式和服务端`Read()`和客户端流`Write()`一样
                     + 读写操作的先后顺序可以任意，它们之间的操作也是独立的
 
+* CopyFrom
+    - `void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;`
 
 
 ### protocol buffer
