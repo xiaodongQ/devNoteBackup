@@ -133,7 +133,11 @@
         + 速记select查指定表或者所有数据库用`()`不带`s`,show不用括号带s
 
 * 备份
+    - 使用客户端工具进行导出和导入
+        + MySQL Workbench：Server->Data Export/Import->选择数据库->选择导出到文件/项目目录->Export Progress页进行导出(点击Start Export)
     - `mysqldump ---user [user name] ---password=[password] [database name] > [dump file]`
+
+e.g.示例(暂未测试)
 
 ```sh
 #!/bin/bash

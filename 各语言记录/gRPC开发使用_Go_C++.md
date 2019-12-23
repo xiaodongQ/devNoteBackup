@@ -72,75 +72,101 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
         + `--cpp_out=OUT_DIR` 生成C++头文件和源文件，`OUT_DIR`指定生成文件放置的目录
         + `--java_out/--js_out/--python_out=OUT_DIR` 生成Java/JavaScript/Python等
 
-### 示例流程和源码结构
+## Go示例流程和源码结构
 
 * Go `protoc --go_out=plugins=gRPC:./ *.proto`
     - [gRPC Basics - Go](https://grpc.io/docs/tutorials/basic/go/)
-* C++
-    - 官方示例：[Generating client and server code](https://grpc.io/docs/tutorials/basic/cpp/)
-    - 执行下面的生成命令，生成客户端和服务端代码
-        + protoc -I ../../protos --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` ../../protos/route_guide.proto
-            * 生成 `.grpc.pb.h` 和 `.grpc.pb.cc`，声明和实现了.protoc中的`service`定义的服务类
-        + protoc -I ../../protos --cpp_out=. ../../protos/route_guide.proto
-            * 生成 `.pb.h` 和 `.pb.cc`，声明和实现了`message`定义的类
-    - 会生成四个文件
-        + route_guide.pb.h，该头文件声明了`message`定义的类
-        + route_guide.pb.cc，包含了`message`定义的类的实现
-        + route_guide.grpc.pb.h，该头文件声明了`service`定义的类
-        + route_guide.grpc.pb.cc，包含了`service`定义的类的实现
-    - 创建服务端，包含两部分
-        + 实现根据定义的`service`生成的服务接口，这里是服务中实际要做的工作
-            * `class RouteGuideImpl`继承实现`RouteGuide::Service`，这里是同步服务，也可以继承实现异步服务`RouteGuide::AsyncService`
-            * 需要实现所有`service`中定义的方法(成员函数)
-                - e.g. 其中一个：`Status GetFeature(ServerContext* context, const Point* point, Feature* feature) override {}`
-                - 传入一个用于RPC的`ServerContext* context`上下文对象
-            * 注意所有方法都可能被多线程调用，所以方法实现中需要保证线程安全
-        + 运行gRPC服务来监听客户端请求
-            * 启动服务需要用到一个 `ServerBuilder` 工厂类，需要以下步骤
-                - 1. 根据上一步的实现的类`RouteGuideImpl`创建一个实例
-                - 2. 创建一个 `ServerBuilder` 工厂类
-                - 3. 调用工厂类的 `AddListeningPort()`方法 来指定要监听的地址和端口
-                - 4. 调用工厂类的 `RegisterService()`方法 注册 定义的实现类
-                - 5. 调用工厂类的 `BuildAndStart()`方法 为服务service创建和启动一个RPC服务端server
-                - 6. 调用server的 `wait()` 方法 进行阻塞等待处理。 当调用`Shutdown()`时程序被kill
-    - 创建客户端并调用服务方法
-        + 为了调用服务端的方法，需要创建一个`stub`存根
-            * 首先，为`stub`创建一个gRPC `channel`，`channel`指定服务端的地址和端口
-                - `grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());`
-                - grpc::InsecureChannelCredentials() 指定 非SSL
-            * 然后，调用根据.proto生成的类`RouteGuide`中的 `NewStub` 方法，使用上一步的`channel`来创建`stub`
-                - `RouteGuideClient(std::shared_ptr<ChannelInterface> channel, const std::string& db): stub_(RouteGuide::NewStub(channel)) {}`
-        + 调用服务的方法(示例中只演示同步阻塞方法)
-            * 创建一个客户端上下文 `ClientContext`对象(服务端创建时也会类似传入一个`ServerContext* context`对象)，可以给这个对象设置一些选项
-            * 类似本地方法一样调用方法：`Status status = stub_->GetFeature(&context, point, feature);`
-            * service定义：`rpc GetFeature(Point) returns (Feature) {}`
-            * 调用：`Status status = stub_->GetFeature(&context, point, feature);`
-        + 流式的RPC
-            * [这几种类型的service示例](https://grpc.io/docs/tutorials/basic/cpp/)
-            * rpc service 定义：[server](https://grpc.io/docs/tutorials/basic/cpp/#server)
-            * 服务端的流(server-side streaming)
-                - service定义：`rpc ListFeatures(Rectangle) returns (stream Feature) {}`
-                - 实际调用：`std::unique_ptr<ClientReader<Feature> > reader(stub_->ListFeatures(&context, rect));`
-                - 跟之前的传入`context, request`、`response`不一样的是：现在传入`context, request`，返回一个`ClientReader`对象
-                    + 客户端可以使用这个`ClientReader`来多次通过`Read()`服务端的应答
-                    + `Read()`的返回值为true则可以继续读取，false则结束
-                - 最后通过`ClientReader`对象的 `Finish()` 方法来完成调用并获取RPC状态
-            * 客户端的流(client-side streaming)
-                - service定义：`rpc RecordRoute(stream Point) returns (RouteSummary) {}`
-                - 实际调用：`std::unique_ptr<ClientWriter<Point> > writer(stub_->RecordRoute(&context, &stats));`
-                - 和上面类似，除了传入`context`、`response`外，返回的是一个`ClientWriter`对象
-                    + 向流里面使用这个`ClientWriter`对象的`Write()`方法写入客户端的请求
-                    + 所有都发送完则使用 `WritesDone()` 方法告诉gRPC已经完成了写入
-                    + 然后使用 `Finish()` 完成调用并获取RPC状态
-            * 双向流(bidirectional streaming) (英 /ˌbaɪdəˈrekʃənl/ 双向的)
-                - service定义：`rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}`
-                - 调用：`std::shared_ptr<ClientReaderWriter<RouteNote, RouteNote> > stream(stub_->RouteChat(&context));`
-                - 传入只有一个 `context`，返回一个 `ClientReaderWriter` 对象
-                    + `ClientReaderWriter`对象既可以读也可以写消息，读写方式和服务端`Read()`和客户端流`Write()`一样
-                    + 读写操作的先后顺序可以任意，它们之间的操作也是独立的
 
-* CopyFrom
-    - `void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;`
+## C++示例流程和源码结构
+
+- 官方示例：[Generating client and server code](https://grpc.io/docs/tutorials/basic/cpp/)
+- 执行下面的生成命令，生成客户端和服务端代码
+    + protoc -I ../../protos --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` ../../protos/route_guide.proto
+        * 生成 `.grpc.pb.h` 和 `.grpc.pb.cc`，声明和实现了.protoc中的`service`定义的服务类
+    + protoc -I ../../protos --cpp_out=. ../../protos/route_guide.proto
+        * 生成 `.pb.h` 和 `.pb.cc`，声明和实现了`message`定义的类
+- 会生成四个文件
+    + route_guide.pb.h，该头文件声明了`message`定义的类
+    + route_guide.pb.cc，包含了`message`定义的类的实现
+    + route_guide.grpc.pb.h，该头文件声明了`service`定义的类
+    + route_guide.grpc.pb.cc，包含了`service`定义的类的实现
+- 创建服务端，包含两部分
+    + 实现根据定义的`service`生成的服务接口，这里是服务中实际要做的工作
+        * `class RouteGuideImpl`继承实现`RouteGuide::Service`，这里是同步服务，也可以继承实现异步服务`RouteGuide::AsyncService`
+        * 需要实现所有`service`中定义的方法(成员函数)
+            - e.g. 其中一个：`Status GetFeature(ServerContext* context, const Point* point, Feature* feature) override {}`
+            - 传入一个用于RPC的`ServerContext* context`上下文对象
+        * 注意所有方法都可能被多线程调用，所以方法实现中需要保证线程安全
+    + 运行gRPC服务来监听客户端请求
+        * 启动服务需要用到一个 `ServerBuilder` 工厂类，需要以下步骤
+            - 1. 根据上一步的实现的类`RouteGuideImpl`创建一个实例
+            - 2. 创建一个 `ServerBuilder` 工厂类
+            - 3. 调用工厂类的 `AddListeningPort()`方法 来指定要监听的地址和端口
+            - 4. 调用工厂类的 `RegisterService()`方法 注册 定义的实现类
+            - 5. 调用工厂类的 `BuildAndStart()`方法 为服务service创建和启动一个RPC服务端server
+            - 6. 调用server的 `wait()` 方法 进行阻塞等待处理。 当调用`Shutdown()`时程序被kill
+- 创建客户端并调用服务方法
+    + 为了调用服务端的方法，需要创建一个`stub`存根
+        * 首先，为`stub`创建一个gRPC `channel`，`channel`指定服务端的地址和端口
+            - `grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());`
+            - grpc::InsecureChannelCredentials() 指定 非SSL
+        * 然后，调用根据.proto生成的类`RouteGuide`中的 `NewStub` 方法，使用上一步的`channel`来创建`stub`
+            - `RouteGuideClient(std::shared_ptr<ChannelInterface> channel, const std::string& db): stub_(RouteGuide::NewStub(channel)) {}`
+    + 调用服务的方法(示例中只演示同步阻塞方法)
+        * 创建一个客户端上下文 `ClientContext`对象(服务端创建时也会类似传入一个`ServerContext* context`对象)，可以给这个对象设置一些选项
+        * 类似本地方法一样调用方法：`Status status = stub_->GetFeature(&context, point, feature);`
+        * service定义：`rpc GetFeature(Point) returns (Feature) {}`
+        * 调用：`Status status = stub_->GetFeature(&context, point, feature);`
+    + 流式的RPC
+        * [这几种类型的service示例](https://grpc.io/docs/tutorials/basic/cpp/)
+        * rpc service 定义：[server](https://grpc.io/docs/tutorials/basic/cpp/#server)
+        * 服务端的流(server-side streaming)
+            - service定义：`rpc ListFeatures(Rectangle) returns (stream Feature) {}`
+            - 实际调用：`std::unique_ptr<ClientReader<Feature> > reader(stub_->ListFeatures(&context, rect));`
+            - 跟之前的传入`context, request`、`response`不一样的是：现在传入`context, request`，返回一个`ClientReader`对象
+                + 客户端可以使用这个`ClientReader`来多次通过`Read()`服务端的应答
+                + `Read()`的返回值为true则可以继续读取，false则结束
+            - 最后通过`ClientReader`对象的 `Finish()` 方法来完成调用并获取RPC状态
+        * 客户端的流(client-side streaming)
+            - service定义：`rpc RecordRoute(stream Point) returns (RouteSummary) {}`
+            - 实际调用：`std::unique_ptr<ClientWriter<Point> > writer(stub_->RecordRoute(&context, &stats));`
+            - 和上面类似，除了传入`context`、`response`外，返回的是一个`ClientWriter`对象
+                + 向流里面使用这个`ClientWriter`对象的`Write()`方法写入客户端的请求
+                + 所有都发送完则使用 `WritesDone()` 方法告诉gRPC已经完成了写入
+                + 然后使用 `Finish()` 完成调用并获取RPC状态
+        * 双向流(bidirectional streaming) (英 /ˌbaɪdəˈrekʃənl/ 双向的)
+            - service定义：`rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}`
+            - 调用：`std::shared_ptr<ClientReaderWriter<RouteNote, RouteNote> > stream(stub_->RouteChat(&context));`
+            - 传入只有一个 `context`，返回一个 `ClientReaderWriter` 对象
+                + `ClientReaderWriter`对象既可以读也可以写消息，读写方式和服务端`Read()`和客户端流`Write()`一样
+                + 读写操作的先后顺序可以任意，它们之间的操作也是独立的
+
+### CopyFrom
+
+- message定义的类中，每个类都会有两个`CopyFrom`实现(重载关系)
+    + `void XdTest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)`
+    + `void XdTest::CopyFrom(const XdTest& from)`
+    + 自定义类:`XdTest` 继承自类:`::PROTOBUF_NAMESPACE_ID::Message`，由于用的是引用`&`而不是指针，所以定成两个方法(若传入指针则可只有一个方法用基类指针来实现多态)
+
+#### `void XdTest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)`
+
+* 在.pb.h(如上面的说明所说，该头文件声明了`message`定义的类)中的声明为：`void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;`
+    - 函数使用`final`关键字说明该函数不能被派生类重写
+* 逻辑：
+    - 1. 判断 `if (&from == this)`，是则直接return，不需要再copy
+    - 2. 执行`.Clear();`
+        + 对于类中有repeated成员时，会执行`Clear()`方法。
+            - gRPC会基于成员生成模板类：`::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<成员类>`
+* `RepeatedPtrField` 类
+    - 定义在 `repeated_field.h`中，继承自 `RepeatedPtrFieldBase`类：`class RepeatedPtrField final : private internal::RepeatedPtrFieldBase{}`
+    - `RepeatedPtrFieldBase` 类
+        + 定义在 `repeated_field.h`中，其成员函数部分作为内联函数实现在.h中，部分实现在.cc中
+        + 成员变量
+            * static const int kInitialSize = 0;
+
+#### `void XdTest::CopyFrom(const XdTest& from)`
+
+在.pb.h中的声明为：`void CopyFrom(const XdTest& from);`
 
 
 ### protocol buffer

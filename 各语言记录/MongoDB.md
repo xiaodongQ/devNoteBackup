@@ -1,5 +1,7 @@
 ## MongoDB教程
 
+MongoDB并非芒果(mango)的意思，而是源于 Humongous（巨大）一词。
+
 [MongoDB 教程](https://www.runoob.com/mongodb/mongodb-tutorial.html)
 
 MongoDB 是一个基于分布式文件存储的数据库。由 C++ 语言编写。旨在为 WEB 应用提供可扩展的高性能数据存储解决方案。
@@ -7,7 +9,7 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
 
 ### NoSQL
 
-关系数据库管理系统（RDBMS）
+关系数据库管理系统（Relational Database Management System：RDBMS）
     关系模型是非常适合于客户服务器编程，远远超出预期的利益，今天它是结构化数据存储在网络和商务应用的主导技术。
     关系型数据库遵循ACID规则
         1、A (Atomicity) 原子性
@@ -15,14 +17,14 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
         2、C (Consistency) 一致性
             数据库要一直处于一致的状态，事务的运行不会改变数据库原本的一致性约束。
                 例如现有完整性约束a+b=10，如果一个事务改变了a，那么必须得改变b，使得事务结束后依然满足a+b=10，否则事务失败。
-        3、I (Isolation) 独立性
+        3、I (Isolation) 隔离性
             指并发的事务之间不会互相影响
         4、D (Durability) 持久性
             指一旦事务提交后，它所做的修改将会永久的保存在数据库上，即使出现宕机也不会丢失。
 
 NoSQL 是一项全新的数据库革命性运动 提倡运用非关系型的数据存储
-    NoSQL有时也称作Not Only SQL的缩写，是对不同于传统的关系型数据库的数据库管理系统的统称。
-    NoSQL用于超大规模数据的存储。
+    NoSQL有时也称作`Not Only SQL`的缩写，是对不同于传统的关系型数据库的数据库管理系统的统称。
+    NoSQL用于**超大规模数据**的存储。
 
 RDBMS vs NoSQL
 RDBMS
@@ -37,66 +39,67 @@ NoSQL
 - 代表着不仅仅是SQL
 - 没有声明性查询语言
 - 没有预定义的模式
--键 - 值对存储，列存储，文档存储，图形数据库
+- 键-值对 存储，列存储，文档存储，图形数据库
 - 最终一致性，而非ACID属性
 - 非结构化和不可预知的数据
-- CAP定理
+- CAP定理(CAP theorem)
+    + 在计算机科学中, CAP定理（CAP theorem）, 又被称作 布鲁尔定理（Brewer's theorem）,它指出对于一个分布式计算系统来说，不可能同时满足以下三点:
+        * 一致性(Consistency) (所有节点在同一时间具有相同的数据)
+        * 可用性(Availability) (保证每个请求不管成功或者失败都有响应)
+        * 分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作)
+    + CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，最多只能同时较好的满足两个。
+    + 因此，根据 CAP 原理将 NoSQL 数据库分成了满足`CA`原则、满足`CP`原则和满足`AP`原则三大类：
+        * CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。
+        * CP - 满足一致性，分区容忍性的系统，通常性能不是特别高。
+        * AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。
+    + `BASE` 是NoSQL数据库通常对可用性及一致性的弱要求原则:
+        * Basically Availble --基本可用
+        * Soft-state --软状态/柔性事务。 "Soft state" 可以理解为"无连接"的, 而 "Hard state" 是"面向连接"的
+        * Eventual Consistency -- 最终一致性， 也是是 ACID 的最终目的。
 - 高性能，高可用性和可伸缩性
 
-CAP定理（CAP theorem）
-    在计算机科学中, CAP定理（CAP theorem）, 又被称作 布鲁尔定理（Brewer's theorem）, 它指出对于一个分布式计算系统来说，不可能同时满足以下三点:
-
-    一致性(Consistency) (所有节点在同一时间具有相同的数据)
-    可用性(Availability) (保证每个请求不管成功或者失败都有响应)
-    分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作)
-
-CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，最多只能同时较好的满足两个。
-
-因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类：
-    CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。
-    CP - 满足一致性，分区容忍性的系统，通常性能不是特别高。
-    AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。
-
-BASE 是NoSQL数据库通常对可用性及一致性的弱要求原则:
-    Basically Availble --基本可用
-    Soft-state --软状态/柔性事务。 "Soft state" 可以理解为"无连接"的, 而 "Hard state" 是"面向连接"的
-    Eventual Consistency -- 最终一致性， 也是是 ACID 的最终目的。
-
-NoSQL 数据库分类
-    列存储
-        (按列存储数据的。最大的特点是方便存储结构化和半结构化数据，方便做数据压缩，对针对某一列或者某几列的查询有非常大的IO优势。)
-        Hbase
-        Cassandra
-        Hypertable
-    文档存储
-        (文档存储一般用类似json的格式存储，存储的内容是文档型的。这样也就有机会对某些字段建立索引，实现关系数据库的某些功能。)
-        MongoDB
-        CouchDB
-    key-value存储
+* NoSQL 数据库分类
+    - 列存储
+        + (按列存储数据的。最大的特点是方便存储结构化和半结构化数据，方便做数据压缩，对针对某一列或者某几列的查询有非常大的IO优势。)
+        + Hbase
+        + Cassandra
+        + Hypertable
+    - 文档存储
+        + (文档存储一般用类似json的格式存储，存储的内容是文档型的。这样也就有机会对某些字段建立索引，实现关系数据库的某些功能。)
+        + MongoDB
+        + CouchDB
+    - key-value存储
         (通过key快速查询到其value。一般来说，存储不管value的格式，照单全收。)
-        Tokyo Cabinet / Tyrant
-        Berkeley DB
-        MemcacheDB
-        Redis
-    图存储
-        (图形关系的最佳存储。使用传统关系数据库来解决的话性能低下，而且设计使用不方便。)
-        Neo4J
-        FlockDB
-    对象存储
-        (通过类似面向对象语言的语法操作数据库，通过对象的方式存取数据。)
-        db4o
-        Versant
-    xml数据库
-        (高效的存储XML数据，并支持XML的内部查询语法，比如XQuery,Xpath。)
-        Berkeley DB XML
-        BaseX
+        + Tokyo Cabinet / Tyrant
+        + Berkeley DB
+        + MemcacheDB
+        + Redis
+    - 图存储
+        + (图形关系的最佳存储。使用传统关系数据库来解决的话性能低下，而且设计使用不方便。)
+        + Neo4J
+        + FlockDB
+    - 对象存储
+        + (通过类似面向对象语言的语法操作数据库，通过对象的方式存取数据。)
+        + db4o
+        + Versant
+    - xml数据库
+        + (高效的存储XML数据，并支持XML的内部查询语法，比如XQuery,Xpath。)
+        + Berkeley DB XML
+        + BaseX
 
 ### MongoDB
 
-MongoDB 将数据存储为一个文档，数据结构由键值(key=>value)对组成。MongoDB 文档类似于 JSON 对象。
+MongoDB 将数据存储为一个文档，数据结构由键值(key=>value)对组成。MongoDB 文档类似于 `JSON` 对象。
 字段值可以包含其他文档，数组及文档数组。
 
 2007年10月，MongoDB由10gen团队所发展。2009年2月首度推出。
+
+* MongoDB适用场景
+    - [1.3.10 MongoDB适用场景](https://www.cnblogs.com/clsn/p/8214194.html#auto_id_19)
+    - 网站数据、缓存等大尺寸、低价值的数据
+    - 在高伸缩性的场景，用于对象及JSON数据的存储
+* 慎用场景
+    - `PB数据`持久存储、大数据分析、数据湖(数据湖最初由大数据厂商提出)
 
 #### 概念
 
@@ -142,7 +145,7 @@ MongoDB的单个实例可以容纳多个独立的数据库，每一个都有自�
 
 ##### 文档(Document)
 
-文档是一组键值(key-value)对(即 BSON )。 Binary JSON(二进制JSON)
+文档是一组键值(key-value)对(即 `BSON` )。 `Binary JSON`(二进制JSON)
 MongoDB 的文档不需要设置相同的字段，并且相同的字段不需要相同的数据类型，这与关系型数据库有很大的区别，也是 MongoDB 非常突出的特点。
 
 需要注意的是：

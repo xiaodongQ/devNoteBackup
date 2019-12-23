@@ -10,6 +10,12 @@
  -->
 # SGI-STL学习笔记
 
+* SGI指的是：
+    - Silicon Graphics, Inc 硅谷图形公司(后来更名为SGI，历史上被称为Silicon Graphics Computer Systems, Inc 或SGCS) (硅谷图形计算机系统公司)
+    - 2006年3月8日，SGI申请破产保护
+    - 2016年8月11日，慧与科技（HPE, Hewlett Packard Enterprise）宣布以每股美金7.75, 合共2亿7仟5百万美金, 收购SGI所有股权
+    - [硅谷图形公司](https://zh.wikipedia.org/zh-hans/%E7%A1%85%E8%B0%B7%E5%9B%BE%E5%BD%A2%E5%85%AC%E5%8F%B8)
+
 ## 开发测试环境
 
 Oracle VM VirtualBox搭建的虚拟机
