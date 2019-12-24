@@ -385,3 +385,61 @@ Percentage of the requests served within a certain time (ms)
                 - [开发相关笔记记录](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95.md)中搜`火焰图`，关于"Brendan Gregg"：[Brendan Gregg: 一个实战派大神](https://book.douban.com/review/7894012/)
             * `perf-tools`是一些用于Linux ftrace和perf_events的正在开发和不受支持的性能分析工具的杂项集合
                 - 这些集合使用起来很简单：做一件事并把它做好
+
+## 案例篇：系统中出现大量不可中断进程和僵尸进程怎么办
+
+* 进程状态回顾
+    - 可以查看之前的记录(搜` ps`)：[开发相关笔记记录](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95.md)
+    - S(PROCESS STATE CODES): 进程状态
+        + R    running or runnable (on run queue)，运行或者可运行状态
+        + D    (Disk Sleep)uninterruptible sleep (usually IO)，不可中断睡眠状态(一般在跟硬件交互，最常见的是等待硬件设备的 I/O 响应)
+        + S    interruptible sleep (waiting for an event to complete)，可中断的的sleep
+        + Z    defunct ("zombie") process, terminated but not reaped by its parent，僵尸进程
+        + T    stopped by job control signal，任务控制信号中止
+        + t    stopped by debugger during the tracing
+        + X    dead (should never be seen)，进程消亡，不会看到进程的该状态
+        + W    paging (not valid since the 2.6.xx kernel)，2.6内核版本之后无效
+* 操作分析
+    - `docker run --privileged --name=app -itd feisky/app:iowait` 运行案例
+    - `ps aux | grep /app`
+        + root 4009 0.0 0.0 4376 1008 pts/0 `Ss+` 05:51 0:00 /app
+        + root 4287 0.6 0.4 37280 33660 pts/0 `D+` 05:54 0:00 /app
+        + `S` 表示可中断睡眠状态，`D` 表示不可中断睡眠状态
+        + 而`s`表示这个进程是一个会话的领导进程；`+`表示前台进程组
+            * `进程组`表示一组相互关联的进程，比如每个子进程都是父进程所在组的成员；
+            * `会话`是指共享同一个控制终端的一个或多个进程组。
+                - 终端和会话，可以查看之前的记录(搜` 进程组`)，其中涉及`SIGHUP`信号导致关闭终端会杀死进程的问题：[开发相关笔记记录](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95.md)
+    - `top` 分析
+        + 过去 1 分钟、5 分钟和 15 分钟内的平均负载在依次减小，说明平均负载正在升高
+        + 而 1 分钟内的平均负载已经达到系统的 CPU 个数，说明系统很可能已经有了性能瓶颈
+        + 僵尸进程比较多，说明有子进程在退出时没被清理
+        + iowait(`wa`) 分别是 60.5% 和 94.6%，有点不正常
+            * 对与io比较高的问题，考虑是否有利用`零拷贝`原理的场景来减少拷贝次数和上下文切换，参考之前的记录(搜`零拷贝`)：[C++笔记](https://github.com/xiaodongQ/devNoteBackup/blob/master/各语言记录/C%2B%2B.md)
+
+top结果，参考链接中的示例(本地虚拟机环境没跑)：：
+
+```sh
+# 按下数字 1 切换到所有 CPU 的使用情况，观察一会儿按 Ctrl+C 结束
+$ top
+top - 05:56:23 up 17 days, 16:45,  2 users,  load average: 2.00, 1.68, 1.39
+Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
+%Cpu0  :  0.0 us,  0.7 sy,  0.0 ni, 38.9 id, 60.5 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu1  :  0.0 us,  0.7 sy,  0.0 ni,  4.7 id, 94.6 wa,  0.0 hi,  0.0 si,  0.0 st
+...
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+ 4340 root      20   0   44676   4048   3432 R   0.3  0.0   0:00.05 top
+ 4345 root      20   0   37280  33624    860 D   0.3  0.0   0:00.01 app
+ 4344 root      20   0   37280  33624    860 D   0.3  0.4   0:00.01 app
+    1 root      20   0  160072   9416   6752 S   0.0  0.1   0:38.59 systemd
+...
+```
+
+* 原链接中的留言摘录
+    - 发现留言中很多有意义的思考和实践，也有一些踩到的坑和经验讨论
+    - 生产系统出问题，“逻辑cpu是120的实体机，跑oracle数据库，业务刚接进来就卡死了，一分钟平均负载200多，运行队列也两百多，cpu的usr部分四五十，sys部分四十左右，iowait基本是零，idle个位数，top和pid stat都无法输出，perf top也无法，只能dstat”
+        + 参考思路：
+            * “这种情况应该要适当中断一下应用，让这些基本的操作可以正常执行后重新运行。” (先部分恢复基本操作环境，再使用工具分析)
+            * “推荐把这些系统和进程的指标监控起来，避免应用已启动又没法操作了。” (防患于未然，监控起来后续触发时有排查环境，类似的有C/C++程序段错误时通过`backtrace`保存用户态的调用堆栈)
+            * “还有就是预留几个CPU，专门用作运维、监控使用。这需要修改内核选项” (待查，技术债)
+        + 思考：最近使用`zabbix`监控进程和日志报警，正好能用于这些监控；
