@@ -1,6 +1,6 @@
 ## 平均负载
 
-[到底应该怎么理解“平均负载”？](https://time.geekbang.org/column/article/69618)
+[02 到底应该怎么理解“平均负载”？](https://time.geekbang.org/column/article/69618)
 
 * 简单来说，**平均负载**是指单位时间内，系统处于*可运行状态*和*不可中断状态*的平均进程数，也就是平均活跃进程数，它和 CPU 使用率并没有直接关系。
     - 可运行状态的进程，是指正在使用 CPU 或者正在等待 CPU 的进程，也就是我们常用 ps 命令看到的，处于 R 状态（Running 或 Runnable）的进程。
@@ -69,7 +69,7 @@
 
 ## CPU 上下文切换
 
-[经常说的 CPU 上下文切换是什么意思？](https://time.geekbang.org/column/article/69859)
+[03 经常说的 CPU 上下文切换是什么意思？](https://time.geekbang.org/column/article/69859)
 
 * CPU 上下文
     - 在每个任务运行前，CPU 都需要知道任务从哪里加载、又从哪里开始运行，也就是说，需要系统事先帮它设置好 CPU 寄存器和程序计数器（Program Counter，PC）。
@@ -196,7 +196,7 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
 
 ## CPU使用率
 
-[基础篇：某个应用的CPU使用率居然达到100%，我该怎么办？](https://time.geekbang.org/column/article/70476)
+[05 基础篇：某个应用的CPU使用率居然达到100%，我该怎么办？](https://time.geekbang.org/column/article/70476)
 
 * CPU使用率
     - 作为最常用也是最熟悉的 CPU 指标，你能说出 CPU 使用率到底是**怎么算出来的**吗？
@@ -283,17 +283,25 @@ Overhead  Shared Object                 Symbol
         + 接着，测试一下这个 Nginx 服务的性能。在第二个终端运行下面的 ab 命令：
             * `ab -c 10 -n 100 http://192.168.50.118:10000/` 结果如下
         + 分析
-            * 在b执行新的 `ab -c 10 -n 10000 http://10.240.0.5:10000/`
+            * 在b执行新的 `ab -c 10 -n 10000 http://192.168.50.118:10000/`
             * 在a找到 php-fpm 进程号(有多个，找一个分析)
-                - `perf top -g -p 19318`
+                - `perf top -g -p 19318(其中一个php-fpm的进程号)`
             * 在容器外perf top只能看到十六进制地址，所以先在外面保存perf信息，再放到容器中分析
                 - 参考：[CPU使用率达到100% 精选留言](https://time.geekbang.org/column/article/70476)
                 - `perf record -g -p 19402` 运行一段时间后打断，生成 perf.data 文件，拷贝到容器中，在容器中进行分析
                 - `docker cp perf.data phpfpm:/tmp` 拷贝到容器phpfpm
                 - `docker exec -i -t phpfpm bash`   进入容器bash终端
                 - `cd /tmp/`, 安装perf工具：`apt-get update && apt-get install -y linux-perf linux-tools procps`
-                - 分析perf.data, `perf_4.9 report`
+                - 分析perf.data, `perf_4.9 report`，可以看到最终到了 `sqrt` 和 `add_function`
                     + 注意：最后运行的工具名字是容器内部安装的版本 perf_4.9，而不是 perf 命令，这是因为 perf 会去跟内核的版本进行匹配，但镜像里面安装的perf版本有可能跟虚拟机的内核版本不一致。
+                - 拷贝出 Nginx 应用的源码
+                    + `docker cp phpfmp:/app .`
+                    + 查找源码中的函数调用 `grep sqrt -r app/` ，找到sqrt调用发现是测试代码未删除而一直在循环调用所以比较慢
+                - 停止原来的应用`docker rm -f nginx phpfpm`，运行优化后的应用
+                    + `docker run --name nginx -p 10000:80 -itd feisky/nginx:cpu-fix`
+                    + `docker run --name phpfpm -itd --network container:nginx feisky/php-fpm:cpu-fix`
+        + 在案例结束时，不要忘了清理环境，执行下面的 Docker 命令，停止案例中用到的 Nginx 进程：
+            * `docker rm -f nginx phpfpm` (不停止则下次`docker run`会报错，"The container name "/nginx" is already in use by container")
 
 * `ab -c 10 -n 10000 http://192.168.50.118:10000/`运行结果(中途打断了，执行2703个请求)：
 
@@ -345,3 +353,35 @@ Percentage of the requests served within a certain time (ms)
  100%    910 (longest request)
 ```
 
+## 案例篇：CPU 使用率很高却找不到高CPU的应用
+
+* [06 系统的 CPU 使用率很高，但为啥却找不到高 CPU 的应用？](https://time.geekbang.org/column/article/70822)
+    - 回顾前面的内容，系统的 CPU 使用率，不仅包括进程用户态和内核态的运行，还包括`中断处理`、`等待 I/O` 以及`内核线程`等。所以，当你发现系统的 CPU 使用率很高的时候，`不一定`能找到相对应的高 CPU 使用率的`进程`。
+    - 使用案例镜像
+        + `docker run --name nginx -p 10000:80 -itd feisky/nginx:sp`
+        + `docker run --name phpfpm -itd --network container:nginx feisky/php-fpm:sp`
+    - 检查Nginx服务是否正常启动 `curl http://192.168.50.118:10000/`
+    - `ab -c 5 -t 600 http://192.168.50.118:10000/` 并发5，时间600s
+    - `top` 可以看到`R`状态的进程并不是`php-fpm`(此时是`S`状态)，而是`stress` (此时pidstat看并没有CPU很高的单个进程)
+    - 最后问题是：进程的 PID 在变，这些进程都是`短时进程`或`崩溃重启`
+* 排查此类问题
+    - 进程的 PID 一直在变，一般两个原因：
+        + 第一个原因，进程在不停地崩溃重启，比如因为段错误、配置错误等等，这时，进程在退出后可能又被监控系统自动重启了。
+        + 第二个原因，这些进程都是短时进程，也就是在其他应用内部通过 `exec` 调用的外面命令。很难用 `top`这种间隔时间比较长的工具发现(上面是碰巧发现)
+    - 要想继续分析下去，还得找到它们的父进程
+        + `pstree` 可以用树状形式显示所有进程之间的关系
+    - `execsnoop`
+        + 这个案例中，我们使用了 top、pidstat、pstree 等工具分析了系统 CPU 使用率高的问题，并发现 CPU 升高是短时进程 stress 导致的，但是整个分析过程还是比较复杂的。对于这类问题，有没有更好的方法监控呢？
+        + `execsnoop` 就是一个专为短时进程设计的工具。它通过 ftrace 实时监控进程的 exec() 行为，并输出短时进程的基本信息，包括进程 PID、父进程 PID、命令行参数以及执行的结果。
+        + execsnoop 所用的 `ftrace` 是一种常用的动态追踪技术，一般用于分析 Linux 内核的运行时行为
+        + 安装：
+        + 包含在项目(GitHub)：[perf-tools](https://github.com/brendangregg/perf-tools)中
+            * 其中的工具都是一系列脚本，`git clone` 或 `wget` 下来后执行即可(没有权限则chmod +x)
+                - 其中`execsnoop`位置在[execsnoop](https://github.com/brendangregg/perf-tools/blob/master/execsnoop)
+            * 下载所有脚本：`git clone --depth 1 https://github.com/brendangregg/perf-tools`
+            * 下载单个脚本：`wget https://raw.githubusercontent.com/brendangregg/perf-tools/master/execsnoop`
+        + 关于`perf-tools`的说明
+            * 作者是 `Brendan Gregg`，讲火焰图的时候还讲到他
+                - [开发相关笔记记录](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95.md)中搜`火焰图`，关于"Brendan Gregg"：[Brendan Gregg: 一个实战派大神](https://book.douban.com/review/7894012/)
+            * `perf-tools`是一些用于Linux ftrace和perf_events的正在开发和不受支持的性能分析工具的杂项集合
+                - 这些集合使用起来很简单：做一件事并把它做好
