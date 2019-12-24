@@ -43,3 +43,6 @@ boost的TR1：
         + 该站点被Go核心团队寄望于成为全世界Gopher开发人员的中心
         + go.dev将成为gopher日常使用go语言的中心，包括go学习、go方案、go应用案例等
         + [Go官方发布的go.dev给gopher们带来了什么](https://tonybai.com/2019/11/14/what-the-godev-website-bring-to-gophers/)
+* [用户态使用 glibc/backtrace 追踪函数调用堆栈定位段错误](https://blog.csdn.net/gatieme/article/details/84189280)
+    - [如何调试没有core文件的coredump](https://zhuanlan.zhihu.com/p/56751496)
+        + "backtrace在信号处理函数里运行是不安全的。"

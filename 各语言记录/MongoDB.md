@@ -7,6 +7,9 @@ MongoDB并非芒果(mango)的意思，而是源于 Humongous（巨大）一词�
 MongoDB 是一个基于分布式文件存储的数据库。由 C++ 语言编写。旨在为 WEB 应用提供可扩展的高性能数据存储解决方案。
 MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 
+* 官网文档：
+    - [The MongoDB 4.2 Manual](https://docs.mongodb.com/manual/#the-mongodb-version-manual)
+
 ### NoSQL
 
 关系数据库管理系统（Relational Database Management System：RDBMS）
@@ -89,7 +92,7 @@ NoSQL
 
 ### MongoDB
 
-MongoDB 将数据存储为一个文档，数据结构由键值(key=>value)对组成。MongoDB 文档类似于 `JSON` 对象。
+MongoDB 将数据存储为一个**文档**，数据结构由键值(key=>value)对组成。MongoDB 文档类似于 `JSON` 对象。
 字段值可以包含其他文档，数组及文档数组。
 
 2007年10月，MongoDB由10gen团队所发展。2009年2月首度推出。
