@@ -86,7 +86,7 @@
 
 	- 验证安装是否成功
 		+ `docker version`, ubuntu 16.04-xenial中，`Version:      17.09.1-ce`、`Go version:   go1.8.3`
-		+ 或 `docker info`，非root用户执行会报错，没有权限，可以把用户加到docker用户组中，按下面的操作
+		+ 或 `docker info`，非root用户执行会报错，没有权限，可以把用户加到docker用户组中，按下面的操作：
 	- Docker 需要用户具有 sudo 权限，为了避免每次命令都输入sudo，可以把用户加入 Docker 用户组
 		+ `sudo usermod -aG docker $USER`
 		+ 更新用户组：`newgrp docker` (否则普通用户还是没权限)
@@ -103,7 +103,7 @@
 	- `docker image rm [imageName]` 删除 image 文件
 	- image 文件是通用的，一台机器的 image 文件拷贝到另一台机器，照样可以使用。
 		+ 一般来说，为了节省时间，我们应该尽量使用别人制作好的 image 文件，而不是自己制作。即使要定制，也应该基于别人的 image 文件进行加工，而不是从零开始制作。
-		+ 为了方便共享，image 文件制作完成后，可以上传到网上的仓库。Docker 的官方仓库 [Docker Hub](https://hub.docker.com/) 是最重要、最常用的 image 仓库。
+		+ 为了方便共享，image 文件制作完成后，可以上传到网上的仓库。Docker 的官方仓库 [Docker Hub](https://hub.docker.com/)，官方仓库是*最重要、最常用*的 image 仓库。
 
 ### 实例
 
@@ -137,3 +137,20 @@
 * `docker exec -it`
 	- 进入容器
 	- e.g. `docker exec -it mysql bash`
+* `docker run`
+	- [Docker run 命令](https://www.runoob.com/docker/docker-run-command.html)
+	- 创建一个新的容器并运行一个命令
+	- e.g. `docker run --privileged --name=app -itd feisky/app:helloworld`
+	- `--name[=NAME]`
+		+ 为容器指定一个名称；
+	- `--privileged`
+		+ 赋予容器扩展特权(默认情况下容器是`unprivileged`非特权模式)，允许容器访问任何设备的权限
+	- `-i` 或者 `--interactive`
+		+ 以交互模式运行容器，通常与 `-t` 同时使用
+		+ 即使没有连接也保持`STDIN`打开
+	- `-t` 或 `--tty`
+		+ 为容器重新分配一个伪输入终端，通常与 `-i` 同时使用；
+	- `-d` 或 `--detach`
+		后台运行容器，并返回容器ID；
+* `docker image`
+	- 参考上面的章节记录

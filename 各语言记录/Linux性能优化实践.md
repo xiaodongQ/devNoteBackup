@@ -380,6 +380,7 @@ Percentage of the requests served within a certain time (ms)
                 - 其中`execsnoop`位置在[execsnoop](https://github.com/brendangregg/perf-tools/blob/master/execsnoop)
             * 下载所有脚本：`git clone --depth 1 https://github.com/brendangregg/perf-tools`
             * 下载单个脚本：`wget https://raw.githubusercontent.com/brendangregg/perf-tools/master/execsnoop`
+        + `./execsnoop`或添加环境变量直接执行即可，执行结果中的列也很简单：`PID   PPID ARGS`
         + 关于`perf-tools`的说明
             * 作者是 `Brendan Gregg`，讲火焰图的时候还讲到他
                 - [开发相关笔记记录](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95.md)中搜`火焰图`，关于"Brendan Gregg"：[Brendan Gregg: 一个实战派大神](https://book.douban.com/review/7894012/)
@@ -415,8 +416,12 @@ Percentage of the requests served within a certain time (ms)
         + 僵尸进程比较多，说明有子进程在退出时没被清理
         + iowait(`wa`) 分别是 60.5% 和 94.6%，有点不正常
             * 对与io比较高的问题，考虑是否有利用`零拷贝`原理的场景来减少拷贝次数和上下文切换，参考之前的记录(搜`零拷贝`)：[C++笔记](https://github.com/xiaodongQ/devNoteBackup/blob/master/各语言记录/C%2B%2B.md)
+    - perf record跟踪调用堆栈，发现`sys_read()`直接读，绕过了系统缓存，这解释了`iowait`高的问题
+        + `open(disk, O_RDONLY|O_DIRECT|O_LARGEFILE, 0755)`，去掉O_DIRECT
+        + 示例中给出了源码(C程序)链接：[app.c](https://github.com/feiskyer/linux-perf-examples/blob/master/high-iowait-process/app.c)
+    - 对于僵尸进程，用`pstree -aps 某个僵尸进程` 找到其父进程进行分析
 
-top结果，参考链接中的示例(本地虚拟机环境没跑)：：
+top结果，参考链接中的示例(本地虚拟机环境跑得卡死，敲不了命令)：：
 
 ```sh
 # 按下数字 1 切换到所有 CPU 的使用情况，观察一会儿按 Ctrl+C 结束

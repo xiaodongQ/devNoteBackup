@@ -8,7 +8,31 @@ MongoDB 是一个基于分布式文件存储的数据库。由 C++ 语言编写�
 MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 
 * 官网文档：
-    - [The MongoDB 4.2 Manual](https://docs.mongodb.com/manual/#the-mongodb-version-manual)
+    - 关于手册
+        + [guide, manual, tutorial之间的区别](https://www.cnblogs.com/jiangleads/p/11238232.html)
+        + `Tutorial`，教程(tutorial)是一系列课程，侧重于给没有经验的人一步一步进行详细的指导
+        + `Guide`，指南(guide)是一个简单的“操作方法”，有足够的信息可以帮助您入门。
+        + `Manual`，手册(manual)是一套完整，深入的说明
+    - [Connect to MongoDB](https://docs.mongodb.com/guides/server/drivers/)
+        + 更详细深入的文档，查看Manual:[The MongoDB 4.2 Manual](https://docs.mongodb.com/manual/#the-mongodb-version-manual)
+        + 安装客户端shell并连接MongoDB
+            * [Procedure](https://docs.mongodb.com/guides/server/drivers/#check-your-environment)
+            * 过程
+                - 下载安装：
+                    + 按说明中的提示进行下载，此处选`Linux`点进链接后->点击`Server`->出来选择页面可以选择`Version`+`OS`(RHEL 7.0，针对自己的CentOS虚拟机)+`Package`(shell)。下载得到"mongodb-org-shell-4.2.2-1.el7.x86_64.rpm"，进行安装`rpm -ivh xxx.rpm`
+                - 安装后：则会有`mongo`可执行文件(一般在/usr/bin下，可which mongo查看)，若路径没有在环境变量中则可添加
+                - 获取MongoDB连接字符串
+                    + 格式：`mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[database][?options]]`
+                    + [Connection String URI Format](https://docs.mongodb.com/manual/reference/connection-string/#mongodb-uri)
+                - 连接到MongoDB实例
+                    + `mongo mongodb://$[hostlist]/$[database]?authSource=$[authSource] --username $[username]`
+                    + e.g. `mongo "mongodb://192.168.50.118:27017/?authSource=xdtest --username admin"` 即可进入MongoDB操作shell终端
+                    + e.g. 如果没有设置访问控制，则 `mongo "mongodb://192.168.50.118"`会直接连接(端口默认27017)
+                    + 可见下面的`MongoDB - 连接`章节
+                - 进行CRUD操作，shell终端里特别注意中英文字符不要打错了(肉眼看不明显)
+                    + 查看下面的`插入文档` `查询文档` `创建集合` 等
+        + 具体CRUD操作和其他MongoDB Shell的方法，参考`Manual`手册
+            * [MongoDB CRUD Operations](https://docs.mongodb.com/manual/crud/)
 
 ### NoSQL
 
@@ -129,7 +153,7 @@ MongoDB的单个实例可以容纳多个独立的数据库，每一个都有自�
     "show dbs" 命令可以显示所有数据的列表。
 
 ```sql
-        $ ./mongo
+        $ ./mongo   # 连接的是本地的服务，要连接其他设备上的服务，参考上面通过mongo uri进行连接
         MongoDB shell version: 3.0.6
         connecting to: test
         > show dbs
@@ -270,7 +294,7 @@ MongoDB 中默认的数据库为 test，如果你没有创建新的数据库，�
         在插入文档时，MongoDB 首先检查固定集合的 size 字段，然后检查 max 字段。
 
 ```sql
-在 test 数据库中创建 runoob 集合：
+在 test 数据库中创建 runoob 集合： #如上，MongoDB 中默认的数据库为 test，如果你没有创建新的数据库，集合将存放在 test 数据库中
 > use test
 switched to db test
 > db.createCollection("runoob")
@@ -309,10 +333,10 @@ mycol2
 MongoDB 使用 insert() 或 save() 方法向集合中插入文档，语法如下：
 `db.COLLECTION_NAME.insert(document)`
 
-以下文档可以存储在 MongoDB 的 runoob 数据库 的 col 集合中：
+以下文档可以存储在 MongoDB 的 runoob 数据库 的 col1 集合中：
 
 ```sql
->db.col.insert({title: 'MongoDB 教程',
+>db.col1.insert({title: 'MongoDB 教程',
     description: 'MongoDB 是一个 Nosql 数据库',
     by: '菜鸟教程',
     url: 'http://www.runoob.com',
@@ -321,24 +345,25 @@ MongoDB 使用 insert() 或 save() 方法向集合中插入文档，语法如下
 })
 ```
 
-以上实例中 col 是我们的集合名，如果该集合不在该数据库中， MongoDB 会自动创建该集合并插入文档。
+以上实例中 col1 是集合名，如果该集合不在该数据库中， MongoDB 会自动创建该集合并插入文档。
+
+注意： json里面的成员可以是数组，像上面示例中的"tags"
 
 查看已插入文档：
 
 ```sql
-> db.col.find()
+> db.col1.find()
 { "_id" : ObjectId("56064886ade2f21f36b03134"), "title" : "MongoDB 教程", "description" : "MongoDB 是一个 Nosql 数据库", "by" : "菜鸟教程", "url" : "http://www.runoob.com", "tags" : [ "mongodb", "database", "NoSQL" ], "likes" : 100 }
 >
 ```
 
-插入文档你也可以使用 db.col.save(document) 命令
+除了`insert`，插入文档还可以使用 `db.col1.save(document)` 命令
 
-3.2 版本后还有以下几种语法可用于插入文档:
-
-db.collection.insertOne():向指定集合中插入一条文档数据
-    `> var document = db.collection.insertOne({"a": 3})`
-db.collection.insertMany():向指定集合中插入多条文档数据
-    `> var res = db.collection.insertMany([{"b": 3}, {'c': 4}])`
+* 3.2 版本后还有以下几种语法可用于插入文档:
+    - db.collection.insertOne():向指定集合中插入一条文档数据
+        + `> var document = db.collection.insertOne({"a": 3})`
+    - db.collection.insertMany():向指定集合中插入多条文档数据
+        + `> var res = db.collection.insertMany([{"b": 3}, {'c': 4}])`
 
 #### MongoDB 查询文档
 `db.collection.find(query, projection)`
@@ -346,61 +371,84 @@ db.collection.insertMany():向指定集合中插入多条文档数据
     projection ：可选，使用投影操作符指定返回的键。查询时返回文档中所有键值， 只需省略该参数即可（默认省略）。
 
 如果你需要以易读的方式来读取数据，可以使用 pretty() 方法，语法格式如下：
-    `>db.col.find().pretty()`
+    `>db.col1.find().pretty()`
     pretty() 方法以格式化的方式来显示所有文档。
 
-除了 find() 方法之外，还有一个 findOne() 方法，它只返回一个文档。
+除了 `find()` 方法之外，还有一个 `findOne()` 方法(注意：大小写敏感)，它只返回一个文档。
 
 ##### MongoDB AND 条件
 MongoDB 的 find() 方法可以传入多个键(key)，每个键(key)以逗号隔开，即常规 SQL 的 AND 条件。
-`>db.col.find({key1:value1, key2:value2}).pretty()`
+`>db.col1.find({key1:value1, key2:value2}).pretty()`
 
-e.g. 通过 by 和 title 键来查询 菜鸟教程 中 MongoDB 教程 的数据
-`> db.col.find({"by":"菜鸟教程", "title":"MongoDB 教程"}).pretty()`
+e.g. 通过 "by" 和 "title" 键来查询 菜鸟教程 中 MongoDB 教程 的数据(by和title都是json中的字段键值，不是MongoDB的关键字)
+`> db.col1.find({"by":"菜鸟教程", "title":"MongoDB 教程"}).pretty()`
 
 ##### MongoDB OR 条件
 MongoDB OR 条件语句使用了关键字 $or
 
 ```sql
->db.col.find(
+>db.col1.find(
    {
       $or: [{key1: value1}, {key2:value2}]
    }
 ).pretty()
 ```
 
-e.g.
-`>db.col.find({$or:[{"by":"菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()`
+* e.g. `>db.col1.find({$or:[{"by":"菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()`
 
+* e.g. 'where likes>50 AND (by = '菜鸟教程' OR title = 'MongoDB 教程')' ("likes"是json里面的键值，这个网站里的示例不好，老用sql的关键字作为键值)
+    - `>db.col1.find({"likes": {$gt:50}, $or: [{"by": "菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()`
+    - 注意，此处的or语法是作为一个整体当做and的后半部分，结构如 `条件1 and (条件2 or 条件3)`
 
-e.g.'where likes>50 AND (by = '菜鸟教程' OR title = 'MongoDB 教程')'
-`>db.col.find({"likes": {$gt:50}, $or: [{"by": "菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()`
+注意
 
 ##### MongoDB 条件操作符
 MongoDB 与 RDBMS Where 语句比较
 如果你熟悉常规的 SQL 数据，通过下表可以更好的理解 MongoDB 的条件语句查询：
 
 操作          格式                     范例                                        RDBMS中的类似语句
-等于          {<key>:<value>}         db.col.find({"by":"菜鸟教程"}).pretty()      where by = '菜鸟教程'
-小于          {<key>:{$lt:<value>}}   db.col.find({"likes":{$lt:50}}).pretty()    where likes < 50
-小于或等于    {<key>:{$lte:<value>}}  db.col.find({"likes":{$lte:50}}).pretty()    where likes <= 50
-大于          {<key>:{$gt:<value>}}   db.col.find({"likes":{$gt:50}}).pretty()    where likes > 50
-大于或等于    {<key>:{$gte:<value>}}  db.col.find({"likes":{$gte:50}}).pretty()    where likes >= 50
-不等于        {<key>:{$ne:<value>}}   db.col.find({"likes":{$ne:50}}).pretty()    where likes != 50
+等于          {<key>:<value>}         db.col1.find({"by":"菜鸟教程"}).pretty()      where by = '菜鸟教程'
+小于          {<key>:{$lt:<value>}}   db.col1.find({"likes":{$lt:50}}).pretty()    where likes < 50
+小于或等于    {<key>:{$lte:<value>}}  db.col1.find({"likes":{$lte:50}}).pretty()    where likes <= 50
+大于          {<key>:{$gt:<value>}}   db.col1.find({"likes":{$gt:50}}).pretty()    where likes > 50
+大于或等于    {<key>:{$gte:<value>}}  db.col1.find({"likes":{$gte:50}}).pretty()    where likes >= 50
+不等于        {<key>:{$ne:<value>}}   db.col1.find({"likes":{$ne:50}}).pretty()    where likes != 50
 
 e.g. "likes" 大于 100 的数据
-`db.col.find({likes: {$gt:100}})`
+`db.col1.find({likes: {$gt:100}})`
 
 ##### $type操作符
 是基于BSON类型来检索集合中匹配的数据类型，并返回结果。
 
-如果想获取 "col" 集合中 title 为 String 的数据，你可以使用以下命令：
+如果想获取 "col1" 集合中 title 为 String 的数据，你可以使用以下命令：
 
 ```sql
-db.col.find({"title" : {$type : 2}})
+db.col1.find({"title" : {$type : 2}}) # 2为sting类型的编号
 或
-db.col.find({"title" : {$type : 'string'}})
+db.col1.find({"title" : {$type : 'string'}})
 ```
+
+* 其他的类型对应关系，参考：[MongoDB $type 操作符](https://www.runoob.com/mongodb/mongodb-operators-type.html)
+    - 注意MongoDB中默认的数字类型是 `double` (1)
+    - Double    1
+    - String    2
+    - Object    3
+    - Array 4
+    - Binary data 5
+    - Undefined   6   已废弃。
+    - Object id   7
+    - Boolean 8
+    - Date    9
+    - Null    10
+    - Regular Expression  11
+    - JavaScript  13
+    - Symbol  14
+    - JavaScript (with scope) 15
+    - 32-bit integer  16
+    - Timestamp   17
+    - 64-bit integer  18
+    - Min key 255 Query with -1.
+    - Max key 127
 
 ##### limit
 如果你需要在MongoDB中读取指定数量的数据记录，可以使用MongoDB的Limit方法
@@ -415,10 +463,10 @@ db.col.find({"title" : {$type : 'string'}})
 在 MongoDB 中使用 sort() 方法对数据进行排序，sort() 方法可以通过参数指定排序的字段，并使用 1 和 -1 来指定排序的方式，其中 1 为升序排列，而 -1 是用于降序排列。
 `>db.COLLECTION_NAME.find().sort({KEY:1})`
 
-e.g. 以下实例演示了 col 集合中的数据按字段 likes 的降序排列：
+e.g. 以下实例演示了 col1 集合中的数据按字段 likes 的降序排列：
 
 ```sql
->db.col.find({},{"title":1,_id:0}).sort({"likes":-1})
+>db.col1.find({},{"title":1,_id:0}).sort({"likes":-1})
 { "title" : "PHP 教程" }
 { "title" : "Java 教程" }
 { "title" : "MongoDB 教程" }
@@ -433,20 +481,20 @@ e.g. 以下实例演示了 col 集合中的数据按字段 likes 的降序排列
 MongoDB使用 createIndex() 方法来创建索引。
 `>db.collection.createIndex(keys, options)`
     语法中 Key 值为你要创建的索引字段，1 为指定按升序创建索引，如果你想按降序来创建索引指定为 -1 即可。
-    `>db.col.createIndex({"title":1})`
+    `>db.col1.createIndex({"title":1})`
 
 1、查看集合索引
 
-db.col.getIndexes()
+db.col1.getIndexes()
 2、查看集合索引大小
 
-db.col.totalIndexSize()
+db.col1.totalIndexSize()
 3、删除集合所有索引
 
-db.col.dropIndexes()
+db.col1.dropIndexes()
 4、删除集合指定索引
 
-db.col.dropIndex("索引名称")
+db.col1.dropIndex("索引名称")
 
 ### 使用mongocxx操作
 
