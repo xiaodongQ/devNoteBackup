@@ -67,7 +67,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 
 ```sh
 # 把 c 改为 d，c 表示当前目录，d 表示绝对路径，显示格式"[➜ /home/xd ]$"
-PROMPT='[%{$fg_bold[red]%}%n➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
+PROMPT='[%{$fg_bold[red]%}%n@%M ➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
 # 把 c 改为 d，c 表示当前目录，d 表示绝对路径，另外在末尾增加了一个「 > 」
 #PROMPT='%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}>'
 #PROMPT='%{$fg_bold[red]%}➜ %{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} % %{$reset_color%}'
@@ -137,7 +137,7 @@ plugins=(git autojump)
 # autojump
 [[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && . ~/.autojump/etc/profile.d/autojump.sh
 # 提示
-PROMPT='[%{$fg_bold[red]%}%n➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
+PROMPT='[%{$fg_bold[red]%}%n@%M ➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
 
 alias rm='rm -i'
 alias cp='cp -i'

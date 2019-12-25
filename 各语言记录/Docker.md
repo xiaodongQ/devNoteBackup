@@ -71,11 +71,15 @@
 						* [GPG入门教程](http://www.ruanyifeng.com/blog/2013/07/gpg.html)
 				- 4. 设置稳定的仓库地址
 					+ `sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"`
+					+ 由于ubuntu下载了最新的19.10(代号`eoan`)，在仓库`ttps://download.docker.com/linux/ubuntu`中并没有，所以写19.04的代号`disco`(注意需要小写！因为大小写试了n个代号都是没有找到Release)
+						* `sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu disco stable"`
+						* 对于已添加的`eoan`代号源，使用`--remove`来删除，`sudo add-apt-repository --remove "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"`
+						* [Ubuntu 各版本代号简介](https://blog.csdn.net/zhengmx100/article/details/78352773)
 			* 开始安装(不设置仓库进行安装会找不到docker的包)
 				- `sudo apt-get update`
 				- `sudo apt-get install docker-ce docker-ce-cli containerd.io`
 					+ 执行由于部分库版本不满足，需要升级ubuntu，虚拟机里一直升级失败，所以用指定版本的方式升级
-				-  查看当前ubuntu版本能安装的版本
+				-  查看当前ubuntu版本能安装的版本(**下面由于版本问题安装后冲突或者依赖不满足，并不能正常运行使用。还是安装一个新的满足Docker版本要求的Ubuntu版本重新安装Docker**)
 					+ 查看 docker-ce 满足版本 `apt-cache madison docker-ce`
 						* 尝试列表里很多新一点的版本都有部分库版本不满足要求，最终选择了：17.09.1~ce-0~ubuntu
 						* 使用 `sudo apt-get install docker-ce=17.09.1~ce-0~ubuntu`
