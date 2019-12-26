@@ -59,6 +59,9 @@ via curl：
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 ```
 
+* 若提示要安装zsh，则`yum install zsh` (CentOS)
+* zsh中`history`显示命令历史的时间，可用`history -i`，不过vi打开文件看不到时间，可配合`less`在终端查看
+
 ### PS提示显示
 
 把 c 改为 d，c 表示当前目录，d 表示绝对路径，另外在末尾增加了一个「 > 」

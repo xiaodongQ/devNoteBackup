@@ -1,2 +1,2 @@
 # devNoteBackup
-Development notes' configuration backup
+Development notes record and backup

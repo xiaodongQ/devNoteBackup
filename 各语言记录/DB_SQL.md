@@ -128,3 +128,19 @@ count(col)的执行效率比count(distinct col)高，不过这个结论的意义
         + e.g. 查询学生表中所有的学生姓名和课程表中的所有课程：
             * `select students.name,course.kecheng from students full join course on students.stuID=course.stuID`
     - [图解MySQL 内连接、外连接、左连接、右连接、全连接](https://blog.csdn.net/plg17/article/details/78758593)
+
+* `显式inner join` 和 `隐式inner join`
+    - 显式内连接：`select * from table1 a inner join table2 b on a.id=b.id`
+    - 隐式内连接：`select * from table1 a, table2 b where a.id=b.id`
+    - 性能上几乎相同，使用显式的内连接来避免隐式带来的不确定性
+    - [Explicit vs implicit SQL joins](https://stackoverflow.com/questions/44917/explicit-vs-implicit-sql-joins)
+
+* join的性能问题
+    - 参考：[](https://www.cnblogs.com/BeginMan/p/3754322.html)(搜`七.性能优化`小节)
+    - 尽量用`inner join`.避免 `LEFT JOIN` 和 `RIGHT JOIN`
+        + on 与 where 的执行顺序
+            * ON 条件（“A LEFT JOIN B ON 条件表达式”中的ON）用来决定如何从 B 表中检索数据行。如果 B 表中没有任何一行数据匹配 ON 的条件,将会额外生成一行所有列为 NULL 的数据
+            * 在`匹配阶段` WHERE 子句的条件都`不会`被使用。仅在`匹配阶段完成以后`，WHERE 子句条件才会被使用。它将从匹配阶段产生的数据中检索过滤。
+        + 所以在使用Left (right) join的时候，一定要在先给出尽可能多的匹配满足条件，减少Where的执行(参考链接中的示例)
+    - 尽量避免子查询，而用join
+        + 参考链接中的示例
