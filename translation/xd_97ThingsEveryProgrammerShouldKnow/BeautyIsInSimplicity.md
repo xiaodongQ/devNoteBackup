@@ -45,13 +45,19 @@ What is beautiful code? This is potentially(/pəˈtenʃəlɪ/，可能地；潜�
 
 Think about source code that you have studied. If you haven't spent time studying other people's code, stop reading this right now and find some open source code to study. Seriously! I mean it! Go search the web for some code in your language of choice, written by some well-known, acknowledged expert.
 
-你又回来了？好的，我们在哪？哦，是的...我发现那些与我有共鸣和我认为优美的代码，有很多共同的属性。这些共同点里最主要的就是简单性。
+你又回来了？好的，我们在哪？哦，是的...我发现那些与我有共鸣和我认为优美的代码，有很多共同的属性。这些共同点里最主要的就是简单性。我发现无论整个应用或者系统多复杂，各个模块都要保持简单。具有单一职责的简单对象，包含具有描述性名称的类似简单、集中的方法。一些人认为只有短到5到10行代码的方法是极端的，而且一些语言很难做到这个，但是我认为这种简洁是可取的。
 
-You're back? Good. Where were we? Ah yes... I have found that code that resonates(/'rez(ə)neɪt/，共鸣；共振) with me and that I consider beautiful has a number of properties in common. Chief among these is simplicity. I find that no matter how complex the total application or system is, the individual parts have to be kept simple. Simple objects with a single responsibility containing similarly simple, focused methods with descriptive names. Some people think the idea of having short methods of five to ten lines of code is extreme, and some languages make it very hard to do this, but I think that such brevity is a desirable goal nonetheless.
+You're back? Good. Where were we? Ah yes... I have found that code that resonates(/'rez(ə)neɪt/，共鸣；共振) with me and that I consider beautiful has a number of properties in common. Chief among these is simplicity. I find that no matter how complex the total application or system is, the individual parts have to be kept simple. Simple objects with a single responsibility containing similarly simple, focused methods with descriptive(/dɪ'skrɪptɪv/ 说明的，解释的) names. Some people think the idea of having short methods of five to ten lines of code is extreme(/ɪk'striːm/ 极端的；尽头的), and some languages make it very hard to do this, but I think that such brevity(/'brevɪtɪ/ 短暂；简洁) is a desirable goal nonetheless(/nʌnðə'les/, adv，虽然如此，但是).
+
+最重要的是优美的代码是简洁的代码。使每个单独的部分都保持简单的职责，并和系统里的其他部分保持简单的关系。通过这种方式，我们可以使用干净，简单，可测试的代码保持系统随时间的可维护性，从而在整个系统生命周期中保持较高的开发速度。优美是来源于简单的。
 
 The bottom line is that beautiful code is simple code. Each individual part is kept simple with simple responsibilities and simple relationships with the other parts of the system. This is the way we can keep our systems maintainable over time, with clean, simple, testable code, keeping the speed of development high throughout the lifetime of the system. Beauty is born of and found in simplicity.
+
+* Jørn Ølmheim
+	- Jørn Ølmheim 是一位从业软件专业人士，对开源软件，互联网技术和编程语言非常感兴趣。他还是偶尔的演讲者和作家。他目前在 Statoil(挪威国家石油公司) 担任公司IT部门的首席顾问，专注于软件体系结构和系统集成方面的挑战 [参考](https://saturn2017.sched.com/speaker/jorn_olmheim.1w9sw9i8)
 
 By Jørn Ølmheim
 
 ### 思考
 
+保持代码的简洁，保持单一职责，并减少和系统其他模块的耦合。
