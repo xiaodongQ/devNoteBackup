@@ -478,25 +478,28 @@ for (auto &n : arr)   //n类型是int&，引用，循环内对成员做修改操
 [基于范围的 for 循环 (C++11 起)](https://zh.cppreference.com/w/cpp/language/range-for)
 
 ## string
-### stod, stoi
 
-`#include <string>`
-[C++字符串转换](https://blog.csdn.net/baidu_34884208/article/details/88342844)
-std::stod
-
-to_string
-
-### compare
-
-== 0
-> 0
-< 0
-
-str1从str1[0]开始，3个字符，与str2整体比较:
-`str1.compare(0, 3, str2)`
-
-`"6001234.compare(0, 3, "600")`
-`"6001234.compare(0, 3, "60087")`  注意是"600"和"60087"比较
+* stod, stoi, to_string
+    - `#include <string>`
+    - `std::stod`
+    - `to_string`
+    - [C++字符串转换](https://blog.csdn.net/baidu_34884208/article/details/88342844)
+* compare
+    - `== 0`、`> 0`、`< 0`
+    - str1从str1[0]开始，3个字符，与str2整体比较:
+        + `str1.compare(0, 3, str2)`
+    - e.g. `"6001234.compare(0, 3, "600")`
+    - e.g. `"6001234.compare(0, 3, "60087")`  注意是"600"和"60087"比较
+* 截取/查找/替换字符串
+    - 截取子串
+        + `s.substr(pos, n)` 截取s中从pos开始（包括0）的n个字符的子串，并返回
+        + `s.substr(pos)` 截取s中从从pos开始（包括0）到末尾的所有字符的子串，并返回
+    - 替换子串
+        + `s.replace(pos, n, s1)` 用s1替换s中从pos开始（包括0）的n个字符的子串
+    - 查找子串
+        + `s.find(s1)` 查找s中第一次出现s1的位置，并返回（包括0）
+        + `s.rfind(s1)` 最后一次
+    - [C++基础-string截取、替换、查找子串函数](https://www.cnblogs.com/catgatp/p/6407788.html)
 
 ## std::mutex
 

@@ -79,6 +79,11 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
 
 ## C++示例流程和源码结构
 
+* 实际使用遇到的问题
+    - 使用`.set_`方法时，int 和 string类型混用，导致段错误，报错 `CHECK failed: value != nullptr:`
+        + 注意字段格式！ 转换体里面最好也是加一个 `try...catch`
+    - int 和 string类型，经常性的会用到`stoi/stod`，最好加一个`try...catch`捕获异常，常会有数据来源有问题的情况，这时不捕获一下很难定位到哪个位置，或可能怀疑到别的问题上去了
+
 - 官方示例：[Generating client and server code](https://grpc.io/docs/tutorials/basic/cpp/)
 - 执行下面的生成命令，生成客户端和服务端代码
     + protoc -I ../../protos --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` ../../protos/route_guide.proto
