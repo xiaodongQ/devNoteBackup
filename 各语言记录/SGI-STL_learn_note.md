@@ -15,6 +15,10 @@
     - 2006年3月8日，SGI申请破产保护
     - 2016年8月11日，慧与科技（HPE, Hewlett Packard Enterprise）宣布以每股美金7.75, 合共2亿7仟5百万美金, 收购SGI所有股权
     - [硅谷图形公司](https://zh.wikipedia.org/zh-hans/%E7%A1%85%E8%B0%B7%E5%9B%BE%E5%BD%A2%E5%85%AC%E5%8F%B8)
+* SGI版本STL由STL之父 Alexander Stepanov、经典书籍《Generic Programming and the STL》作者 Matthew H. Austern、STL巨匠 David Musser等人实现。
+* 这份产品被纳为GNU C++标准程序库。
+
+* GitHub源码和笔记链接：[xiaodongQ/SGI-STL](https://github.com/xiaodongQ/SGI-STL)
 
 ## 开发测试环境
 
@@ -125,6 +129,12 @@ github repository website:
 目录: `SGI-STL\The Annotated STL Sources V3.3\container\sequence container\vector`
 
 * bvector.h 文件
+
+
+## 《STL源码剖析》 --侯捷
+
+> 追踪一流作品并与其中吸取养分，远比自己关起门来写个三流作品，价值高得多。我的确认为99.99%的程序员所写的程序，在SGI STL面前都是三流水准。
+
 
 
 
