@@ -516,6 +516,14 @@ mtx.try_lock()异步
 mtx.lock()
 mtx.unlock()
 
+* 相关编译错误：使用了被删除的函数‘std::mutex& std::mutex::operator=(const std::mutex&)’
+    - 定义了类的map，其中类成员包含一个std::mutex成员
+    - 由于std::mutex的拷贝构造函数和赋值运算符被禁用了： `mutex( const mutex& ) = delete;`
+    - `std::mutex& std::mutex::operator=(const std::mutex&) = delete`
+    - 而 std::vector 和 std::map 都是要求 类型 必须包含拷贝构造函数，所以就报错了。
+    - 可以把 `std::mutex _mutex` 改成 `std::shared_ptr<std::mutex> _mutex`，使用时`std::lock_guard<std::mutex> _lock{*解引用};`
+    - [std::mutex 引起的 C2280 尝试引用已删除的函数](https://www.cnblogs.com/lzpong/p/10138872.html)
+
 ### linux下 pthread_mutex_t
 在C/C++中（linux下）就需要使用pthread库中提供的互斥锁，并且设置锁的属性为递归锁:
 
@@ -1060,6 +1068,14 @@ shared_ptr<T> p(q)  p是shared_ptr q的拷贝；此操作会增加q中的计数�
 p=q p和q都是shared_ptr，所保存的指针必须能相互转换。此操作会递减p的引用计数，递增q的引用计数；若p的引用计数变为0，则将其管理的原内存释放
 p.unique()  若p.use_count()为1，返回true；否则返回false
 p.use_count()   返回与p 共享对象的智能指针数量；可能很慢，主要用于调试
+
+```cpp
+//创建string的共享指针
+shared_ptr<string> sp = make_shared<string>("make_shared");
+
+//创建vector的共享指针
+shared_ptr<vector<int> > spv = make_shared<vector<int> >(10, 2);
+```
 
 ### unique_ptr
 unique_ptr 独占所指向的对象。与shared_ptr不同，某个时刻只能有一个unique_ptr指向一个给定对象。当unique_ptr被销毁时，它所指向的对象也被销毁。
@@ -1712,13 +1728,6 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
     this=0x7fffef70caf0, __x=...) at /usr/local/include/c++/4.8.5/bits/stl_vector.h:911
 ```
 
-* 编译错误：使用了被删除的函数‘std::mutex& std::mutex::operator=(const std::mutex&)’
-    - 定义了类的map，其中类成员包含一个std::mutex成员
-    - 由于std::mutex的拷贝构造函数和赋值运算符被禁用了： `mutex( const mutex& ) = delete;`
-    - `std::mutex& std::mutex::operator=(const std::mutex&) = delete`
-    - 而 std::vector 和 std::map 都是要求 类型 必须包含拷贝构造函数，所以就报错了。
-    - 可以把 `std::mutex _mutex` 改成 `std::shared_ptr<std::mutex> _mutex`，使用时`std::lock_guard<std::mutex> _lock{*解引用};`
-    - [std::mutex 引起的 C2280 尝试引用已删除的函数](https://www.cnblogs.com/lzpong/p/10138872.html)
 
 ## 零拷贝
 

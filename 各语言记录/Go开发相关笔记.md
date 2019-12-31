@@ -1,5 +1,9 @@
 ## go
 
+* 安装
+    - [Install the Go tools](https://golang.org/doc/install#install)
+    - 下载并解压到/usr/local，`tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz`
+
 ### 变量声明
 
 ```golang
@@ -685,4 +689,18 @@ string:=strconv.Itoa(int)
 #int64到string
 string:=strconv.FormatInt(int64,10)
 ```
+
+## Go文档
+
+* [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
+* [Go编程语言规范](https://go-zh.org/ref/spec)
+
+* [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
+
+
+## net 包
+
+* net 包
+    - net包提供编写一个网络客户端或者服务器程序的基本组件，无论两者间通信是使用TCP，UDP或者Unix domain sockets
+        + net/http包里的方法，也算是net包的一部分
 

@@ -564,9 +564,11 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
         + 用户 CPU 使用率
         + 系统 CPU 使用率(不包括中断)
         + 等待 I/O 的 CPU 使用率，通常也称为 `iowait`，表示等待 I/O 的时间百分比。
-            * 注意：top 中的`iowait`，和pidstat中的`%wait`是不同的两个指标
+            * 注意：top 中的`iowait` (top中显示为：`wa`)，和pidstat中的`%wait`是不同的两个指标
                 - pidstat 中， %wait 表示进程等待 CPU 的时间百分比。
+                    + "Percentage of CPU spent by the task while waiting to run"
                 - top 中 ，iowait% 则表示等待 I/O 的 CPU 时间百分比。
+                    + "wa, IO-wait : time waiting for I/O completion"
                     + iowait高，通常说明系统与硬件设备的 I/O 交互时间比较长。
         + 软中断和硬中断的 CPU 使用率
         + 虚拟化环境中的 窃取 CPU 使用率（`steal`）和 客户 CPU 使用率（`guest`）
