@@ -85,6 +85,8 @@ Golang中只有三种引用类型：slice(切片)、map(字典)、channel(管道
 
 * 创建和使用
 
+*注意需要创建后才能使用*
+
 ```golang
 // 创建
 map1 := make(map[string]string)
@@ -604,22 +606,19 @@ go get : git clone + go install
 
 ### 获取时间 time包
 
-[golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
-
-golang提供以下两种基础类型
+* [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
+* golang提供以下两种基础类型
     - 时间点(Time)
     - 时间段(Duration)
-
-此外还提供：
+* 此外还提供：
     + 时区(Location)
     + Ticker
     + Timer(定时器)
 
-获取当前时间
+* 获取当前时间
+    - (1) `currentTime:=time.Now()`     //获取当前时间，类型是Go的时间类型Time
 
-     (1) currentTime:=time.Now()     //获取当前时间，类型是Go的时间类型Time
-
-时间格式化：
+* 时间格式化：
 
 ```golang
 BeginTime := "20191126 145500"
@@ -628,6 +627,24 @@ BeginTime := "20191126 145500"
 // 此处有个简单的源码分析：[Golang神奇的2006-01-02 15:04:05](https://www.jianshu.com/p/c7f7fbb16932)
 formatTime, _ := time.Parse("20060102 150405", BeginTime)
 fmt.Printf("ori time:%v, parse:%v\n", BeginTime, formatTime.Format("2006-01-02 15:04:05"))
+```
+
+* Sleep
+    - `time.Sleep(10 * time.Second)`，sleep十秒
+    - 函数如下：`func Sleep(d Duration)`
+        + `Duration` 结构：`type Duration int64`，表示持续时间，int64表示的`纳秒`(最长290年左右)
+        + 定义的一些时间相关的const变量
+            * `const Second = 1000 * Millisecond`
+
+```golang
+const (
+    Nanosecond  Duration = 1
+    Microsecond          = 1000 * Nanosecond
+    Millisecond          = 1000 * Microsecond
+    Second               = 1000 * Millisecond
+    Minute               = 60 * Second
+    Hour                 = 60 * Minute
+)
 ```
 
 ## string
