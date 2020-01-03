@@ -1,8 +1,68 @@
 ## go
 
+* 官网入门文档 [How to Write Go Code](https://golang.org/doc/code.html)
 * 安装
     - [Install the Go tools](https://golang.org/doc/install#install)
     - 下载并解压到/usr/local，`tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz`
+    - 添加环境变量(~/.bashrc或用zsh时：~/.zshrc)，`export PATH=$PATH:/usr/local/go/bin`
+    - 测试`go version` 查看版本得到 `go version go1.13.5 linux/amd64`
+* `GOPATH`环境变量
+    - [The GOPATH environment variable](https://golang.org/doc/code.html#Workspaces)
+    - `go help gopath` 查看说明信息
+    - `GOPATH`指定工作空间(`workspace`)的位置，Unix上默认`$HOME/go`，可以通过`go env GOPATH`查看
+        + 可以指定一个不同的位置
+        + 注意：`GOPATH`不能和go的安装路径一样
+    - 通过环境变量指定`GOPATH`，可以指定多个，用`:`隔开(Unix`:`，而Windows上用`;`)
+        + e.g. `export GOPATH=$GOPATH:/home/xd/go_path`
+        + 为了方便起见，可以把工作空间的`bin`路径添加到`PATH`中
+    - 每个`GOPATH`下的目录结构需要满足指定的结构
+        + `src` 放源码
+        + `pkg` 放安装包
+            * 存放的目录结构为`pkg/GOOS_GOARCH`，`GOOS_GOARCH`用来区分不同系统架构，如Windows下为`windows_amd64`
+        + `bin` 放编译好的命令，每个命令都以`源码目录的最后层级`命名
+            * e.g. DIR在GOPATH中，源码目录：DIR/src/foo/quux，则编译的命令quux路径为：DIR/bin/quux，而不是 DIR/bin/foo/quux
+            * 如果设置了`GOBIN`变量，则命令放置位置会由`DIR/bin`替换为环境变量设置的路径(需要设置为绝对路径)
+    - Go搜索源代码时会搜索每个在`GOPATH`中列出的目录，不过注意：新的包只会下载在列表的`第一个`目录
+        + 若使用`modules`，则`GOPATH`不再用于解析`import`，不过还是会用于存放源码和编译后的命令
+* `import path`
+    - [Import paths](https://golang.org/doc/code.html#ImportPaths)
+    - `import path`唯一标识一个包，一个包的import path和它在工作空间或者远程仓库中的位置是对应的
+* `go install` 生成执行文件到`$GOPATH/bin`中
+    - 可以在任何地方执行，`/home/xd/workspace/go_path/src/hello`目录下，新建了`hello.go`文件
+        + 则可以cd到目录中执行`go install`
+        + 或者 `go install /home/xd/workspace/go_path/src/hello`
+* `go build` 使用库
+    - [Your first library](https://golang.org/doc/code.html#Library)
+    - 示例见链接
+        + 新建要包含函数的.go文件，`package stringutil`
+        + `func Reverse(s string) string {}`
+        + 测试package编译，执行`go bulid`
+            * 此步骤不会生成输出文件，而是将编译的包保存在本地编译缓存中
+        + 在其他函数中调用上述函数(使用`import 相对$GOPATH的路径`导入其所在的包)，`go install` 生成执行文件，执行即可
+            * `import ("stringutil")`
+* `Package names`
+    - 在Go源文件中，第一个语句必须是 `package name`
+    - `name`是`import`时默认的package包名
+    - 所有在一个package中的文件必须使用相同的`name`
+    - Go的约定是package名是导入路径的最后一级的名字，如导入`import "crypto/rot13"`，则导入的包应该是rot13
+    - **可执行的命令必须使用包`main`**，e.g. `package main`
+        + 链接到一个二进制文件的所有包中，包名不必需唯一，但导入的全路径必须唯一
+* `Testing`
+    - [Testing](https://golang.org/doc/code.html#Testing)
+    - Go包含一个轻量级框架 `testing` 包，使用`go test`命令使用
+        + `import "testing"` 来使用
+    - 使用要求
+        + 文件命名格式：`_test.go`
+        + 要测试的函数命名格式：`TestXXX`
+        + 签名：`func (t *testing.T)`
+            * e.g. `func TestReverse(t *testing.T) {...}`
+        + 调用`t.Error` 或者 `t.Fail`则当做测试失败
+    - `go test` 进行用例测试
+* `Remote packages` 远程package
+    - `go get`
+        + 该命令将会自动 `fetch`、`build`、`install`
+        + 如果本地已存在该package，则`go get`会跳过`fetch`(和`go install`表现得一致)
+        + e.g. `go get github.com/golang/example/hello`，生成执行文件：`$GOPATH/bin/hello`，可直接使用
 
 ### 变量声明
 
@@ -649,10 +709,15 @@ const (
 
 ## string
 
-是一个不可变的byte切片，初始化后不能修改成员
-
-* unicode和utf-8
+* 是一个不可变的byte切片，初始化后不能修改成员
+* Go语言的字符有以下两种：
+    - 一种是 `uint8` 类型，或者叫 `byte` 型，代表了 ASCII 码的一个字符
+    - 另一种是 `rune` 类型，代表一个 UTF-8 字符，当需要处理中文、日文或者其他复合字符时，则需要用到 `rune` 类型。`rune` 类型等价于 `int32` 类型。
+* `unicode`和`utf-8`
     - unicode是一种编码，utf-8是unicode的一种存储实现
+    - golang中string底层是通过`byte数组`实现的。中文字符在unicode下占`2`个字节，在utf-8编码下占`3`个字节，而golang默认编码正好是`utf-8`。
+        + 所以 `var str = "hello 你好"`，`len(str)`是12(5+1+3*2)，而不是8
+        + `len([]rune(str))` 则是8
 
 ```golang
 var s string = "中"   // len(s):3
