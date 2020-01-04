@@ -1,6 +1,20 @@
 ## go
 
+## Go文档
+
+* [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
+    - 本文档就如何编写清晰、地道的 Go 代码提供了一些技巧。它是对 `语言规范`、`Go 语言之旅` 以及 `如何使用 Go 编程` 的补充说明，因此我们建议您先阅读这些文档。
+        + [Go编程语言规范](https://go-zh.org/ref/spec)
+            * 英文版：[The Go Programming Language Specification](https://golang.org/ref/spec)
+        + [Go 语言之旅](https://tour.golang.org/)
+        + [如何使用 Go 编程](https://go-zh.org/doc/code.html)
+            * 英文版：[How to Write Go Code](https://golang.org/doc/code.html)
+* [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
+
+### 如何使用 Go 编程
+
 * 官网入门文档 [How to Write Go Code](https://golang.org/doc/code.html)
+    - 中文版：[如何使用 Go 编程](https://go-zh.org/doc/code.html)
 * 安装
     - [Install the Go tools](https://golang.org/doc/install#install)
     - 下载并解压到/usr/local，`tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz`
@@ -63,6 +77,13 @@
         + 该命令将会自动 `fetch`、`build`、`install`
         + 如果本地已存在该package，则`go get`会跳过`fetch`(和`go install`表现得一致)
         + e.g. `go get github.com/golang/example/hello`，生成执行文件：`$GOPATH/bin/hello`，可直接使用
+
+### [Go编程语言规范](https://go-zh.org/ref/spec)
+
+* [Go编程语言规范](https://go-zh.org/ref/spec)
+    - 源码为采用 `UTF-8` 编码的 Unicode 文本
+
+## 语法
 
 ### 变量声明
 
@@ -771,13 +792,6 @@ string:=strconv.Itoa(int)
 #int64到string
 string:=strconv.FormatInt(int64,10)
 ```
-
-## Go文档
-
-* [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
-* [Go编程语言规范](https://go-zh.org/ref/spec)
-
-* [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
 
 ## net 包
