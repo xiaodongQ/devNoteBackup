@@ -447,3 +447,9 @@ while True:
 
 把一个类作为一个迭代器使用需要在类中实现两个方法 __iter__() 与 __next__() 。
 
+## 安装包问题
+
+* Pip 安装pymongo失败
+    - "WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/pymongo/"
+    - `pip install pymongo -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com`
+    - [Pip 安装pymongo失败](https://blog.csdn.net/lwc5411117/article/details/79659794)
