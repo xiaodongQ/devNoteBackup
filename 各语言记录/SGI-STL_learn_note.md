@@ -103,22 +103,24 @@ Oracle VM VirtualBox搭建的虚拟机
 template <class T, class Alloc = alloc>  // 缺省使用 alloc 为配置器
 class vector {...};
 
-vector<int, std::alloc> iv; 
+vector<int, std::alloc> iv;
 ```
 
 * `<defalloc.h>` SGI 标准的空间配置器，`std::allocator`
     - allocator 只是基层内存配置/释放行为(::operator::new 和 ::operator::delete)的一层薄薄的包装，并没有考虑到任何效率上的强化。
 * SGI 特殊的空间配置器：`std::alloc`
-    - `<stl_construct.h>`：定义了全局函数 construct() 和 destroy()，负责对象内容的构造和析构。 
+    - `<stl_construct.h>`：定义了全局函数 construct() 和 destroy()，负责**对象内容的构造和析构**。
         + `placement new操作符`，查看源码实现中，使用了该操作符
             * `placement new`是重载`operator new`的一个标准、全局的版本
             * 原型：`void *operator new( size_t, void *p ) throw()  { return p; }`
             * `new`, `operator new`, `placement new`
-                - 要实现不同的内存分配行为，需要重载`operator new`，而不是new和delete。
+                - 要实现不同的内存分配行为，需要重载`operator new`(全局函数，相当于C的malloc)，而不是new和delete。
                 - `new`实际执行了三步：1.调用`operator new`分配内存；2.调用构造函数生成类对象；3.返回相应指针
             * `placement new`在一个预先准备好了的内存缓冲区中进行，不需要查找内存，内存分配的时间是常数；避免像使用`new`操作符分配内存时在堆中查找足够大的剩余空间，这个操作速度是很慢的，而且有可能出现无法分配内存的异常（空间不够）。`placement new`非常适合那些对时间要求比较高，长时间运行不希望被打断的应用程序。
             * `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
             * 可参考：[C++中placement new操作符](https://blog.csdn.net/zhangxinrun/article/details/5940019)
+        + `destroy`两个版本：1. 接受一个指针 2. 接受两个迭代器([first,last)注意区间)
+            * 第二个版本，迭代器范围万一很大而析构无关痛痒的情况，先用`value_type()`获得所指对象型别，再用`__type_traits<T>`判断该型别的析构是否无关痛痒(不重要的析构trivial destructor)，若是则什么都不做就结束，若否则循环调第一个版本的`destroy`(`value_type`和`__type_traits<>`的实现在后续章节介绍)
     - `<stl_alloc.h>`：定义了一、二级配置器，配置器名为 alloc。负责内存空间的配置/释放。
     - `<stl_uninitialized.h>`：定义了全局函数，用来填充(fill)或复制(copy)大块内存数据。
 
