@@ -1788,7 +1788,7 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
 
 ## 模板
 
-* [C++ 模板详解（一）](https://www.cnblogs.com/gw811/archive/2012/10/25/2738929.html)
+* 参考：[C++ 模板详解（一）](https://www.cnblogs.com/gw811/archive/2012/10/25/2738929.html)
 * 模板
     - 通常有两种形式：`函数模板`和`类模板`
         + 函数模板 针对仅参数类型不同的函数；
@@ -1812,5 +1812,28 @@ template <class 形参名1, class 形参名2, ...>
 {
     函数体
 }
+```
+
+* 类模板
+    - 一但声明了类模板就可以用类模板的 形参名 声明类中的成员变量和成员函数
+        + 即可以在类中使用内置类型的地方都可以使用模板形参名来声明
+        + e.g. `template<class T> class A{public: T a; T b; T hy(T c, T &d);};`
+            * 在类A中声明了两个类型为T的成员变量a和b，还声明了一个返回类型为T带两个参数类型为T的函数hy
+    - 类模板对象的创建
+        + 一个模板类A，则使用类模板创建对象的方法为A<int> m;
+        + 对于类模板，模板形参的类型必须在类名后的尖括号中明确指定。比如`A<2> m`;
+            * 用这种方法把模板形参设置为int是`错误`的（编译错误：error C2079: 'a' uses undefined class 'A<int>'），类模板形参不存在实参`推演`的问题。
+            * 也就是说不能把整型值2推演为int 型传递给模板形参。要把类模板形参调置为int 型必须这样指定`A<int> m`
+    - 在类模板外部定义成员函数的方法为：
+        + `template<模板形参列表> 函数返回类型 类名<模板形参名>::函数名(参数列表){函数体}`
+        + e.g. 两个模板形参T1，T2的类A中含有一个`void h()`函数，实现函数：`template<class T1,class T2> void A<T1,T2>::h(){}。`
+        + 当在类外面定义类的成员时template后面的模板形参应与要定义的类的模板形参一致。
+
+```cpp
+template<class 形参名1, class 形参名2, ...>
+class 类名
+{
+    ...
+};
 ```
 
