@@ -4,10 +4,12 @@
     - 下载mysql zip
     - 没有data目录，如果没有data目录，安装后`net start mysql`启动的时候就会报这个错：MySQL 服务无法启动。
     - 需要使用命令生成data文件夹
-        + bin目录，mysqld -install
+        + 到bin目录，`mysqld -install`
         + `mysqld --initialize --user=root --console`初始化后可看到新的data目录(可能会产生一个默认生成的密码)
         + 启动`net start mysql`
         + 登录`mysql -uroot -p` 若生成默认密码则用其登录，若没有回车即可进入mysql控制台
+    - `mysqld -remove mysql` 卸载安装的mysql
+    - 如果是通过安装包安装的，则可以查看启动的命令：`控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)`
 
 * Windows下检查mysql是否开机启动：
     - 控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)-启动类型为"自动"则为开机启动

@@ -1,8 +1,8 @@
 ## Zabbix
 
-[Zabbix 3.0 从入门到精通(zabbix使用详解)](https://www.cnblogs.com/clsn/p/7885990.html)
 
 * 网站/服务器 的可用性 和 监控内容
+    - [Zabbix 3.0 从入门到精通(zabbix使用详解)](https://www.cnblogs.com/clsn/p/7885990.html)
     - 高可靠性(高可用)，HA(High Avaiable)
     - 一个衡量可靠性的标准——X个9，X代表数字3~5
         + X个9表示在软件系统1年时间的使用过程中，系统可以正常使用时间与总时间（1年）之比
@@ -152,6 +152,22 @@
     + 安装完成，按链接检查前端安装项，数据库地址、用户密码等
         * [前端安装步骤](https://www.zabbix.com/documentation/4.0/manual/installation/install#installing_frontend)
         * 确认配置完成后，会出来登录页面，默认用户： Admin, 密码： zabbix
+    + 注意：
+        + 由于服务器操作的安全性要求和任务关键性，`UNIX`(类 Unix) 是唯一能够始终如一地提供必要性能、容错和弹性的操作系统。
+            * 所以server只能在UNIX(Linux)上，agent则可以为Linux或Windows
+        + Windows安装使用agent
+            * Windows安装zabbix监控(agent)，可参考官网：[Windows 下的Zabbix agent](https://www.zabbix.com/documentation/4.0/zh/manual/appendix/install/windows_agent)
+            * 下载地址：[官网下载agent地址](https://www.zabbix.com/cn/download_agents)
+                - `zabbix_agentd.exe --start`
+                - `zabbix_agentd.exe --stop`
+            * 监控windows下的mysql：
+                - 上面链接下载安装，安装时可以输入配置的server和激活远程命令执行(也可后续在配置文件中修改后重启服务)
+                    + `控制面板-系统和安全-管理工具-服务(双击打开)-找到对应服务名(zabbix...)` 可以手动重启，或者上面的命令重启
+                - 配置监控项、触发器、动作(和Linux一致)
+                    + 关于动作：可以找到对应的服务名(控制面板-系统和安全-管理工具-服务(双击打开)-找到对应服务名)，然后`net start 服务名`进行启动
+                    + 比如我的环境下，`服务`中mysql服务名是：`MySQL80`，则远程执行命令设置：`net start mysql80`(大小写均可)
+        + 参考：[支持的平台](https://www.zabbix.com/documentation/4.0/zh/manual/concepts/server)
+        + Zabbix server 需要 UTF-8 语言环境，以便可以正确解释某些文本项。
 
 #### 入门使用
 
