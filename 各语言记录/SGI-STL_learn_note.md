@@ -127,6 +127,14 @@ vector<int, std::alloc> iv;
             * 可参考：[C++中placement new操作符](https://blog.csdn.net/zhangxinrun/article/details/5940019)
     - `<stl_alloc.h>`：定义了一、二级配置器，配置器名为 alloc 。负责内存空间的配置/释放。
         + `simple_alloc` SGI STL容器全部使用这个simple_alloc接口
+            * 使用模板传入的类型(class或typename)对应的`allocate`和`deallocate`版本
+        + 模板类`__malloc_alloc_template`(模板形参并没有用到)
+        + 空间的配置和释放，std::alloc
+            * 向 system heap 要求空间
+            * 考虑多线程(multi-threads)状态
+                - 通过判断宏`_NOTHREADS`是否定义，若没有定义则用`_Lock`类，利用RAII机制来进行加锁，进行多线程的同步
+            * 考虑内存不足时的应变措施
+  + 考虑过多 “小型区块” 可能造成的内存碎片问题
     - `<stl_uninitialized.h>`：定义了全局函数，用来填充(fill)或复制(copy)大块内存数据。
 
 
