@@ -126,6 +126,8 @@ vector<int, std::alloc> iv;
             * `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
             * 可参考：[C++中placement new操作符](https://blog.csdn.net/zhangxinrun/article/details/5940019)
     - `<stl_alloc.h>`：定义了一、二级配置器，配置器名为 alloc 。负责内存空间的配置/释放。
+        + 文件结构
+            * 定义了模板类`__malloc_alloc_template`、`simple_alloc`、`debug_alloc`、`__default_alloc_template`、`allocator`等
         + `simple_alloc` SGI STL容器全部使用这个simple_alloc接口
             * 使用模板传入的类型(class或typename)对应的`allocate`和`deallocate`版本
         + 模板类`__malloc_alloc_template`(模板形参并没有用到)
