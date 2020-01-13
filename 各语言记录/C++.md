@@ -1002,12 +1002,179 @@ K&R C语言到ANSI/ISO标准C语言 (C89/C90)的改进包括：
 * 显式类型转换
     - C风格的强制转换 `type val = (type)(expression);`
     - C++命名的强制类型转换，C++提供了4个命名的强制类型转换
+        + 类型转换的示例，参考：[C++ 四种强制类型转换](https://www.cnblogs.com/Allen-rg/p/6999360.html)
         + `static_cast<type>(expression);` 很像 C 语言中的旧式类型转换，是非安全的
+            * e.g. `double result = static_cast<double>(a) / static_cast<double>(b);`，模板特化
+            * 同 `double result = (double)a / (double)b;`
+            * static_cast不能转换掉expression的const、volitale或者__unaligned属性。
         + `dynamic_cast` 主要用来在继承体系中的安全向下转型,是实现多态的一种方式。
+            * 其他三种都是编译时完成的，dynamic_cast是运行时处理的，运行时要进行类型检查。
+            * 不能用于内置的`基本数据类型`的强制转换
+            * dynamic_cast转换如果成功的话`返回`的是`指向类的指针或引用`，转换失败的话则会返回`NULL`。
+            * 使用dynamic_cast进行转换的，基类中`一定要有虚函数`，否则编译不通过。(通过虚函数实现多态)
+                - 这是由于运行时类型检查需要运行时类型信息，而这个信息存储在类的虚函数表，只有定义了虚函数的类才有虚函数表。
+            * 在类的转换时(参考链接示例)
+                - 在类层次间进行上行转换时(子类指针转换为父类指针)，`dynamic_cast`和`static_cast`的效果是一样的
+                - 在进行下行转换时，`dynamic_cast`具有类型检查的功能(转换失败返回NULL，所以应该判断)，比`static_cast`更安全
+                    + 编译成功，运行时错误，dynamic_cast转换会失败，返回NULL
         + `const_cast` 可去除对象的常量性（const）还可以去除对象的易变性（volatile）
+            * 在C语言中，const限定符通常被用来限定变量，用于表示该变量的值不能被修改。
+            * 而const_cast则正是用于强制去掉这种不能被修改的常数特性
+            * 但需要特别注意的是const_cast`不是用于去除变量的常量性`，而是去除`指向常数对象的指针或引用`的常量性，其去除常量性的**对象必须为指针或引用**。
+            * 对指向`const常量`的`const指针`(或引用)去除const属性后(e.g.通过const_cast<int*>(p))，解引用后进行赋值操作，其语句行为是未定义的，即在标准C++规范中并没有明确规定这种语句的具体行为，其具体行为由编译器来自行决定如何处理。对于这种未定义行为的语句应该尽量予以避免！
+            * const_cast的应用场景是函数返回是const指针或者引用，不过在调用该函数的外部，指针或引用指向的变量并不是const的，这种情况可以去除const属性进行操作(可参考上面链接中的示例)
+            * 但是建议`不要`利用const_cast去掉指针或引用的常量性并且去修改原始变量的数值，这是一种`非常不好`的行为
         + `reinterpret_cast` 用来执行低级转型，如将执行一个 int 的指针强转为 int
-            * 其转换结果与编译平台息息相关，不具有可移植性，因此在一般的代码中不常见到它。
+            * 其转换结果与编译平台相关(指针长度：32位4字节、64位8字节)
+            * 用法：`reinterpret_cast<type_id> (expression)`
+            * 用途：改变指针或引用的类型(别的类型指针)、将指针或引用转换为一个足够长度的整形、将整型转换为指针或引用类型
+                - 可以把一个指针转换成一个整数
+                - 也可以把一个整数转换成一个指针
+* 虚函数表
+    - [C++ 虚函数表解析](https://blog.csdn.net/haoel/article/details/1948051/)
+        + 注意参考链接中的示例是基于32位系统的，虚函数地址表成员强转为`(int*)`类型是ok的(地址表里都保存int 4字节的地址)，但是对于64位系统，`(int*)`就有问题了，应该是`(long*)`，虚函数表中保存的指针为8字节数据
+        + 虚函数表中只保存虚函数的地址/指针，示例中的子类成员函数也是定义成virtual的
+    - 虚函数（Virtual Function）是通过一张`虚函数表（Virtual Table）`来实现的。简称为V-Table。
+        + 编译器会为每个有虚函数的类创建`一个`虚函数表，该虚函数表将被`该类的所有对象共享`
+        + 类的每个虚成员占据虚函数表中的一行。如果类中有N个虚函数，那么其虚函数表将有`N*4或者8`(指针字节大小4或8)的大小。
+        + 虚函数表放在应用程序的`常量区`
+        + [vtbl（虚函数表）与vptr（虚函数表指针）](https://blog.csdn.net/micx0124/article/details/9838147)
+    - 在这个表中，主要是一个类的虚函数`地址表`，这张表解决了继承、覆盖的问题。
+    - 当我们用父类的指针来操作一个子类的时候，虚函数表指明了实际所应该调用的函数。
+    - C++的编译器应该是保证`虚函数表的指针`存在于对象实例中`最前面的位置`(第一个指针，前4/8个字节)（这是为了保证取到虚函数表的有最高的性能——如果有多层继承或是多重继承的情况下）。这意味着我们通过对象实例的地址得到这张虚函数表，然后就可以遍历其中的函数指针，并调用相应的函数
+    - 参考链接中的示例：
+        + class Base含有下面的虚函数：`virtual void f() { cout << "Base::f" << endl; }`和`virtual void g() { cout << "Base::g" << endl; }`
+        + 定义对象实例：`Base b;`，则虚函数表的指针(位于对象最前面)为 `(long*)(&b)`，(而不是 ~~(int*)(&b)~~)
+            * 也可以用 `reinterpret_cast<unsigned long*>(&b)`，将对象指针转换为(长)整型的指针(指针长度：unsigned long)
+            * 使用int时编译警告：将一个整数转换为大小不同的指针 [-Wint-to-pointer-cast]
+        + 通过虚函数表的指针找到对应虚函数的地址(函数指针)，声明函数地址类型为： `typedef void (*Func)(void);`
+        + 则可得虚函数成员f()(第一个虚函数)的地址为： `*((long*)*(long*)(&b) + 0)`，强转为函数指针`(Func) *((long*)*(long*)(&b) + 0)`
+        + 第二个虚函数`g()`地址为：`(Func) *((long*)*(long*)(&b) + 1)` (强转为long*，64位系统下+1则偏移8字节)
+    - gdb 查看虚函数表
+        + a. `b 行号` 打断点到对象定义后，`p b`打印对象
+            * `set print object on` 可设置打印真实的类类型(即打印对象的指针时，打印派生的实际类而不是基类)
+                - 有RTTI才生效，需要有虚函数才生效
+                - 参考gdb onlinedoc(搜set print object on)：[gdb onlinedoc](https://sourceware.org/gdb/onlinedocs/gdb/Print-Settings.html)
+        + b. 设置上面的object on后，`p b`打印前面多了一个`(真实类型)`
+            * `$6 = {_vptr.Base = 0x400f90 <vtable for Base+16>}` 设置前
+            * `$7 = (Base) {_vptr.Base = 0x400f90 <vtable for Base+16>}` 设置后
+        + c. 查看虚表指针(`0x400f90`)中的内容(可以看到虚函数f()、g()、h()及对应地址)
+            * `p /a *(void**)0x400f90@4` 或(`p/a`)
+                - `$15 = {0x400ce6 <Base::f()>, 0x400d10 <Base::g()>, 0x400d3a <Base::h()>, 0x6465766972654437}`
+                - `set print symbol-filename on` 可打印各虚函数在文件中的位置(文件和行号)
+            * [GDB print 详解](https://blog.csdn.net/linuxheik/article/details/17380767)
+                - `@` 是一个和数组有关的操作符
+                - `::` 指定一个在文件或是一个函数中的变量。变量重名时，查看文件f2.c中的全局变量x的值：`(gdb) p 'f2.c'::x`
+                - `p *array@len ` array:数组的首地址，len:数据的长度
+                - `/a` 按十六进制格式显示变量。 还可以`p/c`字符格式、`p/d`十进制、`p/o`八进制、`p/f`浮点数等等
+        + [gdb查看虚函数表、函数地址](https://www.cnblogs.com/johnnyflute/p/3675630.html)
 
+示例(64位CentOS)：
+
+```cpp
+#include <iostream>
+#include <cstdio>
+
+using namespace std;
+
+class Base {
+
+public:
+    virtual void f() { cout << "Base::f" << endl; }
+    virtual void g() { cout << "Base::g" << endl; }
+    virtual void h() { cout << "Base::h" << endl; }
+    void i() { cout << "Base::i" << endl; }
+};
+
+class Derived final : Base {
+
+public:
+    virtual void haha() { cout << "Derived::haha" << endl;}
+    void i() { cout << "Derived::i" << endl; }
+};
+
+typedef void (*Func)(void);
+
+int main(int argc, char const *argv[])
+{
+    long *point = NULL;
+    // point size: 8, sizeof(long):8, sizeof(int):4
+    cout << "point size: " << sizeof(point)
+        << ", sizeof(long):" << sizeof(long)
+        << ", sizeof(int):" << sizeof(int)
+        << endl;
+    Base b;
+
+    /*
+        虚表地址:0x400f30
+        第一个虚函数地址:0x400cb2
+        第二个虚函数地址:0x400cdc
+    */
+    // 第一个指针中的内容(存放虚函数表地址)
+    printf("虚表地址:%p\n", *(long *)(&b));
+    // 虚函数表按顺序保存虚函数地址(普通成员的函数地址/指针不保存)
+    printf("第一个虚函数地址:%p\n", *(long*)*(long*)(&b));
+    printf("第二个虚函数地址:%p\n", *((long*)*(long*)(&b) + 1));
+
+    cout << "======= 等价于 ======" << endl;
+    /*
+        虚表地址:0x400f30
+        第一个虚函数地址:0x400cb2
+        第二个虚函数地址:0x400cdc
+    */
+    unsigned long *pVt = reinterpret_cast<unsigned long*>(&b); // 对象地址转为unsigned long*类型
+    pVt = (unsigned long*)*pVt; // 虚函数表指针
+    printf("虚表地址:%p\n", pVt);
+    printf("第一个虚函数地址:%p\n", pVt[0]);
+    printf("第二个虚函数地址:%p\n", pVt[1]);
+    cout << "==============\n" << endl;
+
+    /*
+        addr:0x400cb2, addr2:0x400cdc
+        Base::f
+        Base::g
+    */
+    Func addr =  (Func)*((long*)*(long*)(&b)+0);
+    // Func addr2 = (Func)*((int*)*(int*)(&b)+1); // 用int*会得到NULL
+    Func addr2 = (Func)*((long*)*(long*)(&b)+1);
+    cout << "addr:" << (long*)addr << ", addr2:" << (long*)addr2 << endl;
+    addr();
+    addr2();
+
+    cout << "==============111" << endl;
+    /*
+        addr: 0x400cb2, Base::f
+        addr: 0x400cdc, Base::g
+        addr: 0x400d06, Base::h
+    */
+    // 说明：若继承N个包含虚函数的类，则就有N个虚函数表(继承但不实现虚函数，子类虚函数顺序排列在表中；实现则替换地址值)
+    long **pVtable = (long**)(&b);
+    for (long i = 0; i<3 && NULL != (Func)pVtable[0][i]; i++)
+    {
+        addr = (Func)pVtable[0][i];
+        printf("addr: %p, ", pVtable[0][i]);
+        addr();
+    }
+
+    cout << "==============222" << endl;
+    /*
+        addr: 0x400cb2, Base::f
+        addr: 0x400cdc, Base::g
+        addr: 0x400d06, Base::h
+        addr: 0x400d30, Derived::haha
+    */
+    Derived derived;
+    pVtable = (long**)(&derived);
+    for (long i = 0;  NULL != (Func)pVtable[0][i]; i++)
+    {
+        addr = (Func)pVtable[0][i];
+        printf("addr: %p, ", pVtable[0][i]);
+        addr();
+    }
+
+    return 0;
+}
+```
 
 ## 空悬指针 和 野指针
 
@@ -1267,7 +1434,7 @@ int main()
 ```
 
 * 一旦你已经**自己创建了复制构造函数与复制赋值运算符后**，编译器**不会创建默认的移动构造函数和移动赋值运算符**，这点要注意。
-* 最好的话，这个4个函数一旦自己实现一个，就应该养成实现另外3个的习惯。
+* 最好的话，这4个函数一旦自己实现一个，就应该养成实现另外3个的习惯。
 * 这就是移动语义，用移动而不是复制来避免无必要的资源浪费，从而提升程序的运行效率。
 * 其实在C++11中，STL的容器都实现了移动构造函数与移动赋值运算符，这将大大优化STL容器。
 
