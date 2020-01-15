@@ -1992,6 +1992,10 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
         + 否则，CPU 需要从来源把每一片段的资料复制到暂存器，然后把它们再次写回到新的地方。在这个时间中，CPU 对于其他的工作来说就无法使用。
         + DMA 传输将数据从一个地址空间复制到另外一个地址空间。在实现DMA传输时，是由DMA控制器直接掌管总线，因此，存在着一个总线控制权转移问题。即DMA传输前，CPU要把总线控制权交给DMA控制器，而在结束DMA传输后，DMA控制器应立即把总线控制权再交回给CPU。一个完整的DMA传输过程必须经过DMA请求、DMA响应、DMA传输、DMA结束4个步骤。
 
+# 现代C++实战30讲
+
+* 极客时间课程：[现代C++实战30讲](https://time.geekbang.org/column/article/169268)
+
 ## C++管理资源
 
 * 编译器会自动调用析构函数，包括在函数执行发生异常的情况。在发生异常时对析构函数的调用，还有一个专门的术语，叫栈展开（stack unwinding）
@@ -2083,3 +2087,23 @@ class 类名
             * sg_ 静态全局变量（static global）
             * gg_ 进程或动态链接库间共享的全局变量（global global）
             * 除非不得已，否则应该尽可能少使用全局变量
+
+## assert
+
+* assert
+    - assert`宏`(而不是函数) 其作用是如果它的条件返回错误，则终止程序执行
+    - 如果`expression`其值为假（即为0），那么它先向`stderr`打印一条出错信息，然后通过调用 `abort` 来`终止程序`运行。
+    - 使用assert的缺点是，频繁的调用会极大的影响程序的性能，增加额外的开销。(应该仅在Debug版本使用)
+    - 在调试结束后，可以通过在包含`#include <assert.h>`的语句之前插入`#define NDEBUG`来禁用assert调用(编译时指定`-DNDEBUG`)
+
+```cpp
+// 原型
+#include <assert.h>
+void assert( int expression );
+
+// 禁用，编译时选项 -DNDEBUG，或 包含头文件前指定
+#include <stdio.h>
+#define NDEBUG
+#include <assert.h>
+```
+
