@@ -2087,6 +2087,7 @@ class 类名
             * sg_ 静态全局变量（static global）
             * gg_ 进程或动态链接库间共享的全局变量（global global）
             * 除非不得已，否则应该尽可能少使用全局变量
+* [C++0x（C++11）新特性点评](http://www.baiy.cn/doc/cpp/comments_of_cxx0x.htm)
 
 ## assert
 

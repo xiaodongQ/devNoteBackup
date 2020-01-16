@@ -1,10 +1,25 @@
 ## Consul
 
-* [用 Consul 来做服务注册与服务发现](https://segmentfault.com/a/1190000018731395)
-    - 为什么需要有服务注册与服务发现？
-    - 业界常用的服务注册与服务发现工具有 ZooKeeper、etcd、Consul 和 Eureka，Consul和其区别
-
-* [Consul 使用手册](http://www.liangxiansen.cn/2017/04/06/consul/)
-    - Download Consul：[官网下载地址](https://www.consul.io/downloads.html)
+* Consul
     - 协议：Mozilla Public License 2.0，只要该许可证的代码在单独的文件中，新增的其他文件可以不用开源
+    - [用 Consul 来做服务注册与服务发现](https://segmentfault.com/a/1190000018731395)
+        + 为什么需要有服务注册与服务发现？
+            * 环境背景：分布式系统中有服务Service-A(S-A)和Service-B(S-B)，S-A调用S-B
+            * 演进过程：服务规模小只有一个S-B (演进)-> 每个服务不止部署一个实例(此时多个S-B如何调用?) -> 引入Nginx -> 某服务实例挂掉后需要Nginx不向其分配请求 -> 引入"`服务注册和服务发现工具`" (架构图参考链接) -> 引入Consul(或其他工具)
+        + 业界常用的服务注册与服务发现工具有 `ZooKeeper`、`etcd`、`Consul` 和 `Eureka`，Consul和其区别参考链接中的链接
+        + Consul 作为一种分布式服务工具，为了避免单点故障常常以集群的方式进行部署，在 Consul 集群的节点中分为 `Server` 和 `Client` 两种节点（所有的节点也被称为`Agent`）
+            * Server 节点保存数据，Client 节点负责健康检查及转发数据请求到 Server；
+            * Server 节点有一个 `Leader` 节点和多个 `Follower` 节点，Leader 节点会将数据同步到 Follower 节点，在 Leader 节点挂掉的时候会启动选举机制产生一个新的 Leader。
+            * Client 节点很轻量且无状态，它以 RPC 的方式向 Server 节点做读写请求的转发，此外也可以直接向 Server 节点发送读写请求。 Consul 的架构图参考链接。
+    - [Consul 使用手册](http://www.liangxiansen.cn/2017/04/06/consul/)
 
+* 官网文档：[HashiCorp Consul Documentation](https://www.consul.io/docs/index.html)
+    - 入门使用文档，[GETTING STARTED](https://learn.hashicorp.com/consul?track=getting-started#getting-started)
+        + 安装
+            * Download Consul：[官网下载地址](https://www.consul.io/downloads.html)
+            * zip包中只有一个`consul`二进制文件(104M, `consul_1.6.2_linux_amd64`)，执行路径添加到PATH环境变量即可
+        + 启动`Consul agent`
+            * 每个`Consul agent`都运行在`server`或者`client`模式。
+            * 每个Consul数据中心都至少有一个`server`，负责维护Consul的状态
+                - 包括其他Consul server和client、什么服务可被发现、哪些服务可以和其他服务交互
+                - 注意：强烈反对单服务器产品部署Consul
