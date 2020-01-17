@@ -49,3 +49,5 @@ boost的TR1：
 * [用户态使用 glibc/backtrace 追踪函数调用堆栈定位段错误](https://blog.csdn.net/gatieme/article/details/84189280)
     - [如何调试没有core文件的coredump](https://zhuanlan.zhihu.com/p/56751496)
         + "backtrace在信号处理函数里运行是不安全的。"
+* 源码
+    - 网络编程 libevent(C)、Asio(C++ boost)、ACE(C++)
