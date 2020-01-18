@@ -44,6 +44,9 @@
             * 链接示例中演示了使用`Libevent`的低层次ROT13服务(编译时`-levent`)
                 - 使用`Libevent 2`来替换`select()`
                 - 注意，`fd_sets`现在没有了，使用`event_base`结构体(可以用`select()`, `poll()`, `epoll()`, `kqueue()`来实现)来对`事件`进行关联和解除关联
+        + 另外补充`poll`和`epoll`
+            * [poll](https://linux.die.net/man/2/poll)
+            * [epoll](https://linux.die.net/man/4/epoll)
     - 对于socket server端，`bind()`前一般都对要监听的socket设置一下 `SO_REUSEADDR` 选项
         + `int one = 1; setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));`
         + 关于`SO_REUSEADDR`(和`SO_REUSEPORT`)的说明
