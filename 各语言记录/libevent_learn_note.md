@@ -1,6 +1,7 @@
 ## libevent
 
 * GitHub：[libevent](https://github.com/libevent/libevent)
+* 个人fork学习路径：[libevent学习](https://github.com/xiaodongQ/libevent)
 
 * 文档：[Fast portable non-blocking network programming with Libevent](http://www.wangafu.net/~nickm/libevent-book/)
     - 文档开始的示例演示了不同网络IO的问题：
@@ -26,11 +27,11 @@
                 - 最早的解决方式是使用`select`
         + `select`
             * 见链接中的示例，`select`会等到有socket准备好时，修改描述符集(readset、writeset、exceptionset)只保留准备好的描述符
-                - `FD_ZERO(set)` 宏 清理文件描述符集fdset
+                - `FD_ZERO(set)` 宏 清理文件描述符集fdset (描述符集的数据结构为：`fd_set`)
                 - `FD_SET(fd,set)` 向文件描述符集fdset中新增文件描述符fd (listener描述符)
                 - `FD_CLR(fd,set)` 将对应fd移除
                 - `FD_ISSET(fd,set)`来检测(返回true) 文件描述符集fdset中是否存在文件描述符fd(`select`之后set中只保留准备好的fd)
-                - `select`返回后会把以前加入的但并无事件发生的fd清空，所以循环每次开始`select`前都要重新从array取得fd逐一加入（通过`FD_SET`，用前先将描述符集`FD_ZERO`），扫描array的同时取得fd最大值maxfd，用于select的第一个参数(maxfd+1)
+                - `select`返回后会把以前加入的但并无事件发生的fd清空(Linux用每位的0/1开关，MinGW的实现是用结构体数组标识每个fd)，所以循环每次开始`select`前都要重新从array取得fd逐一加入（通过`FD_SET`，用前先将描述符集`FD_ZERO`），扫描array的同时取得fd最大值maxfd，用于select的第一个参数(maxfd+1)
                 - 通过`FD_ISSET(fd,set)`判断指定描述符fd存在于指定set中时，调用处理函数(fd收到时已设置为nonblock，处理函数中send/recv失败时判断errno为 EAGAIN 的情况)
                 - 示例中给每个接收到的fd定义了一个数据结构，由于fd不能超过FD_SETSIZE，所以定义成了结构体指针数组，fd作为index
             * 但是还是没有解决`问题`：
@@ -45,8 +46,35 @@
                 - 使用`Libevent 2`来替换`select()`
                 - 注意，`fd_sets`现在没有了，使用`event_base`结构体(可以用`select()`, `poll()`, `epoll()`, `kqueue()`来实现)来对`事件`进行关联和解除关联
         + 另外补充`poll`和`epoll`
-            * [poll](https://linux.die.net/man/2/poll)
-            * [epoll](https://linux.die.net/man/4/epoll)
+            * man手册：[poll](https://linux.die.net/man/2/poll)
+                - `poll`和`select`类似，等待文件描述符集中的fd直到其准备好用于IO操作，测试示例参考libevent源码学习链接中的test_xd目录
+                - 优点
+                    + poll() 不要求开发者计算最大文件描述符加一的大小。
+                    + poll() 在应付大数目的文件描述符的时候速度更快，相比于select
+                    + 它没有最大连接数的限制，原因是它是基于链表来存储的
+                    + 在调用函数时，只需要对参数进行一次设置就好了
+                - 缺点
+                    + 大量的fd的数组被整体复制于用户态和内核地址空间之间，而不管这样的复制是不是有意义（epoll可以解决此问题）
+                    + 与select一样，poll返回后，需要轮询pollfd来获取就绪的描述符，这样会使性能下降
+                    + 同时连接的大量客户端在一时刻可能只有很少的就绪状态，因此随着监视的描述符数量的增长，其效率也会线性下降
+                - 优缺点参考：[poll 的使用方法及代码](https://blog.csdn.net/weixin_43825537/article/details/90211331)
+                - 关于select、poll、epoll三者比较，可参考：[IO多路复用的三种机制Select，Poll，Epoll](https://www.jianshu.com/p/397449cadc9a)
+            * man手册：[epoll](https://linux.die.net/man/4/epoll)
+                - `epoll`是`poll`的一个变体，既可用作Edge Triggered ( ET )边缘触发，也可用于Level Triggered ( LT )水平触发，可以很好地扩展到监测大量fd
+                - 三个系统调用用于控制使用`epoll`：
+                    + `int epoll_create(int size);`
+                        * 创建一个epoll实例的文件描述符句柄，该句柄用于后续所有的epoll相关接口。不再使用时需要`close`关闭句柄
+                        * 从Linux2.6.8起，`size`参数就被忽略了，但需要`>0`
+                    + `int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);`
+                        * epoll句柄的控制接口
+                            - `epfd`传`epoll_create`创建的句柄，是操作的对象
+                            - `op`指定操作，支持`EPOLL_CTL_ADD`、`EPOLL_CTL_MOD`、`EPOLL_CTL_DEL`
+                        * 感兴趣的fd通过`epoll_ctl`注册
+                    + `epoll_wait`，实际的wait从调用`epoll_wait`后开始
+            * 比较
+                - `./rot13_server_poll`       10线程10000请求，cost:530.000000 ms
+                - `./rot13_server_select`     cost:520.000000 ms
+                - `./rot13_server_accept_for` cost:860.000000 ms
     - 对于socket server端，`bind()`前一般都对要监听的socket设置一下 `SO_REUSEADDR` 选项
         + `int one = 1; setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));`
         + 关于`SO_REUSEADDR`(和`SO_REUSEPORT`)的说明

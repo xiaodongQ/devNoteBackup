@@ -36,9 +36,14 @@ boost的TR1：
 * 博客
     - Tony Bai，Go&C: [Tony Bai](https://tonybai.com/articles/)
         + [如何在Go语言中使用Websockets：最佳工具与行动指南](https://tonybai.com/2019/09/28/how-to-build-websockets-in-go/)
-    - 跨平台、分布式 C/C++ 开发，白杨：[白杨的博客](http://baiy.cn/)
+    - 白杨：[白杨的博客](http://baiy.cn/) 跨平台、分布式 C/C++ 开发，
         + 看了一篇《C++编码规范与技术指导-何时处理异常》，直接将自己的错误处理代码风格(do...while(0))列为了反面教材，，(实际中设置错误码break退出然后返回给客户端，自我感觉是挺清晰的，不过针对会抛异常可能导致段错误的块，确实需要额外捕获)
             * [代码风格与版式_异常](http://www.baiy.cn/doc/cpp/index.htm#%E4%BB%A3%E7%A0%81%E9%A3%8E%E6%A0%BC%E4%B8%8E%E7%89%88%E5%BC%8F_%E5%BC%82%E5%B8%B8)
+    - [陶辉：聚焦分布式系统的程序员](https://blog.csdn.net/russell_tao)
+        + 看了几篇 linux内核调度算法 的博客，加上查其他资料和极客时间上也有他的课程，看了下博文列表，很有学习价值
+        + 性能优化，高性能编程，分布式，Nginx，MongoDB
+        + 智链达CTO，《深入理解Nginx》作者+ 上面的CSDN看文章老提示登录，比较烦，不过目录导航还是比较便捷。博主的其他主页：
+        + [个人站点](http://www.taohui.pub/?s=paxos)，[腾讯云](https://cloud.tencent.com/developer/article/1449436)
 * 官方
     - [golang.org](https://golang.org/)
         + go.dev发布之后，golang.org官网将更加聚焦go开源项目本身的开发、语言演化以及Go版本发布
