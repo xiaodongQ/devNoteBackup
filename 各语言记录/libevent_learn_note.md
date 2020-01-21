@@ -46,7 +46,7 @@
             * 使用`Libevent 2`来替换`select()`
             * 注意，`fd_sets`现在没有了，使用`event_base`结构体(可以用`select()`, `poll()`, `epoll()`, `kqueue()`来实现)来对`事件`进行关联和解除关联
     - 另外补充`poll`和`epoll`
-        + man手册：[poll](https://linux.die.net/man/2/poll)
+        + `poll`，[poll](https://linux.die.net/man/2/poll)
             * `poll`和`select`类似，等待文件描述符集中的fd直到其准备好用于IO操作，测试示例参考libevent源码学习链接中的test_xd目录
             * `int poll(struct pollfd *fds, nfds_t nfds, int timeout);`
                 - `fds`，需要监控的文件描述符集合，结构体包含：
@@ -55,10 +55,10 @@
                     + `short revents;`出参，内核将实际发生的事件填入其中
                 - `nfds`，指定fds的数量
                 - `timeout`，超时时间 毫秒数，达到该超时之前`poll`会阻塞。设置为`负数`则一直阻塞，设置为0则立即返回(尽管无准备好的fd)
+            * `POLLIN`可读/`POLLPRI`紧急数据可读/`POLLOUT`可写/`POLLRDHUP`连接关闭/`POLLERR`错误条件/`POLLHUP`挂起/`POLLNVAL`无效请求(fd未打开)
             * 优点
                 - poll() 不要求开发者计算最大文件描述符加一的大小。
-                - poll() 在应付大数目的文件描述符的时候速度更快，相比于select
-                - 它没有最大连接数的限制，原因是它是基于链表来存储的
+                - poll() 在应付大数目的文件描述符的时候速度更快，相比于select，它没有最大连接数的限制，原因是它是基于`链表`来存储的
                 - 在调用函数时，只需要对参数进行一次设置就好了
             * 缺点
                 - 大量的fd的数组被整体复制于用户态和内核地址空间之间，而不管这样的复制是不是有意义（epoll可以解决此问题）
@@ -66,21 +66,26 @@
                 - 同时连接的大量客户端在一时刻可能只有很少的就绪状态，因此随着监视的描述符数量的增长，其效率也会线性下降
             * 优缺点参考：[poll 的使用方法及代码](https://blog.csdn.net/weixin_43825537/article/details/90211331)
             * 关于select、poll、epoll三者比较，可参考：[IO多路复用的三种机制Select，Poll，Epoll](https://www.jianshu.com/p/397449cadc9a)
-        + man手册：[epoll](https://linux.die.net/man/4/epoll)
+        + `epoll`，[epoll](https://linux.die.net/man/4/epoll)
             * `epoll`是`poll`的一个变体，既可用作Edge Triggered ( ET )边缘触发，也可用于Level Triggered ( LT )水平触发，可以很好地扩展到监测大量fd
             * 三个系统调用用于控制使用`epoll`：
-                - 参考：[epoll使用详解](https://blog.csdn.net/ljx0305/article/details/4065058)
-                - `int epoll_create(int size);`
+                - 参考：[epoll使用详解](https://www.jianshu.com/p/ee381d365a29)
+                - `int epoll_create(int size);` `int epoll_create1(int flags);`(flags设置为0时和epoll_create忽略size一样)
                     + 创建一个epoll实例的文件描述符句柄，该句柄用于后续所有的epoll相关接口。不再使用时需要`close`关闭句柄
                     + 从Linux2.6.8起，`size`参数就被忽略了，但需要`>0`
                 - `int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);`
                     + epoll句柄的控制接口，epoll的事件注册函数
                         * `epfd`，传的是`epoll_create`创建的句柄
-                        * `op`，指定动作，支持以下动作：`EPOLL_CTL_ADD`注册新的fd到epfd中、`EPOLL_CTL_MOD`修改已经注册的fd的监听事件、`EPOLL_CTL_DEL`从epfd中删除一个fd
+                        * `op`，指定动作，支持以下动作：
+                            - `EPOLL_CTL_ADD`注册新的fd到epfd中、
+                            - `EPOLL_CTL_MOD`修改已经注册的fd的监听事件、
+                            - `EPOLL_CTL_DEL`从epfd中删除一个fd
+                                + `EPOLL_CTL_DEL`时最后一个参数会忽略，可送NULL，不过kernel2.6.9之前需要一个非NULL(参考man epoll_ctl,BUGS)
                         * `fd`，第三个参数是需要`监听`的fd
                         * `struct epoll_event *event`，告诉内核需要监听什么事件(可组合，位掩码)
-                            - 包含两个成员：`__uint32_t events;`指定epoll的事件，EPOLLIN/EPOLLOUT/EPOLLPRI/EPOLLERR/EPOLLHUP/EPOLLET等等
-                            - 和`epoll_data_t data;`用户数据变量
+                            - 包含两个成员：
+                                + `__uint32_t events;` 指定epoll的事件，包含：`EPOLLIN`可读/`EPOLLOUT`可写/`EPOLLRDHUP`连接关闭/`EPOLLPRI`紧急数据可读/`EPOLLERR`错误条件(不需单独add设置)/`EPOLLHUP`挂起(不需add)/`EPOLLET`边缘触发(默认是水平触发)/`EPOLLONESHOT`一次性的行为
+                                + `epoll_data_t data;` 用户数据变量，联合体：其中一个成员是`int fd;`
                 - `int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);`
                     + 等待epoll描述符上的I/O事件产生，类似于select()调用。
                         * `epfd`，传的是`epoll_create`创建的句柄
@@ -100,10 +105,18 @@
                     + 注意，如果一直不对这个fd作IO操作(从而导致它再次变成未就绪)，内核不会发送更多的通知(only once).
                     + 优点：每次内核只会通知一次，大大减少了内核资源的浪费，提高效率。
                     + 缺点：不能保证数据的完整。不能及时的取出所有的数据。
-        + 比较
-            * `./rot13_server_poll`       10线程10000请求，cost:530.000000 ms
-            * `./rot13_server_select`     cost:520.000000 ms
-            * `./rot13_server_accept_for` cost:860.000000 ms
+            * epoll的优点
+                - 监视的描述符数量不受限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子,在1GB内存的机器上大约是10万左 右，具体数目可以`cat /proc/sys/fs/file-max`察看,一般来说这个数目和系统内存关系很大。
+                    + select的最大缺点就是进程打开的fd是有数量限制的。这对于连接数量比较大的服务器来说根本不能满足。虽然也可以选择多进程的解决方案( Apache就是这样实现的)，不过虽然linux上面创建进程的代价比较小，但仍旧是不可忽视的，加上进程间数据同步远比不上线程间同步的高效，所以也不是一种完美的方案。
+                - IO的效率不会随着监视fd的数量的增长而下降。epoll不同于select和poll轮询的方式，而是通过每个fd定义的回调函数来实现的。只有就绪的fd才会执行回调函数。
+                - 如果没有`大量的idle-connection或者dead-connection`，epoll的效率并不会比select/poll高很多，但是当遇到大量的idle-connection，就会发现epoll的效率大大高于select/poll。
+            * 参考(可查看三者比较，总结得比较好)：[I/O模型之二：Linux IO模式及 select、poll、epoll详解](https://www.jianshu.com/p/fe54ca4affe8)
+        + 运行比较(客户端10线程跑10000个请求，脚本中跑5次并求平均时间)
+            * `./rot13_server_accept_fork` avg clock() cost: 642 ms, gettimeofday():2569 ms
+            * `./rot13_server_select`      avg clock() cost: 496 ms, gettimeofday():604 ms
+            * `./rot13_server_poll`        avg clock() cost: 486 ms, gettimeofday():686 ms
+            * `./rot13_server_epoll`       avg clock() cost: 486 ms, gettimeofday():602 ms
+            * `./rot13_server_libevent`    (accept: Too many open files)
 * 对于socket server端，`bind()`前一般都对要监听的socket设置一下 `SO_REUSEADDR` 选项
     - `int one = 1; setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));`
     - 关于`SO_REUSEADDR`(和`SO_REUSEPORT`)的说明
@@ -128,3 +141,53 @@
                 - 要重新绑定`TIME_WAIT`的地址，需要新的socket设置为`SO_REUSEADDR`
                 - 或者`TIME_WAIT`的socket和新绑定的socket，都需要设置为`SO_REUSEPORT`
             * 当然，`SO_REUSEPORT`和`SO_REUSEADDR`在一个socket上可以同时设置
+* 关于`listen`函数的第二个参数，`int listen(int socket, int backlog);`
+    - [listen()函数中backlog参数分析](https://blog.csdn.net/ordeder/article/details/21551567)
+    - 当socket函数创建一个套接字时，它被假设为一个主动套装口(客户端socket，用于调用connect去连接服务端)，listen函数把一个未连接的套接字转换成一个被动套接字(告诉内核接受指向该socket的连接请求)。根据TCP状态转换图，调用listen导致套接字从`CLOSED`状态转换到`LISTEN`状态。
+    - 第二个参数`backlog`规定了内核应该为相应socket(套接字)排队的最大连接个数。一般为 `未完成三次握手队列` 和 `已经完成三次握手队列` 的大小之和
+        + 未完成连接队列（incomplete connection queue）
+            * `SYN`已由某个客户发出并到达服务器，而服务器正在等待完成相应的TCP三次握手过程。这些套接字处于`SYN_RCVD`状态。
+        + 已完成连接队列（completed connection queue）
+            * 每个已完成TCP三次握手过程的客户对应其中一项。这些套接字处于`ESTABLISHED`状态。
+    - 当来自客户的`SYN`到达时，TCP在未完成连接队列中创建一个新项，然后服务器给该项组装`SYN`响应，其中稍带对客户SYN的`ACK`（即SYN+ACK）(三次握手的第二个分节)，该项一直保留在未完成连接队列中，直到三次握手的第三个分节或者达到该项的超时时间。如果三次握手正常完成，该项就从未完成连接队列移到已完成连接队列的队尾。当进程调用`accept`时，已完成连接队列中的队头项将返回给进程(从已完成连接队列中取出一个“连接”)，如果队列为空，则进程进入睡眠，直到TCP在该队列中放入一项才唤醒它(监听套接字的已完成连接队列中的元素个数大于0，那么该套接字是可读的)。
+
+## 预备知识(官网文档)
+
+* 官网链接：[The Libevent Reference Manual: Preliminaries](http://www.wangafu.net/~nickm/libevent-book/Ref0_meta.html)
+* 设计目标
+    - 可移植性(Portability)。跨平台，即使某个环境没有非阻塞IO，libevent也应该支持类似方式
+    - 速度(Speed)。使用每个平台最快的非阻塞IO来实现，并且不引入太多的开销
+    - 可扩展性(Scalability)。即使同时有1万个活跃的socket(C10K)
+    - 便利性(Convenience)。用Libevent编写程序最自然的方式应该是稳定的、可移植的方式
+* Libevent分成以下组件
+    - `evutil`
+        + 抽象出不同平台的网络实现之间的差异的通用功能。
+    - `event` and `event_base`
+        + 这是Libevent的核心。它为各种特定于平台、基于事件的非阻塞IO后端提供了一个抽象API
+    - `bufferevent`
+        + 这些函数为Libevent的基于事件的核心提供了更方便的包装。它们让应用程序的请求缓冲读和写，让人知道IO什么时候已经发生，而不是通知什么时候套接字准备好了。
+    - `evbuffer`
+        + 此模块实现bufferevents底层的缓冲区，并提供高效和方便的访问功能
+    - `evhttp`
+        + 一个简单的HTTP 客户端/服务器实现
+    - `evdns`
+        + 一个简单的DNS 客户端/服务器实现
+    - `evrpc`
+        + 一个简单的RPC实现
+* 库 Libevent编译后，默认安装以下库
+    - `libevent_core`
+        + 所有核心事件和缓冲区功能。这个库包含所有的event_base、evbuffer、bufferevent和utility实用程序函数。
+    - `libevent_extra`
+        + 定义了特定协议的功能。你的应用程序可能需要也可能不需要这些功能，包括HTTP、DNS和RPC
+    - `libevent`
+        + 这个库存在是有历史原因的，同时包含`libevent_core` 和 `libevent_extra`，**不应该**使用这个库
+    - 下面的库安装在某些系统上(Linux下安装了)
+        + `libevent_pthreads`
+            * 这个库添加了基于`pthreads`可移植线程库的线程和锁的实现。它和`libevent_core`库是分开的，因此不需要链接到`pthreads`来使用Libevent，除非真的要以多线程方式使用Libevent
+        + `libevent_openssl`
+            * 这个库用于支持使用`bufferevents`和`OpenSSL`库来进行加密通信。它和`libevent_core`库是分开的，因此不需要链接到这个库来使用Libevent，除非真的要使用加密连接
+* 头文件 所有Libevent公共头文件都安装在`event2`目录下(自己的CentOS环境：/usr/local/include/event2)
+    - Libevent 2.0版本修改了它的api，使其更加合理，更少出错。尽可能使用Libevent 2.0版本的APIs ()
+    - 老版本和2.0版本，头文件有所区分，老版本的头文件不会放到`event2`目录，新老头文件的替换参照，参考链接
+    - 1.4版本前，只有一个`libevent`库(目前分成了`libevent_core` 和 `libevent_extra`库)
+    - 2.0版本前，不支持锁，需要通过 不在两个线程中同时使用同一个结构体 来保证线程安全。

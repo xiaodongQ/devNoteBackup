@@ -224,11 +224,10 @@ ${var##pattern} 这种模式时，shell在var中查找，看它是否以给的�
 
 * let和(())
 
-    两者也是一样的(或者说基本上是一样的，双括号比let稍弱一些)。
-
-    主要进行算术运算，也比较适合进行整数比较(可直接使用>、<)
-
-    可以直接使用变量名如var而不需要$var这样的形式。
+    - 两者也是一样的(或者说基本上是一样的，双括号比let稍弱一些)。
+    - 主要进行算术运算，也比较适合进行整数比较(可直接使用>、<)
+    - 可以`直接使用变量名`如var而不需要$var这样的形式。
+        + e.g. `let "totalms=totalms+ms"` 或者 `((totalms=totalms+ms))` 表示将变量`ms`的值累加到`totalms`变量
 
 tips：
 
@@ -382,3 +381,14 @@ fi
 ```
 
 * 每个文件必须有一个顶层的注释，其中包含内容的简要概述
+
+
+## `bc` 使用 bc 命令实现高级数学运算
+
+* `bc`
+    - [Linux bc 命令](https://www.runoob.com/linux/linux-comm-bc.html)
+    - `echo "1.212*3" | bc`
+    - `echo "scale=2;3/8" | bc`，结果为：0.37
+        + 也可以引用变量 `res=$(echo "scale=2;$val+4.5"|bc)`
+    - `echo "obase=10;ibase=2;$abc" | bc`，十进制转换为二进制
+    - `echo "sqrt(100)" | bc`、`echo "10^10" | bc`，计算开方和平方
