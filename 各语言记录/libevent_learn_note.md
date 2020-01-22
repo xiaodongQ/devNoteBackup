@@ -191,3 +191,31 @@
     - 老版本和2.0版本，头文件有所区分，老版本的头文件不会放到`event2`目录，新老头文件的替换参照，参考链接
     - 1.4版本前，只有一个`libevent`库(目前分成了`libevent_core` 和 `libevent_extra`库)
     - 2.0版本前，不支持锁，需要通过 不在两个线程中同时使用同一个结构体 来保证线程安全。
+
+## 设置Libevent库
+
+* [Setting up the Libevent library](http://www.wangafu.net/~nickm/libevent-book/Ref1_libsetup.html)
+* 消息记录(Log messages in Libevent)
+    - `event.h`中定义了`#define EVENT_LOG_DEBUG 0`等宏定义，用于定义消息的等级
+        + 包含老版本的`#define _EVENT_LOG_DEBUG EVENT_LOG_DEBUG`等，已弃用
+    - 可以自定义日志记录函数
+        + 日志记录的函数指针原型：`typedef void (*event_log_cb)(int severity, const char *msg);`(定义在`event.h`中)
+        + 通过`void event_set_log_callback(event_log_cb cb);`将自定义的函数指针设置给全局函数
+            * 日志记录的全局函数定义为：`static event_log_cb log_fn = NULL;`，定义在`log.c`文件中
+            * 若该指针为NULL，则记录时默认输出到stderr：`(void)fprintf(stderr, "[%s] %s\n", severity_str, msg);`，内容可查看`log.c`中的`event_log()`函数
+        + 参考链接中演示了两个自定义日志记录的示例(丢弃和记录文件)
+        + 注意：在自定义的日志记录函数中调用Libevent的函数是不安全的
+    - 可以自定义错误处理函数，其中也不应该调用Libevent接口。且调用后不应该返回而将控制权给Libevent(可能出现未定义行为)
+    - `log.c` 实际记录日志的操作定义在该文件中，底层为`event_log()`，`event_logv_()`对其进行封装，再由各个等级的日志记录调用该封装接口
+    - 通常debug日志没有开启，debug日志比较繁琐，在大多数情况下不一定有用
+        + 可通过调用`void event_enable_debug_logging(ev_uint32_t which);`来设置是否开启，送`EVENT_DBG_NONE`时是默认不开启，送`EVENT_DBG_ALL`则开启所有debug日志的支持
+* 内存管理(Memory management)
+    - 默认情况下，Libevent使用C库的内存管理函数来分配堆中的内存。
+    - 使用`event_set_mem_functions()`函数来设置自定义的内存管理函数(malloc/realloc/free)，定义在`event.c`中(头文件为：`<event2/event.h>`)。参考链接中自定义了几个内存管理相关的函数。
+        + 可以通过判断 `EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED` 宏定义是否存在来判断是否开启了 `event_set_mem_functions` 函数(即是否允许自定义内存管理函数)。编译时该宏定义和函数是同时定义的，存在于同一个`#if`预编译语句块
+    - 对于自定义的malloc和realloc函数，需要返回和C库布局一样的内存空间。如果在多个线程中使用Libevent，自定义函数还需要保持`线程安全`
+* 锁和线程(Locks and threading)
+    - Libevent结构体通常有三种方式处理多线程，有些结构天生单线程、有些结构可选锁定、有些结构总是被锁定
+    - 若要获得Libevent中的锁，必须告诉Libevent使用哪些锁函数。需要在调用Libevent的分配函数来申请用于多线程的结构之前这样做。如果使用的是`pthreads`库，或者本地`Windows`线程代码，那么就比较幸运了。预先定义的函数将会设置Libevent来使用正确的`Pthreads`或`Windows`函数
+    - 锁和线程结构和函数相关的文件：`thread.h`、`evthread_pthread.c`(Pthreads)、`evthread.c`
+        + (Linux使用)`int evthread_use_pthreads(void);`，用于设置Libevent来使用`Pthreads`锁和线程函数。其声明在`thread.h`，实现在`evthread_pthread.c`。其中会调用到`int evthread_use_pthreads_with_flags(int flags)`，该函数会注册设置一系列Libevent基于Pthreads实现的锁相关函数

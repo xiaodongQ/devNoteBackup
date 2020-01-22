@@ -14,12 +14,12 @@
     - [Consul 使用手册](http://www.liangxiansen.cn/2017/04/06/consul/)
 
 * 官网文档：[HashiCorp Consul Documentation](https://www.consul.io/docs/index.html)
-    - 入门使用文档，[GETTING STARTED](https://learn.hashicorp.com/consul?track=getting-started#getting-started)
-        + 安装
-            * Download Consul：[官网下载地址](https://www.consul.io/downloads.html)
-            * zip包中只有一个`consul`二进制文件(104M, `consul_1.6.2_linux_amd64`)，执行路径添加到PATH环境变量即可
-        + 启动`Consul agent`
-            * 每个`Consul agent`都运行在`server`或者`client`模式。
-            * 每个Consul数据中心都至少有一个`server`，负责维护Consul的状态
-                - 包括其他Consul server和client、什么服务可被发现、哪些服务可以和其他服务交互
-                - 注意：强烈反对单服务器产品部署Consul
+* 入门使用文档，[GETTING STARTED](https://learn.hashicorp.com/consul?track=getting-started#getting-started)
+    - 安装
+        + Download Consul：[官网下载地址](https://www.consul.io/downloads.html)
+        + zip包中只有一个`consul`二进制文件(104M, `consul_1.6.2_linux_amd64`)，执行路径添加到PATH环境变量即可
+    - 启动`Consul agent`
+        + 每个`Consul agent`都运行在`server`或者`client`模式。
+        + 每个Consul数据中心都至少有一个`server`，负责维护Consul的状态
+            * 包括其他Consul server和client、什么服务可被发现、哪些服务可以和其他服务交互
+            * 注意：强烈反对单服务器产品部署Consul

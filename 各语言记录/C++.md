@@ -620,8 +620,8 @@ C++ 标准库：
 
 另外，标准库提供几种 RAII 包装器以管理用户提供的资源：
 
-* std::unique_ptr 及 std::shared_ptr 用于管理动态分配的内存，或以用户提供的删除器管理任何以普通指针表示的资源；
-* std::lock_guard、std::unique_lock、std::shared_lock 用于管理互斥体。
+* `std::unique_ptr` 及 `std::shared_ptr` 用于管理动态分配的内存，或以用户提供的删除器管理任何以普通指针表示的资源；
+* `std::lock_guard`、`std::unique_lock`、`std::shared_lock` 用于管理互斥体。
 
 > RAII 不适用于并非在使用前请求的资源：CPU 时间、核心，以及缓存容量、熵池容量、网络带宽、电力消费、栈内存等。
 
@@ -741,6 +741,53 @@ namespace std {
 
     template< class... MutexTypes >class scoped_lock;  // 用于多个互斥体的免死锁 RAII 封装器(C++17)
     //...
+}
+```
+
+* `std::unique_lock`
+    - 参考：[C++11 并发指南三(Lock 详解)](https://www.cnblogs.com/haippy/p/3346477.html)
+        + C++11 标准为我们提供了两种基本的锁类型
+            * `std::lock_guard`，与 Mutex RAII 相关，方便线程对互斥量上锁。
+            * `std::unique_lock`，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了更好的上锁和解锁控制。
+        + 另外还提供了几个与锁类型相关的 Tag 类
+            * `std::adopt_lock_t` 一个空的标记类，定义如下：`struct adopt_lock_t {};`
+            * `std::defer_lock_t`，一个空的标记类，定义如下：`struct defer_lock_t {};`
+            * `std::try_to_lock_t`，一个空的标记类，定义如下：`struct try_to_lock_t {};`
+                - 三个Tag通常作为参数传入给 `unique_lock` 或 `lock_guard` 的构造函数。
+    - cppreference: [std::unique_lock](https://zh.cppreference.com/w/cpp/thread/unique_lock)
+        * 类 unique_lock 是通用互斥包装器，允许延迟锁定、锁定的有时限尝试、递归锁定、所有权转移和与条件变量一同使用。
+        * 类 unique_lock 可移动，但不可复制
+        * 构造(可以选择以哪种方式锁定提供的互斥锁m)
+            - `explicit unique_lock( mutex_type& m );`
+                + 和`lock_gurad`方式一样，创建且调用`m.lock()`
+            - `unique_lock( mutex_type& m, std::defer_lock_t t ) noexcept;`
+                + 延迟加锁，初始化后并不调用`lock`
+            - `unique_lock( mutex_type& m, std::try_to_lock_t t );`
+                + 尝试加锁，`m.try_lock()`不成功也不阻塞
+            - `unique_lock( mutex_type& m, std::adopt_lock_t t );`
+                + 马上加锁，创建`unique_lock`对象管理m，创建前当前线程已经获得锁，创建后的对象拥有锁的所有权
+        * 操作函数
+            - `lock()`              //阻塞等待加锁
+            - `try_lock()`          //非阻塞等待加锁
+            - `try_lock_for()`      //在一段时间内尝试加锁
+            - `try_lock_until()`    //在某个时间点之前尝试加锁
+        * `std::lock`
+    - `std::lock_guard`跟mutex本身是强关联的，也就是说`lock_guard`一旦存在，mutex就必须是锁定的，而条件变量中有过程是要求释放锁的。这个场景下可以用`unique_lock`
+
+* `unique_lock`的示例:
+
+```cpp
+std::mutex foo,bar;
+
+void task_a () {
+    // simultaneous lock (prevents deadlock) 同时加锁，避免死锁
+    std::lock (foo,bar);
+    // 创建unique_lock并接管锁foo，创建前已经获取了两个锁
+    std::unique_lock<std::mutex> lck1 (foo,std::adopt_lock);
+    // 创建unique_lock并接管锁bar
+    std::unique_lock<std::mutex> lck2 (bar,std::adopt_lock);
+    std::cout << "task a\n";
+    // (unlocked automatically on destruction of lck1 and lck2)
 }
 ```
 
