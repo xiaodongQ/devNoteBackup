@@ -56,5 +56,5 @@ boost的TR1：
         + "backtrace在信号处理函数里运行是不安全的。"
 * 源码
     - 网络编程 libevent(C)、Asio(C++ boost)、ACE(C++)
-* C++
-    - 
+* C++筑基
+    - [C++11 并发指南系列](https://www.cnblogs.com/haippy/p/3284540.html)
