@@ -748,37 +748,46 @@ namespace std {
     - 参考：[C++11 并发指南三(Lock 详解)](https://www.cnblogs.com/haippy/p/3346477.html)
         + C++11 标准为我们提供了两种基本的锁类型
             * `std::lock_guard`，与 Mutex RAII 相关，方便线程对互斥量上锁。
-            * `std::unique_lock`，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了更好的上锁和解锁控制。
+            * `std::unique_lock`，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了`更好的上锁和解锁控制`。
+                - 类 `unique_lock` 是通用互斥包装器，允许延迟锁定、锁定的有时限尝试、递归锁定、所有权转移和与条件变量一同使用。
         + 另外还提供了几个与锁类型相关的 Tag 类
             * `std::adopt_lock_t` 一个空的标记类，定义如下：`struct adopt_lock_t {};`
             * `std::defer_lock_t`，一个空的标记类，定义如下：`struct defer_lock_t {};`
             * `std::try_to_lock_t`，一个空的标记类，定义如下：`struct try_to_lock_t {};`
                 - 三个Tag通常作为参数传入给 `unique_lock` 或 `lock_guard` 的构造函数。
-    - cppreference: [std::unique_lock](https://zh.cppreference.com/w/cpp/thread/unique_lock)
-        * 类 unique_lock 是通用互斥包装器，允许延迟锁定、锁定的有时限尝试、递归锁定、所有权转移和与条件变量一同使用。
-        * 类 unique_lock 可移动，但不可复制
         * 构造(可以选择以哪种方式锁定提供的互斥锁m)
-            - `explicit unique_lock( mutex_type& m );`
-                + 和`lock_gurad`方式一样，创建且调用`m.lock()`
-            - `unique_lock( mutex_type& m, std::defer_lock_t t ) noexcept;`
-                + 延迟加锁，初始化后并不调用`lock`
+            - 默认构造函数 `unique_lock() noexcept;`
+                + 新创建的 unique_lock 对象不管理任何 Mutex 对象。
+            - 单参数构造(此处传的是锁，不是拷贝构造) `explicit unique_lock( mutex_type& m );`
+                + 和lock_gurad方式一样，创建且调用m.lock()
             - `unique_lock( mutex_type& m, std::try_to_lock_t t );`
-                + 尝试加锁，`m.try_lock()`不成功也不阻塞
+                + 尝试加锁，m.try_lock()不成功也不阻塞
+            - `unique_lock( mutex_type& m, std::defer_lock_t t ) noexcept;`
+                + 延迟加锁，初始化后并不调用lock
             - `unique_lock( mutex_type& m, std::adopt_lock_t t );`
-                + 马上加锁，创建`unique_lock`对象管理m，创建前当前线程已经获得锁，创建后的对象拥有锁的所有权
+                + 当前线程已经获得锁，创建unique_lock对象来管理m，创建后的对象接手锁的所有权
+            - 另外几个
+                + `unique_lock(mutex_type& m, const chrono::duration<Rep,Period>& rel_time);`
+                    * 创建并试图通过调用 `m.try_lock_for(rel_time)` 来锁住 Mutex 对象一段时间
+                + `unique_lock(mutex_type& m, const chrono::time_point<Clock,Duration>& abs_time);`
+                    * 创建并试图通过调用 `m.try_lock_until(abs_time)` 来在某个时间点(abs_time)之前锁住 Mutex 对象
+                + 拷贝构造被禁用，`unique_lock(const unique_lock&) = delete;`
+                + 移动(move)构造 `unique_lock(unique_lock&& x);`
+                    * 新创建的 unique_lock 对象获得了由 x 所管理的 Mutex 对象的所有权(包括当前 Mutex 的状态)。调用 move 构造之后， x 对象如同通过默认构造函数所创建的，就不再管理任何 Mutex 对象了
         * 操作函数
             - `lock()`              //阻塞等待加锁
             - `try_lock()`          //非阻塞等待加锁
-            - `try_lock_for()`      //在一段时间内尝试加锁
+            - `try_lock_fo r()`      //在一段时间内尝试加锁
             - `try_lock_until()`    //在某个时间点之前尝试加锁
-        * `std::lock`
-    - `std::lock_guard`跟mutex本身是强关联的，也就是说`lock_guard`一旦存在，mutex就必须是锁定的，而条件变量中有过程是要求释放锁的。这个场景下可以用`unique_lock`
+    + `std::lock`
+    + `std::lock_guard`跟mutex本身是强关联的，也就是说`lock_guard`一旦存在，mutex就必须是锁定的，而条件变量中有过程是要求释放锁的。这个场景下可以用`unique_lock`
 
 * `unique_lock`的示例:
 
 ```cpp
 std::mutex foo,bar;
 
+// 场景：两个银行账户相互转账，各自有锁，转账时同时锁定两把锁
 void task_a () {
     // simultaneous lock (prevents deadlock) 同时加锁，避免死锁
     std::lock (foo,bar);
@@ -788,6 +797,18 @@ void task_a () {
     std::unique_lock<std::mutex> lck2 (bar,std::adopt_lock);
     std::cout << "task a\n";
     // (unlocked automatically on destruction of lck1 and lck2)
+}
+```
+
+* `adopt_lock`也可用于`lock_guard`，示例(创建该类型前已经获得锁)：
+
+```cpp
+void print_thread_id (int id) {
+    // 创建前已经通过lock()获得锁，有下面的接管后不用再调用unlock
+    mtx.lock();
+    // 创建adopt_lock类型的包装，接管锁，且声明周期后会自动解锁
+    std::lock_guard<std::mutex> lck(mtx, std::adopt_lock);
+    std::cout << "thread #" << id << '\n';
 }
 ```
 
