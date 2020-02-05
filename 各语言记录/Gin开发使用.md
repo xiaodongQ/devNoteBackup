@@ -9,17 +9,36 @@
     - 使用
         + `import "github.com/gin-gonic/gin"`
         + 如果使用常量`http.StatusOK`，还要`import "net/http"`
+        + 示例参考官网，有各种形式的请求和应答参数，如：[Examples Post url编码模式](https://gin-gonic.com/docs/examples/query-and-post-form/)
+
+很简单的一个示例(注册了一个GET方法 http://localhost:8080/ping，应答为 {"message": "pong"})：
+
+```golang
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+    r := gin.Default()
+    r.GET("/ping", func(c *gin.Context) {
+        c.JSON(200, gin.H{
+            "message": "pong",
+        })
+    })
+    r.Run() // listen and serve on 0.0.0.0:8080
+}
+```
 
 ### restful路由
 
-gin的路由来自httprouter库。因此httprouter具有的功能，gin也具有
+gin的路由来自`httprouter`库。因此httprouter具有的功能，gin也具有
 
 #### :路由参数
 
-冒号:加上一个参数名组成路由参数，可以使用c.Params的方法读取其值
-(除了:，gin还提供了*号处理参数，*号能匹配的规则就更多)
+冒号:加上一个参数名组成路由参数，可以使用`c.Params`的方法读取其值
+(除了:，gin还提供了`*`号处理参数，`*`号能匹配的规则就更多)
 
-```go
+```golang
  router.GET("/user/:name", func(c *gin.Context) {
         name := c.Param("name")
         c.String(http.StatusOK, "Hello %s", name)
@@ -30,7 +49,7 @@ c.String返回content-type是plain或者text
 ```
 
 
-```go
+```golang
  router.GET("/welcome", func(c *gin.Context) {
         firstname := c.DefaultQuery("firstname", "Guest")
         lastname := c.Query("lastname")
@@ -41,15 +60,15 @@ c.String返回content-type是plain或者text
 
 #### query string 参数
 
-客户端向服务器发送请求，除了路由参数，其他的参数无非两种，查询字符串query string和报文体body参数
+客户端向服务器发送请求，除了路由参数，其他的参数无非两种，查询字符串`query string`和报文体`body参数`
 
-* 所谓query string，即路由用?以后连接的key1=value2&key2=value2的形式的参数
+* 所谓`query string`，即路由用`?`以后连接的`key1=value2&key2=value2`的形式的参数
 
-这个key-value是经过urlencode编码
+这个key-value是经过`urlencode编码`
 
-* 对于参数的处理，经常会出现参数不存在的情况，可指定默认值DefaultQuery
+* 对于`body参数`的处理，经常会出现参数不存在的情况，可指定默认值`DefaultQuery`
 
-```go
+```golang
 router.GET("/welcome", func(c *gin.Context) {
         firstname := c.DefaultQuery("firstname", "Guest")
         lastname := c.Query("lastname")
@@ -58,7 +77,7 @@ router.GET("/welcome", func(c *gin.Context) {
     })
 ```
 
-**注意，当firstname为空字串的时候，并不会使用默认的Guest值，空值也是值，DefaultQuery只作用于key不存在的时候，提供默认值。**
+**注意，当firstname为空字串的时候，并不会使用默认的Guest值，空值也是值，DefaultQuery只作用于key`不存在`的时候，提供默认值。**
 
 e.g.
 
@@ -72,12 +91,21 @@ Hello 中国 %
 
 #### body 参数
 
-常见的格式就有四种。
-例如application/json，application/x-www-form-urlencoded, application/xml 和 multipart/form-data(此格式主要用于图片上传)
+* 常见的格式就有四种。
+    - 例如`application/json`，`application/x-www-form-urlencoded`, `application/xml` 和 `multipart/form-data`(此格式主要用于图片上传)
 
-默认情况下，c.PostFORM解析的是x-www-form-urlencoded或form-data的参数。
+* 默认情况下，c.PostFORM解析的是`x-www-form-urlencoded`或`form-data`的参数。
 
-```go
+http请求：
+
+```golang
+POST /form_post HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+message=this_is_great&nick=123
+```
+
+```golang
 router.POST("/form_post", func(c *gin.Context) {
         message := c.PostForm("message")
         nick := c.DefaultPostForm("nick", "anonymous")
@@ -92,10 +120,14 @@ router.POST("/form_post", func(c *gin.Context) {
         })
     })
 
-调用c.JSON则返回json数据，其中gin.H封装了生成json的方式，是一个强大的工具。
+调用c.JSON则返回json数据，其中`gin.H`封装了生成json的方式，是一个强大的工具。
 
 使用golang可以像动态语言一样写字面量的json，对于嵌套json的实现，嵌套gin.H即可。
 ```
+
+* 如果post请求是json格式 `application/json`
+    - 需要做json和结构体的绑定
+    - 参考：[gin框架post路由的使用](https://juejin.im/post/5bd40c5d51882528366375c1#heading-5)
 
 ### 上传单个文件
 [Golang 微框架 Gin 简介](https://www.jianshu.com/p/a31e4ee25305)

@@ -800,3 +800,10 @@ string:=strconv.FormatInt(int64,10)
     - net包提供编写一个网络客户端或者服务器程序的基本组件，无论两者间通信是使用TCP，UDP或者Unix domain sockets
         + net/http包里的方法，也算是net包的一部分
 
+
+## govendor
+
+* [govendor](https://github.com/kardianos/govendor)
+    - `go get -u github.com/kardianos/govendor`
+    - Go modules 是Go1.11开始引入的(本机安装版本为go1.13.1)，并在Go1.11.2中修复提升，在Go1.12中有更好的表现
+    - Go modules作为发布和构建工具，已经准备就绪可以立即使用。推荐在小项目和个人项目中使用Go modules
