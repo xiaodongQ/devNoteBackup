@@ -1,8 +1,14 @@
 ## Gin
 
-下载https://github.com/gin-gonic/gin包，放到路径 src/github.com/gin-gonic/gin
-
-github.com/ugorji/go/codec v1.1.7 依赖包缺少，拷贝
+* Gin官网文档：[Documentation](https://gin-gonic.com/docs/)
+* [Quickstart](https://gin-gonic.com/docs/quickstart/)
+    - 下载安装Gin
+        + `go get -u github.com/gin-gonic/gin`
+        + 或手动下载https://github.com/gin-gonic/gin包，放到路径 src/github.com/gin-gonic/gin
+            * github.com/ugorji/go/codec v1.1.7 依赖包缺少，拷贝过来
+    - 使用
+        + `import "github.com/gin-gonic/gin"`
+        + 如果使用常量`http.StatusOK`，还要`import "net/http"`
 
 ### restful路由
 
