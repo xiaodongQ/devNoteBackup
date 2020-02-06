@@ -127,6 +127,8 @@ router.POST("/form_post", func(c *gin.Context) {
 
 * 如果post请求是json格式 `application/json`
     - 需要做json和结构体的绑定
+        + `type TestInfo struct{}`定义结构体(注意成员名首字母大写)，使用`json:"id"`形式的标签进行结构体和json绑定
+        + 调用`BindJSON`方法，对请求json和定义的结构体绑定
     - 参考：[gin框架post路由的使用](https://juejin.im/post/5bd40c5d51882528366375c1#heading-5)
 
 ### 上传单个文件
