@@ -181,9 +181,22 @@ orm会牺牲程序的执行效率和会固定思维模式，在从系统结构�
 
 ORM只是一种帮助我们解决一些重复的、简单的劳动，我们不能一劳永逸的靠工具来解决问题，有些特殊问题还是需要进行特殊处理的。
 
+### GORM
 
-[GORM 中文文档](http://gorm.book.jasperxu.com/)
-
+* [GORM 中文文档](http://gorm.book.jasperxu.com/)
+* [官网文档](https://gorm.io/docs/index.html)
+* `GORM`: The fantastic ORM library for Golang
+    -  注意和Grails框架的GORM区分开，`Grails' object relational mapping (ORM)` 是 `Grails` 的 ORM 实现，基于 Hibernate 3。 Grails 是一套用于快速 Web 应用开发的开源框架，它基于 Groovy 编程语言，并构建于 Spring、Hibernate 和其它标准 Java 框架之上，从而为大家带来一套能实现超高生产力的一站式框架。
+        + **注意，此处的for MongoDB，并不是go中的gorm**
+        + 参考：[GORM for MongoDB 3.0​ 发布](https://www.oschina.net/news/51215/gorm-for-mongodb-3-0%E2%80%8B)
+* 数据库驱动
+    - 关于MongoDB
+        + mongodb官方**没有**关于go的mongodb的驱动，因此只能使用第三方驱动
+        + `mgo`就是使用最多的一种，mgo（音mango）是MongoDB的Go语言驱动，它用基于Go语法的简单API实现了丰富的特性，并经过良好测试。
+        + [golang中使用mongodb的操作类以及如何封装](https://www.cnblogs.com/spnt/p/4686128.html)
+        + [mgo官网文档](https://gopkg.in/mgo.v2)
+            * `go get gopkg.in/mgo.v2`
+            * `import "gopkg.in/mgo.v2"`
 
 可以加上 db.SingularTable(true) 让gorm转义struct名字的时候不用加上s
 
