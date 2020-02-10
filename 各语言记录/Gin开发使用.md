@@ -123,9 +123,13 @@ router.POST("/form_post", func(c *gin.Context) {
 调用c.JSON则返回json数据，其中`gin.H`封装了生成json的方式，是一个强大的工具。
 
 使用golang可以像动态语言一样写字面量的json，对于嵌套json的实现，嵌套gin.H即可。
+
 ```
 
-* 如果post请求是json格式 `application/json`
+* 应答时可用结构体自动转换为json：c.JSON(http.StatusOK, msg)，msg为结构体，若要改变key则结构体定义中添加json标签
+    - 参考：[XML/JSON/YAML/ProtoBuf rendering](https://gin-gonic.com/docs/examples/rendering/)
+
+* 如果post请求是json格式 `application/json`，并要解析其中的内容，则
     - 需要做json和结构体的绑定
         + `type TestInfo struct{}`定义结构体(注意成员名首字母大写)，使用`json:"id"`形式的标签进行结构体和json绑定
         + 调用`BindJSON`方法，对请求json和定义的结构体绑定

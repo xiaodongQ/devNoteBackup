@@ -685,8 +685,11 @@ go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
 
 go get : git clone + go install
 
-### 获取时间 time包
+### time包 获取时间
 
+* [golang timestamp time 时间戳小结](https://pylist.com/t/1438769640)
+    - `tm := time.Unix(timestamp, 0)`， 返回Time类型
+    - 也可：`t := time.Now() //获取当前时间的结构体`, `secs := t.Unix()`秒，`t.UnixNano()`纳秒s
 * [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
 * golang提供以下两种基础类型
     - 时间点(Time)
@@ -700,6 +703,7 @@ go get : git clone + go install
     - (1) `currentTime:=time.Now()`     //获取当前时间，类型是Go的时间类型Time
 
 * 时间格式化：
+    - `tm2, _ := time.Parse("01/02/2006", "02/08/2015")` 从字符串转为时间戳，第一个参数是格式，第二个是要转换的时间字符串
 
 ```golang
 BeginTime := "20191126 145500"
@@ -709,6 +713,8 @@ BeginTime := "20191126 145500"
 formatTime, _ := time.Parse("20060102 150405", BeginTime)
 fmt.Printf("ori time:%v, parse:%v\n", BeginTime, formatTime.Format("2006-01-02 15:04:05"))
 ```
+
+
 
 * Sleep
     - `time.Sleep(10 * time.Second)`，sleep十秒
@@ -728,12 +734,16 @@ const (
 )
 ```
 
+
 ## string
 
 * 是一个不可变的byte切片，初始化后不能修改成员
 * Go语言的字符有以下两种：
     - 一种是 `uint8` 类型，或者叫 `byte` 型，代表了 ASCII 码的一个字符
     - 另一种是 `rune` 类型，代表一个 UTF-8 字符，当需要处理中文、日文或者其他复合字符时，则需要用到 `rune` 类型。`rune` 类型等价于 `int32` 类型。
+    - **互转**
+        + string转[]byte：`var data []byte = []byte(str)`
+        + []byte转string：`var str string = string(data[:])`
 * `unicode`和`utf-8`
     - unicode是一种编码，utf-8是unicode的一种存储实现
     - golang中string底层是通过`byte数组`实现的。中文字符在unicode下占`2`个字节，在utf-8编码下占`3`个字节，而golang默认编码正好是`utf-8`。
@@ -765,6 +775,22 @@ string/[]byte  [0xE4, 0xB8, 0xAD]
     - strings 包
     - strconv 包
 
+* 中文编码问题，gbk转utf
+    - `go get github.com/axgle/mahonia` BSD协议
+    - [golang 字符串编码转换 gbk转utf8](https://blog.csdn.net/jeffrey11223/article/details/79287010)
+
+```golang
+import ("github.com/axgle/mahonia")
+
+//src为要转换的字符串，srcCode为待转换的编码格式，targetCode为要转换的编码格式
+func ConvertToByte(src string, srcCode string, targetCode string) []byte {
+    srcCoder := mahonia.NewDecoder(srcCode)
+    srcResult := srcCoder.ConvertString(src)
+    tagCoder := mahonia.NewDecoder(targetCode)
+    _, cdata, _ := tagCoder.Translate([]byte(srcResult), true)
+    return cdata
+}
+```
 
 ### strings 包 和 strconv 包
 
@@ -780,6 +806,7 @@ string/[]byte  [0xE4, 0xB8, 0xAD]
     - 转换
         + s := strconv.Itoa(10)       // int到string, 转成字符串
         + i,err := strconv.Atoi("10") // string到int，注意还会返回error
+    - 若要进行拼接，则可用`str += fmt.Sprintf("movie=%s","xx")`
 
 * string、int、int64互相转换示例：
 
