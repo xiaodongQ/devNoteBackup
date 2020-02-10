@@ -689,7 +689,8 @@ go get : git clone + go install
 
 * [golang timestamp time 时间戳小结](https://pylist.com/t/1438769640)
     - `tm := time.Unix(timestamp, 0)`， 返回Time类型
-    - 也可：`t := time.Now() //获取当前时间的结构体`, `secs := t.Unix()`秒，`t.UnixNano()`纳秒s
+    - 也可：`t := time.Now() //获取当前时间的结构体`, `secs := t.Unix()`秒，`t.UnixNano()`纳秒
+        + `t.Year(),Month(),Day()` 等分别获取`Time`结构的年月日
 * [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
 * golang提供以下两种基础类型
     - 时间点(Time)

@@ -197,6 +197,40 @@ ORM只是一种帮助我们解决一些重复的、简单的劳动，我们不�
         + [mgo官网文档](https://gopkg.in/mgo.v2)
             * `go get gopkg.in/mgo.v2`
             * `import "gopkg.in/mgo.v2"`
+                - `Find()`方法来根据条件查询collect(对应sql中的表)
+                - 条件在代码中的格式可参考：[Specify AND Conditions](https://docs.mongodb.com/manual/tutorial/query-documents/#specify-and-conditions)
+                - 由于上面链接中的bson.A找不到，使用bson.M来实现or，[Golang MongoDB bson.M查询&修改](https://blog.csdn.net/LightUpHeaven/article/details/82663146)
+                - [golang和mongodb中的ISODate时间交互问题](https://www.tuicool.com/articles/J7zqiuJ)
+
+示例(mgo流程和bson序列化)：
+
+```golang
+import "gopkg.in/mgo.v2"
+
+type DbResult struct {
+    ID string `bson:"ID`
+    Name string `bson:"Name"`
+    Age int `bson:"age"`    //bson标签是在MongoDB中的字段名称，注意struct字段名和Mongo中一致时，也需要定义bson
+}
+
+// 数据库
+session, err := mgo.Dial(mongoURL)
+if err != nil {
+    panic("failed to connect database")
+}
+defer session.Close()
+// 获取collection
+collect := session.DB("student").C(collectname)
+
+dbresult := []*DbResult{}
+query := bson.M{
+    //"Time": bson.M{"$gt": reqtime},
+    "$or": []bson.M{
+        bson.M{"Name": name1},
+        bson.M{"Name": name2},
+    }}
+finderr := collect.Find(query).Limit(10).All(&dbresult)
+```
 
 可以加上 db.SingularTable(true) 让gorm转义struct名字的时候不用加上s
 
