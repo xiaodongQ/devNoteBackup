@@ -688,9 +688,18 @@ go get : git clone + go install
 ### time包 获取时间
 
 * [golang timestamp time 时间戳小结](https://pylist.com/t/1438769640)
-    - `tm := time.Unix(timestamp, 0)`， 返回Time类型
-    - 也可：`t := time.Now() //获取当前时间的结构体`, `secs := t.Unix()`秒，`t.UnixNano()`纳秒
+    - 将utc时间戳秒转换为Time类型，`tm := time.Unix(timestamp, 0)`， 返回Time类型
+    - 将Time类型转换为utc时间戳：
+        + `t := time.Now()` 获取当前时间的Time结构体
+        + 对Time结构体调用可获取相关秒数：`secs := t.Unix()`秒，`t.UnixNano()`纳秒，根据纳秒/1000000获得毫秒
         + `t.Year(),Month(),Day()` 等分别获取`Time`结构的年月日
+* 比较时间，Time的比较是使用`Before`,`After`和`Equal`方法
+    - `t1.Before(t2)`
+    - `Sub`方法返回的是两个时间点之间的时间距离
+    - `Add`方法和Sub方法是相反的，获取t0和t1的时间距离d是使用Sub，将t0加d获取t1就是使用Add方法
+    - `IsZero`方法：Time的zero时间点是January 1, year 1, 00:00:00 UTC，这个函数判断一个时间是否是zero时间点
+    - Local，UTC，Ln是用来显示和计算地区时间的
+    - [Go语言_时间篇](https://www.cnblogs.com/yjf512/archive/2012/06/12/2546243.html)
 * [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
 * golang提供以下两种基础类型
     - 时间点(Time)
@@ -714,8 +723,6 @@ BeginTime := "20191126 145500"
 formatTime, _ := time.Parse("20060102 150405", BeginTime)
 fmt.Printf("ori time:%v, parse:%v\n", BeginTime, formatTime.Format("2006-01-02 15:04:05"))
 ```
-
-
 
 * Sleep
     - `time.Sleep(10 * time.Second)`，sleep十秒

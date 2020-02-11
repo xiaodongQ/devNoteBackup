@@ -96,7 +96,7 @@ Hello 中国 %
 
 * 默认情况下，c.PostFORM解析的是`x-www-form-urlencoded`或`form-data`的参数。
 
-http请求：
+http`请求`：
 
 ```golang
 POST /form_post HTTP/1.1
@@ -104,6 +104,8 @@ Content-Type: application/x-www-form-urlencoded
 
 message=this_is_great&nick=123
 ```
+
+* 解析请求中的`urlencoded`数据，并组装应答json返回：
 
 ```golang
 router.POST("/form_post", func(c *gin.Context) {
@@ -121,19 +123,142 @@ router.POST("/form_post", func(c *gin.Context) {
     })
 
 调用c.JSON则返回json数据，其中`gin.H`封装了生成json的方式，是一个强大的工具。
-
 使用golang可以像动态语言一样写字面量的json，对于嵌套json的实现，嵌套gin.H即可。
-
 ```
 
-* 应答时可用结构体自动转换为json：c.JSON(http.StatusOK, msg)，msg为结构体，若要改变key则结构体定义中添加json标签
-    - 参考：[XML/JSON/YAML/ProtoBuf rendering](https://gin-gonic.com/docs/examples/rendering/)
-
-* 如果post请求是json格式 `application/json`，并要解析其中的内容，则
+* 如果post请求是`json`格式：`application/json`，并要解析其中的内容，则
     - 需要做json和结构体的绑定
         + `type TestInfo struct{}`定义结构体(注意成员名首字母大写)，使用`json:"id"`形式的标签进行结构体和json绑定
         + 调用`BindJSON`方法，对请求json和定义的结构体绑定
     - 参考：[gin框架post路由的使用](https://juejin.im/post/5bd40c5d51882528366375c1#heading-5)
+
+```golang
+// 注意里面字段大写，对外可见才能bind并解析http请求信息到结构体
+type TestReq struct {
+    ID string   `json:"id"`
+    Name string `json:"name`
+}
+
+/*
+POST请求格式：
+{
+    "id": "123",
+    "name" "zhangsan"
+}
+*/
+r := gin.Default()
+r.POST("api/query", func(c *gin.Context) {
+    var testreq TestReq
+    if c.BindJSON(&testreq) != nil {
+        return
+    }
+    // BindJSON后直接读取即可
+    log.Printf("id:%s, name:%s\n", testreq.ID, testreq.Name)
+    // 一个简单的json应答
+    c.Json(http.StatusOK, gin.H{
+        "message": "pong",
+    })
+})
+```
+
+### 应答
+
+* 应答时可用结构体自动转换为json：c.JSON(http.StatusOK, msg)，msg为结构体，若要改变key则结构体定义中添加json标签
+    - 参考：[XML/JSON/YAML/ProtoBuf rendering](https://gin-gonic.com/docs/examples/rendering/)
+
+* 实践示例(包含json请求绑定，和应答json报文格式)：
+    - 普通带key的json，每个字段都是key-value形式(数据量大时，有大量重复的key值)
+
+```golang
+/*
+{
+    "code":200,
+    "data":[
+        {
+            "time":1580659200000,  //时间
+            "sub":0.1,            //差
+            "testinfo":[
+                {
+                    "id":"111",       //代码
+                    "value":14.56,       //值
+                }
+            ]
+        }
+    ]
+}
+*/
+type TestRsp struct {
+    Code int32         `json:"code"`
+    Data []*SubData    `json:"data"`
+}
+type SubData struct {
+    Time      int64          `json:"time"`
+    Sub       float32        `json:"sub"`
+    Testlist  []*TestInfo    `json:"testinfo"`
+}
+type TestInfo struct {
+    ID     string  `json:"id"`
+    Value  float32 `json:"value`
+}
+
+//组装
+var rsp QuotesListrsp
+rsp.Code = 200
+for {
+    var testlist []*TestInfo;
+    testlist = append(testlist, &TestInfo{ID:xxx, Value:xxx,})
+
+    subdata := &SubData{
+        Time: xxx,
+        Sub: xxx,
+        Testlist: testlist,
+    }
+    rsp.Data = append(rsp.Data, subdata)
+}
+c.JSON(http.StatusOK, rsp)
+```
+
+* 不带key的json数组(省略key，并组织成"数组的数组"形式)，使用`[]interface{}`来实现
+
+```golang
+/*
+{
+    "code":200,
+    "data":[
+        [
+            1580659200000,  //时间
+            0.1,            //差
+            [
+                [
+                    "111",       //代码
+                    14.56,       //值
+                ]
+            ]
+        ]
+    ]
+}
+*/
+type TestRsp struct {
+    Code int32            `json:"code"`
+    Data []interface{}    `json:"data"`
+}
+
+//组装
+var rsp QuotesListrsp
+rsp.Code = 200
+for {
+    var testlist []interface{};
+    testlist = append(testlist, []interface{}{xxx, xxx,})
+
+    subdata := []interface{}{
+        xxx, //Time的值
+        xxx, //Sub的值
+        testlist, //Testlist
+    }
+    rsp.Data = append(rsp.Data, subdata)
+}
+c.JSON(http.StatusOK, rsp)
+```
 
 ### 上传单个文件
 [Golang 微框架 Gin 简介](https://www.jianshu.com/p/a31e4ee25305)

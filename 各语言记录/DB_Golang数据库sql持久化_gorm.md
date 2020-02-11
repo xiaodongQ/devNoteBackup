@@ -224,12 +224,14 @@ collect := session.DB("student").C(collectname)
 
 dbresult := []*DbResult{}
 query := bson.M{
-    //"Time": bson.M{"$gt": reqtime},
+    "Id": bson.M{"$gt": 5}, // Id>5 and (Name=name1 or Name=name2)
     "$or": []bson.M{
         bson.M{"Name": name1},
         bson.M{"Name": name2},
     }}
 finderr := collect.Find(query).Limit(10).All(&dbresult)
+//直接按字段读取dbresult的值即可
+log.Println(dbresult[0].ID)
 ```
 
 可以加上 db.SingularTable(true) 让gorm转义struct名字的时候不用加上s
