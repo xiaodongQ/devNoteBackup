@@ -194,15 +194,25 @@ ORM只是一种帮助我们解决一些重复的、简单的劳动，我们不�
         + mongodb官方**没有**关于go的mongodb的驱动，因此只能使用第三方驱动
         + `mgo`就是使用最多的一种，mgo（音mango）是MongoDB的Go语言驱动，它用基于Go语法的简单API实现了丰富的特性，并经过良好测试。
         + [golang中使用mongodb的操作类以及如何封装](https://www.cnblogs.com/spnt/p/4686128.html)
+            * `c.Find(query).Sort(sort).Select(fields).Skip(skip).Limit(limit).All(&results)`
         + [mgo官网文档](https://gopkg.in/mgo.v2)
             * `go get gopkg.in/mgo.v2`
             * `import "gopkg.in/mgo.v2"`
                 - `Find()`方法来根据条件查询collect(对应sql中的表)
                 - 条件在代码中的格式可参考：[Specify AND Conditions](https://docs.mongodb.com/manual/tutorial/query-documents/#specify-and-conditions)
-                - 由于上面链接中的bson.A找不到，使用bson.M来实现or，[Golang MongoDB bson.M查询&修改](https://blog.csdn.net/LightUpHeaven/article/details/82663146)
-                - [golang和mongodb中的ISODate时间交互问题](https://www.tuicool.com/articles/J7zqiuJ)
+                - 由于上面链接中的bson.A找不到，使用bson.M来实现or，参考：[Golang MongoDB bson.M查询&修改](https://blog.csdn.net/LightUpHeaven/article/details/82663146)
+                - MongoDB中的时间和go类型对应(定义`time.Time`)：[golang和mongodb中的ISODate时间交互问题](https://www.tuicool.com/articles/J7zqiuJ)
 
-示例(mgo流程和bson序列化)：
+各种查询形式：
+
+```golang
+query1 := collection.Find(nil).Sort("firstname", "lastname")
+query2 := collection.Find(nil).Sort("-age")
+query3 := collection.Find(nil).Sort("$natural")
+query4 := collection.Find(nil).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score")
+```
+
+bson条件示例(mgo流程和bson序列化)：
 
 ```golang
 import "gopkg.in/mgo.v2"
