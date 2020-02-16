@@ -29,6 +29,7 @@
     - 通过环境变量指定`GOPATH`，可以指定多个，用`:`隔开(Unix`:`，而Windows上用`;`)
         + e.g. `export GOPATH=$GOPATH:/home/xd/go_path`
         + 为了方便起见，可以把工作空间的`bin`路径添加到`PATH`中
+        + `go get` 时默认安装到**第一个**GOPATH路径
     - 每个`GOPATH`下的目录结构需要满足指定的结构
         + `src` 放源码
         + `pkg` 放安装包
