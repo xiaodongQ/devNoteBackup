@@ -163,7 +163,7 @@ const (
 )
 ```
 
-* 函数类型
+* `func`函数类型
     - 参数列表的变量名称必须同时有，或者同时没有
         + `func(x int, y int) (float64, int)`
         + `func(int, int) (float64, int)`
@@ -174,10 +174,36 @@ const (
     - 最后一个参数可能在类型前加上`...`前缀，表示可变参数，可能有0个也可能多个
         + e.g. `func(prefix string, values ...int)`
     - 未初始化的函数变量，值是nil
-* interface
+* `interface`
     - interface接口类型指定了一个方法集
+        + 接口T里面定义的成员可以是另一个接口成员E，叫做(E为在T中的)嵌入接口，但是不能有同名的方法
+        + 接口不能嵌入自身，也不能变相嵌入自身(e.g. A包含嵌入接口B，同时B包含接口A)
     - 一个interface类型的变量能够赋值任何 带有该接口方法集超集 的类型(叫做 类型实现了该接口)
+        + 若类型实现了某个接口，则同时也实现了任何由该接口子集组成的接口
     - 未初始化的接口类型，值是nil
+    - 所有类型实现了空接口 `interface{}`
+* `map`
+    - map是由一组无序的元素组成的类型
+    - `make(map[string]int)`, `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
+    - `len()`获取元素个数
+    - nil map和空map，除了nil map不允许添加元素外，两者一样
+* `chan`
+    - 管道(channel)提供了并发执行函数来发送和读取的一种机制
+    - 未初始化的管道值为nil
+    - `<-` 指定管道的方向，是发送还是接收; 如果没有指定方向，则管道是双向的
+    - 使用make定义chan:
+        + `make(chan int, 100)` 能发送和接收int类型的数据，容量可选
+            * 容量指定了通道中的缓冲区大小(元素的个数)，当还有缓冲区(发送时非满/读取时非空)时，能够不阻塞地成功通信
+            * 如果容量不设置或者设置为0，则通道是无缓冲的，通信时发送和接收方都准备好才能成功
+            * nil通道永远不会为通信做好准备
+            * 使用内置的`close(c)`关闭通道
+        + `make(chan<- float64, 10)` 只能发送float64数据(给通道)
+        + `make(<-chan int)` 只能(从通道)接收int数据
+    - `<-`可以和最左边的chan通道关联
+        + `make(chan<- chan int)` 或 `make(chan<- (chan int))` 定义一个写通道，发送的是(可读写的通道chan int)类型
+        + `make(chan<- <-chan int)` 或 `make(chan<- (<-chan int))` 写通道，发送的是(读通道，<-chan int)类型
+        + `make(<-chan <-chan int)` 或 `make(<-chan (<-chan int))` 读通道，读取的是(写通道，<-chan int)类型
+        + `make(chan (<-chan int))` 读写通道，读取的是(写通道，<-chan int)类型
 
 ## 语法
 
