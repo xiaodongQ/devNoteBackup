@@ -133,6 +133,8 @@ const u, v float32 = 0, 3    // u = 0.0, v = 3.0
     - 在括号内的常量声明中，`iota`标识符表示连续的无类型整数常量(从0开始)
         + 括号表达式中，若声明的变量省略了表达式列表，那此时这个变量和前一个变量的表达式列表和类型(如果有的话)一样
     - iota每次出现时，被重置为0
+    - iota在每个表达式后新增一次，若在同一个const语句中，iota多次出现，则只递增一次
+        + `bit0, mask0 = 1 << iota, 1<<iota - 1`, bit0=1(1<<0), mask0=0(1<<0 - 1)
 
 ```golang
 // 从0连续递增的整数常量
@@ -161,6 +163,14 @@ const (
     v4 float32 = 1*iota //v4=3.0
     v5  //v5=4.0，省略表达式和类型时跟前一个变量一样
 )
+
+// iota在每个表达式后新增一次，若在同一个const语句中，iota多次出现，则只递增一次
+const (
+    bit0, mask0 = 1 << iota, 1<<iota - 1  // bit0 == 1(1<<0), mask0 == 0(1<<0 - 1)
+    bit1, mask1                           // bit1 == 2(1<<1), mask1 == 1(1<<1 - 1)
+    _, _                                  // skips iota == 2 (丢弃值，该const表达式执行后iota还是加1)
+    bit3, mask3                           // bit3 == 8(1<<3), mask3 == 7(1<<3 - 1)
+)
 ```
 
 * `func`函数类型
@@ -188,15 +198,29 @@ const (
     - `len()`获取元素个数
     - nil map和空map，除了nil map不允许添加元素外，两者一样
 * `chan`
-    - 管道(channel)提供了并发执行函数来发送和读取的一种机制
-    - 未初始化的管道值为nil
-    - `<-` 指定管道的方向，是发送还是接收; 如果没有指定方向，则管道是双向的
+    - 通道(channel)提供了并发执行函数来发送和读取的一种机制
+    - 未初始化的通道值为nil
+    - `<-` 指定通道的方向，是发送还是接收; 如果没有指定方向，则通道是双向的
     - 使用make定义chan:
         + `make(chan int, 100)` 能发送和接收int类型的数据，容量可选
             * 容量指定了通道中的缓冲区大小(元素的个数)，当还有缓冲区(发送时非满/读取时非空)时，能够不阻塞地成功通信
             * 如果容量不设置或者设置为0，则通道是无缓冲的，通信时发送和接收方都准备好才能成功
             * nil通道永远不会为通信做好准备
             * 使用内置的`close(c)`关闭通道
+                - close一个已经`关闭的通道`和`nil通道`，会*引发运行时panic*
+            * 接收操作符 `x, ok := <-ch`(从ch通道接收数据)，返回两个值，会指示通道是否关闭
+                - 如果正常接收，则ok为true
+                - 从一个`关闭的chan`接收，会*立即返回*(注意此时不是panic)，ok值置为false，x置为对应类型的零值
+                    + bool:false; integer:0; float:0.0; string:""; pointer:nil; interface:nil;
+                    + slice:nil; map:nil; channel:nil
+                    + 对于复合类型，go会自动递归地将每个元素初始化为对应类型的零值
+                    + `var i int` 会自动置为零值，i=0
+                - 从一个`nil通道`接收，会*永远阻塞*
+            * 发送语句
+                - `ch <- 3`表示发送语句向通道ch发送3
+                - 向一个非缓冲chan中发送数据会阻塞到接收者能够处理，向缓冲chan中发送数据会阻塞到缓冲区有空间
+                - 向一个`关闭的chan`中发送数据，会*引发panic*
+                - 向一个`nil通道`发送数据，会*永远阻塞*
         + `make(chan<- float64, 10)` 只能发送float64数据(给通道)
         + `make(<-chan int)` 只能(从通道)接收int数据
     - `<-`可以和最左边的chan通道关联
@@ -204,26 +228,61 @@ const (
         + `make(chan<- <-chan int)` 或 `make(chan<- (<-chan int))` 写通道，发送的是(读通道，<-chan int)类型
         + `make(<-chan <-chan int)` 或 `make(<-chan (<-chan int))` 读通道，读取的是(写通道，<-chan int)类型
         + `make(chan (<-chan int))` 读写通道，读取的是(写通道，<-chan int)类型
-
-## 语法
-
-### 变量声明
+* type声明
+    - type声明的类型并不继承绑定到已有类型(将其定义为新类型的原类型)的方法，如下示例
+        + `type Mutex struct{xxx结构体成员定义}`，`func (m *Mutex) Lock() {xxx实现}`，Lock()方法绑定到Mutex类型上了
+        + `type NewMutex Mutex`，NewMutex和Mutex有相同的结构，但是NewMutex的方法集是空的
+        + `type PtrMutex *Mutex`，PtrMutex的方法集是空的
+    - 但是一个接口类型的方法集，和组合类型的成员是保持不变的，如下示例
+        + `type PrintableMutex struct { Mutex }`，新的PrintableMutex类型包含Lock()方法(Mutex绑定到其匿名域了)
+        + `type MyBlockInter BlockInter`，(BlockInter是一个interface)新的MyBlockInter类型包含原接口中的方法集
+    - type声明可以给基本类型其别名，然后向它绑定一些方法
+        + `type TimeZone int`, `func (tz TimeZone) String() string {return fmt.Sprintf("GMT+%dh", tz)}`
+        + 传入的是时区值，返回格式化的string，String()方法绑定到了TimeZone类型上(内层函数引用了 外层函数中的变量/自由变量 的函数，闭包)
 
 ```golang
+type IntArray [16]int
 
-第一种，指定变量类型，如果没有初始化，则变量默认为零值。
-    var v_name v_type
+// 同时声明多个
+type (
+    Point struct{ x, y float64 }
+    Polar Point
+)
 
-    var b, c int = 1, 2
-    var a string = "Runoob"
+// 声明结构体
+type TreeNode struct {
+    left, right *TreeNode
+    value *Comparable
+}
 
-第二种，根据值自行判定变量类型。
-    var v_name = value
+// 声明接口
+type Block interface {
+    BlockSize() int
+    Encrypt(src, dst []byte)
+    Decrypt(src, dst []byte)
+}
+```
+
+* 变量声明
+    - 第一种，指定变量类型，如果没有初始化，则变量默认为零值。
+        + `var v_name v_type   // 默认为零值`
+        + `var b, c int = 1, 2`
+    - 第二种，根据值自行判定变量类型。
+        + 如果没有指定明确的类型，则首先转换为其默认类型，float64/int/bool，nil不能用来初始化一个无明确类型的变量
+        + `var v_name = value  // 自动会判断类型`
+        + `var d = true`
+        + `var xdtest = "sldfjk"`
+        + `var n = nil`，这个是非法的(nil不能用来初始化一个无明确类型的变量)
+    - 第三种，省略 var, 注意 := 左侧如果没有声明新的变量，就产生编译错误(其中有一个新变量也可)
+
+
+
+    var v_name = value  // 自动会判断类型
 
     var d = true
     var xdtest = "sldfjk"
 
-第三种，省略 var, 注意 := 左侧如果没有声明新的变量，就产生编译错误(其中有一个新变量也可)
+
     v_name := value
 
     var intVal int
@@ -232,13 +291,13 @@ const (
 
 多变量声明
     var vname1, vname2, vname3 type
-    vname1, vname2, vname3 = v1, v2, v3
+    vname1, vname2, vname3 = v1, v2, v3 // 可同时赋值多个已定义的变量
 
-    var vname1, vname2, vname3 = v1, v2, v3
+    var vname1, vname2, vname3 = v1, v2, v3  // 同时定义并赋值多个变量
 
     vname1, vname2, vname3 := v1, v2, v3
 
-    // 这种因式分解关键字的写法一般用于声明全局变量
+    // 这种因式分解关键字的写法一般用于声明全局变量，同时定义多个变量
     var (
         vname1 v_type1
         vname2 v_type2
@@ -252,7 +311,6 @@ const (
 空白标识符 _ 也被用于抛弃值，如值 5 在"_, b = 5, 7"中被抛弃。
 
 _ 实际上是一个只写变量，你不能得到它的值。
-```
 
 ### 值类型
 
@@ -279,6 +337,11 @@ Golang中只有三种引用类型：slice(切片)、map(字典)、channel(管道
 
 * append
     - arr = append(arr, 3)  // 把值3添加到[]int，len()新增，cap()按2^n可能受影响
+
+* 循环(三种形式，使用for，没有while关键字)
+    - `for i:=1; i<10; i++ {}`, 类似C的for(i=0; i<10; i++){}
+    - `for {}`, 无限循环，类似while(1){}或for(;;){}
+    - `for condition {}`, 类似C的while(condition){}
 
 #### map
 
