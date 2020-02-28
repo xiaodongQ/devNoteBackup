@@ -174,6 +174,7 @@ const (
 ```
 
 * `func`函数类型
+    - 函数声明(function declarations)
     - 参数列表的变量名称必须同时有，或者同时没有
         + `func(x int, y int) (float64, int)`
         + `func(int, int) (float64, int)`
@@ -184,6 +185,9 @@ const (
     - 最后一个参数可能在类型前加上`...`前缀，表示可变参数，可能有0个也可能多个
         + e.g. `func(prefix string, values ...int)`
     - 未初始化的函数变量，值是nil
+* 方法声明
+    - method declarations
+    - 一个方法(method)是带有一个接收者的函数(function)
 * `interface`
     - interface接口类型指定了一个方法集
         + 接口T里面定义的成员可以是另一个接口成员E，叫做(E为在T中的)嵌入接口，但是不能有同名的方法
@@ -264,53 +268,32 @@ type Block interface {
 ```
 
 * 变量声明
-    - 第一种，指定变量类型，如果没有初始化，则变量默认为零值。
+    - 指定变量类型，如果没有初始化，则变量默认为零值。
         + `var v_name v_type   // 默认为零值`
-        + `var b, c int = 1, 2`
-    - 第二种，根据值自行判定变量类型。
+        + `var b, c int = 1, 2` 可声明多个变量
+    - 根据值自行判定变量类型。
         + 如果没有指定明确的类型，则首先转换为其默认类型，float64/int/bool，nil不能用来初始化一个无明确类型的变量
         + `var v_name = value  // 自动会判断类型`
         + `var d = true`
         + `var xdtest = "sldfjk"`
-        + `var n = nil`，这个是非法的(nil不能用来初始化一个无明确类型的变量)
-    - 第三种，省略 var, 注意 := 左侧如果没有声明新的变量，就产生编译错误(其中有一个新变量也可)
+        + `var n = nil`，这个是**非法**的(nil不能用来初始化一个无明确类型的变量)
+    - 省略 var, 注意 := 左侧如果没有声明新的变量，就产生编译错误(其中有一个新变量也可)
+        + `v_name := value`
+        + `var intVal int`
+            * `intVal :=1` 这时候会产生编译错误;
+            * `intVal,intVal1 := 1,2` 此时不会产生编译错误，因为有声明新的变量，因为 := 是一个声明语句
+    - 注意
+        + 声明了一个局部变量却没有在相同的代码块中使用它，会得到编译错误 a declared and not used
+        + 全局变量允许声明但不使用
+        + `_` 是一个只写变量, `v, _ = 1, 5`, 只能读取到v=1，5被丢弃
 
-
-
-    var v_name = value  // 自动会判断类型
-
-    var d = true
-    var xdtest = "sldfjk"
-
-
-    v_name := value
-
-    var intVal int
-    intVal :=1            // 这时候会产生编译错误
-    intVal,intVal1 := 1,2 // 此时不会产生编译错误，因为有声明新的变量，因为 := 是一个声明语句
-
-多变量声明
-    var vname1, vname2, vname3 type
-    vname1, vname2, vname3 = v1, v2, v3 // 可同时赋值多个已定义的变量
-
-    var vname1, vname2, vname3 = v1, v2, v3  // 同时定义并赋值多个变量
-
-    vname1, vname2, vname3 := v1, v2, v3
-
-    // 这种因式分解关键字的写法一般用于声明全局变量，同时定义多个变量
+```golang
+ // 同时定义多个变量，这种因式分解关键字的写法一般用于声明全局变量
     var (
         vname1 v_type1
         vname2 v_type2
     )
-
-声明了一个局部变量却没有在相同的代码块中使用它，会得到编译错误 a declared and not used。
-全局变量是允许声明但不使用
-
-如果你想要交换两个变量的值，则可以简单地使用 a, b = b, a，两个变量的类型必须是相同。
-
-空白标识符 _ 也被用于抛弃值，如值 5 在"_, b = 5, 7"中被抛弃。
-
-_ 实际上是一个只写变量，你不能得到它的值。
+```
 
 ### 值类型
 
