@@ -123,6 +123,8 @@
         + 查看所有数据库 `show databases;`
         + 创建 `create database menagerie;`
             * unix下数据库名和表名大小写敏感，windows下则不敏感(所以不管何种情况，推荐都使用相同字符)
+            * 在MySQL的语法操作中（MySQL5.0.2之后），可以使用`CREATE DATABASE`和`CREATE SCHEMA`来创建数据库，两者在功能上是一致的(不过其他数据库两种有所不同)
+                - [MySQL中CREATE DATABASE和CREATE SCHEMA区别](http://blog.useasp.net/archive/2013/05/21/The-difference-between-create-database-and-create-schema-in-mysql.aspx)
         + 使用 `use menagerie`
             * 每次使用都要进入数据库，可以连接时就选择：`mysql -h host -u user -p menagerie`
             * 此处menagerie并不指密码，若要指定密码-p后面直接接密码`-ppassword`，不要空格(不推荐)

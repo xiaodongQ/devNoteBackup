@@ -319,3 +319,12 @@ catch(boost::bad_lexical_cast& e)
     - 处理更多类型的转换，包括迭代器对、数组、C字符串等
     - 提供相同的通用接口(sto*对不同类型有不同的名称)
     - 是本地语言环境敏感的(`sto*`/`to_string`只是部分的，例如`lexical_cast`可以处理数千个分隔符，而stoul通常不能)
+
+## std::chrono
+
+* [C++11 std::chrono库详解](https://www.cnblogs.com/jwk000/p/3560086.html)
+    - chrono是一个time library, 源于boost，现在已经是C++标准
+    - 要使用chrono库，需要#include<chrono>，其所有实现均在std::chrono namespace下
+* 另可参考
+    - Boost.Chrono: [Chapter 7. Boost.Chrono 2.0.8](https://www.boost.org/doc/libs/1_71_0/doc/html/chrono.html)
+    - cppreference: [标准库头文件 <chrono>](https://zh.cppreference.com/w/cpp/header/chrono)

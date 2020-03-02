@@ -109,6 +109,7 @@ struct {
 * 指针类型，未初始化的指针是nil
     - `*Point`
     - `*[4]int`  数组的指针
+    - 对结构体指针的赋值：`var pointer *Point3D = &Point3D{y: 1000}`
 * 常量声明
 
 ```golang
@@ -185,9 +186,13 @@ const (
     - 最后一个参数可能在类型前加上`...`前缀，表示可变参数，可能有0个也可能多个
         + e.g. `func(prefix string, values ...int)`
     - 未初始化的函数变量，值是nil
-* 方法声明
+* method`方法`声明
     - method declarations
-    - 一个方法(method)是带有一个接收者的函数(function)
+    - 一个方法(method)是指带有一个接收者的函数(function)，接收者是`T`或者`*T`形式(可以用括号括起来)，T是`type`名
+        + `func (p *Point) Calc(in int32) float64 {xxx实现}` (此处T为通过type定义的Point类型)
+        + 此时`Calc方法`的类型为：`func(p *Point, in int32) (float64)`(不过注意：一个函数用这种方式声明，并不是方法)
+    - 类型`T`被称作接收者基本类型，`T`不能是指针或者接口类型，且必须和方法(method)定义在同一个包(package)中
+    - 方法被称作绑定到类型`T`，并且方法名仅在这个类型的使用时可见
 * `interface`
     - interface接口类型指定了一个方法集
         + 接口T里面定义的成员可以是另一个接口成员E，叫做(E为在T中的)嵌入接口，但是不能有同名的方法
@@ -1010,3 +1015,8 @@ string:=strconv.FormatInt(int64,10)
     - `go get -u github.com/kardianos/govendor`
     - Go modules 是Go1.11开始引入的(本机安装版本为go1.13.1)，并在Go1.11.2中修复提升，在Go1.12中有更好的表现
     - Go modules作为发布和构建工具，已经准备就绪可以立即使用。推荐在小项目和个人项目中使用Go modules
+
+## 项目demo
+
+* [xiaodongQ/douban-movie](https://github.com/xiaodongQ/douban-movie)
+    - fork自：[go-crawler/douban-movie](https://github.com/go-crawler/douban-movie)

@@ -76,6 +76,50 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
 
 * Go `protoc --go_out=plugins=gRPC:./ *.proto`
     - [gRPC Basics - Go](https://grpc.io/docs/tutorials/basic/go/)
+    - 使用超时
+        + 客户端
+            * `ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))`
+                - 或者使用WithTimeout(其封装了WithDeadline): `ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)`
+                - 对于err的解析，参考:[带入gRPC：gRPC Deadlines](https://segmentfault.com/a/1190000016601876)
+            * `defer cancel()` 注意不要忘记对应返回的cancel函数的调用
+            * 然后将`ctx`作为调用grpc结构的第一个参数(上下文)，若不用超时则第一个参数传`context.Background()`即可
+            * (场景：对返回stream做`Recv()`)达到超时后，`Recv()`会返回错误，`pong, err := stream.Recv()`，对err解析：
+                - "google.golang.org/grpc/codes" 导入grpc codes包
+                - "google.golang.org/grpc/status" 导入grpc status包
+                - `statusErr, ok := status.FromError(err)` 判断是否为grpc的错误，若是则ok为true，并返回`*Status`类型
+                - `if statusErr.Code() == codes.DeadlineExceeded {}`, `codes.DeadlineExceeded`即为grpc超时的错误码
+                    + 并不能直接用 `if err == context.DeadlineExceeded`做判断(结果为false)
+        + 服务端
+            * `if ctx.Err() == context.Canceled {}`
+        + 可参考(里面包含了C++和Go的服务端和客户端设置示例)：[grpc deadlines](https://www.cnblogs.com/029zz010buct/p/9487568.html)
+            * 其中例子来源于官网文档：[gRPC and Deadlines](https://grpc.io/blog/deadlines/)
+
+```golang
+// 设置超时的客户端，由于第二个参数需要 time.Time 类型，所以使用time.Now().Add()获取一个Time类型数据
+// ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second) // WithTimeout实际是对WithDeadline的封装
+stream, _ := testClient.GetSecurityQuotes10(ctx, req) //返回stream
+for {
+    pong, err := stream.Recv()
+    if err == io.EOF {
+        log.Printf("c.Echo: io.EOF %v ", err)
+        break
+    }
+    if err != nil {
+        statusErr, ok := status.FromError(err)
+        if ok && statusErr.Code() == codes.DeadlineExceeded {
+            log.Printf("recv timeout, trigger deadline errinfo:[%v]", err)
+            break
+        } else {
+            log.Printf("stream.Recv error: %v", err)
+        }
+    }
+    log.Println("data:", pong)
+}
+
+// 若为Go服务端，则检查是否超时取消
+// if ctx.Err() == context.Canceled {}
+```
 
 ## C++示例流程和源码结构
 
@@ -119,6 +163,13 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
             - `RouteGuideClient(std::shared_ptr<ChannelInterface> channel, const std::string& db): stub_(RouteGuide::NewStub(channel)) {}`
     + 调用服务的方法(示例中只演示同步阻塞方法)
         * 创建一个客户端上下文 `ClientContext`对象(服务端创建时也会类似传入一个`ServerContext* context`对象)，可以给这个对象设置一些选项
+            - 客户端超时选项：使用 `context.set_deadline(timespec);`
+                + `std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + std::chrono::seconds(client_connection_timeout);` 用的是C++11的std::chrono库
+                + `context.set_deadline(deadline);` (每个grpc客户端的ClientContext context;)
+            - 若为服务端
+                + 使用`if (context->IsCancelled()) {}` 进行检查客户端是否超时或取消
+            - 可参考(里面包含了C++和Go的服务端和客户端设置示例)：[grpc deadlines](https://www.cnblogs.com/029zz010buct/p/9487568.html)
+                + 其中例子来源于官网文档：[gRPC and Deadlines](https://grpc.io/blog/deadlines/)
         * 类似本地方法一样调用方法：`Status status = stub_->GetFeature(&context, point, feature);`
         * service定义：`rpc GetFeature(Point) returns (Feature) {}`
         * 调用：`Status status = stub_->GetFeature(&context, point, feature);`
