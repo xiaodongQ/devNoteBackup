@@ -1008,6 +1008,27 @@ string:=strconv.FormatInt(int64,10)
     - net包提供编写一个网络客户端或者服务器程序的基本组件，无论两者间通信是使用TCP，UDP或者Unix domain sockets
         + net/http包里的方法，也算是net包的一部分
 
+# Go语言标准库
+
+* [《Go语言标准库》The Golang Standard Library by Example](https://books.studygolang.com/The-Golang-Standard-Library-by-Example/)
+
+## flag 包
+
+* flag 包
+    - 参考：[1. 13.1 flag - 命令行参数解析](https://books.studygolang.com/The-Golang-Standard-Library-by-Example/chapter13/13.1.html#131-flag---%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90)
+    - flag 包实现了命令行参数的解析(使用命令行执行程序，传入参数)
+        + 示例见参考链接，实现了一个执行`nginx -h`时，对-h参数的解析返回，可以指定其他种类参数(-h为是否存在`h`的bool类型)
+    - 定义 flags 有两种方式
+        + `flag.Xxx()`，其中 Xxx 可以是 Int、String 等；返回一个相应类型的指针
+            * `func Int(name string(标志名称), value int(默认值), usage string(使用提示)) *int(存放标志值) {xxx}`
+            * e.g. `var ip = flag.Int("flagname", 1234, "help message for flagname")`
+        + `flag.XxxVar()`，将 flag 绑定到一个变量上
+            * `func IntVar(p *int(存放标志flag的值), name string, value int, usage string) {xxx}` 无返回值
+            * e.g. `var flagvar int`, `flag.IntVar(&flagvar, "flagname", 1234, "help message for flagname")`
+    - 在所有的 flag 定义完成之后，可以通过调用 `flag.Parse()` 进行*解析*，命令行flag的语法有如下三种形式
+        + `-flag` // 只支持 bool 类型
+        + `-flag=x`
+        + `-flag x` // 只支持非 bool 类型
 
 ## govendor
 

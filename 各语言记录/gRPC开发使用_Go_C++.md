@@ -76,19 +76,32 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
 
 * Go `protoc --go_out=plugins=gRPC:./ *.proto`
     - [gRPC Basics - Go](https://grpc.io/docs/tutorials/basic/go/)
-    - 使用超时
+    - 生成服务端和客户端代码
+        + `protoc -I routeguide/ routeguide/route_guide.proto --go_out=plugins=grpc:routeguide`
+            * 会生成 route_guide.pb.go 文件，其中包含
+                - 用于填充、序列化和检索 请求和响应 消息类型的所有协议缓冲区代码
+                - 一个接口类型interface(或存根stub)(`type RouteGuideClient interface`)，供 客户端 使用RouteGuide服务中定义的方法进行调用
+                - 服务器要实现的接口类型(`type RouteGuideServer interface`)，包含RouteGuide服务中定义的方法
+    - 创建服务端
+        + 
+    - 设置超时
         + 客户端
             * `ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))`
                 - 或者使用WithTimeout(其封装了WithDeadline): `ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)`
                 - 对于err的解析，参考:[带入gRPC：gRPC Deadlines](https://segmentfault.com/a/1190000016601876)
             * `defer cancel()` 注意不要忘记对应返回的cancel函数的调用
             * 然后将`ctx`作为调用grpc结构的第一个参数(上下文)，若不用超时则第一个参数传`context.Background()`即可
-            * (场景：对返回stream做`Recv()`)达到超时后，`Recv()`会返回错误，`pong, err := stream.Recv()`，对err解析：
+            * (*解析err场景*：对返回stream做`Recv()`)达到超时后，`Recv()`会返回错误，
+                - `pong, err := stream.Recv()`，对err解析：
                 - "google.golang.org/grpc/codes" 导入grpc codes包
                 - "google.golang.org/grpc/status" 导入grpc status包
                 - `statusErr, ok := status.FromError(err)` 判断是否为grpc的错误，若是则ok为true，并返回`*Status`类型
                 - `if statusErr.Code() == codes.DeadlineExceeded {}`, `codes.DeadlineExceeded`即为grpc超时的错误码
                     + 并不能直接用 `if err == context.DeadlineExceeded`做判断(结果为false)
+                - **问题**，对于stream，由于连接一直在的，设置的deadline超时会将正常持续的stream置为超时?
+                    + 找到这个:"A deadline would always terminate the stream when it is exceeded. Since the stream is kept open indefinitely/forever a deadline on ClientContext would almost always terminate the stream too early."，参考[How to detect (physical) disconnect when using a bidirectional stream in Grpc](https://stackoverflow.com/questions/49276298/how-to-detect-physical-disconnect-when-using-a-bidirectional-stream-in-grpc)
+                    + 所以结论还是使用`一直连接`接收的stream时，不应设置deadline
+                    + 对于多个服务的grpc调用，若设置了超时时间则会解析传递，实现原理相关源码解析，可参考：[gRPC 系列——grpc超时传递原理](https://xiaomi-info.github.io/2019/12/30/grpc-deadline/)
         + 服务端
             * `if ctx.Err() == context.Canceled {}`
         + 可参考(里面包含了C++和Go的服务端和客户端设置示例)：[grpc deadlines](https://www.cnblogs.com/029zz010buct/p/9487568.html)
@@ -166,6 +179,10 @@ for {
             - 客户端超时选项：使用 `context.set_deadline(timespec);`
                 + `std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + std::chrono::seconds(client_connection_timeout);` 用的是C++11的std::chrono库
                 + `context.set_deadline(deadline);` (每个grpc客户端的ClientContext context;)
+                + *解析err场景*: 循环读取stream，**若一直连接则不应该使用超时**(参考go章节的超时说明，搜索："对于stream，由于连接一直在的，设置的deadline超时会将正常持续的stream置为超时?")
+                    * `while (reader->Read(&res))`
+                    * Read退出while后，检查是否正常结束，`Status status = reader->Finish();`
+                    * 若非ok，`if (status.ok())`，`status.error_code()`，`status.error_message()`
             - 若为服务端
                 + 使用`if (context->IsCancelled()) {}` 进行检查客户端是否超时或取消
             - 可参考(里面包含了C++和Go的服务端和客户端设置示例)：[grpc deadlines](https://www.cnblogs.com/029zz010buct/p/9487568.html)
