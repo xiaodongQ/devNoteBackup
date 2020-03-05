@@ -46,6 +46,7 @@
 * 连接并登录服务器
     - `mysql -h host -u user -p`，然后输入密码
         + 如果是本地mysql服务，则`mysql -u user -p`
+        + 可以指定数据库：`msyql -h host -u user -p -D xdtest`
     - 进程未运行报错
         + 如果报错：ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/tmp/mysql.sock'
         + 说明进程未运行，检查并启动
@@ -118,7 +119,7 @@
     - [3.3.1 Creating and Selecting a Database](https://dev.mysql.com/doc/refman/8.0/en/creating-database.html)
     - *关键字*大小写不敏感，以分号`;`(semicolon)结束语句，字符串使用 `'` 和 `"` 都可以
     - 查询
-        + `select user()`
+        + `select user();`
     - 数据库
         + 查看所有数据库 `show databases;`
         + 创建 `create database menagerie;`

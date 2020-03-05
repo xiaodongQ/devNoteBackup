@@ -212,7 +212,7 @@ query3 := collection.Find(nil).Sort("$natural")
 query4 := collection.Find(nil).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score")
 ```
 
-bson条件示例(mgo流程和bson序列化)：
+* mgo bson条件示例(mgo流程和bson序列化)：
 
 ```golang
 import "gopkg.in/mgo.v2"
@@ -243,6 +243,8 @@ finderr := collect.Find(query).Limit(10).All(&dbresult)
 //直接按字段读取dbresult的值即可
 log.Println(dbresult[0].ID)
 ```
+* mgo示例结束
+
 
 可以加上 db.SingularTable(true) 让gorm转义struct名字的时候不用加上s
 
