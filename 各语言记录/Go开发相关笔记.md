@@ -1086,3 +1086,41 @@ string:=strconv.FormatInt(int64,10)
 
 * [xiaodongQ/douban-movie](https://github.com/xiaodongQ/douban-movie)
     - fork自：[go-crawler/douban-movie](https://github.com/go-crawler/douban-movie)
+
+## golang的init函数
+
+* [五分钟理解golang的init函数](https://zhuanlan.zhihu.com/p/34211611)
+* `init`函数
+    - `init`函数先于`main`函数自动执行，不能被其他函数调用(*注意*)；
+    - `init`函数没有输入参数、返回值；
+    - 每个包可以有多个`init`函数；
+    - 包的每个源文件也可以有多个`init`函数(一个文件中可有多个init)，这点比较特殊；
+    - 同一个包的多个init执行顺序，golang没有明确定义，编程时要注意程序不要依赖这个执行顺序
+        + 链接中有个示例，猜测是按源文件名称的字典序，注意没找到根据
+    - *不同包*的init函数按照包导入的`依赖关系`决定执行顺序
+* Golang程序初始化
+    - golang程序初始化先于main函数执行，由runtime进行初始化，初始化顺序如下：
+        + 1. 初始化`导入的包`(不一定从上到下顺序)，runtime需要解析包依赖关系，没有依赖的包最先被初始化，与变量初始化依赖关系类似
+            * 链接中演示了(全局/局部)变量初始化顺序：[golang变量的初始化](https://mp.weixin.qq.com/s/PGDzMaYznZVuDiO6V-zYDw)
+            * 函数作用域内的局部变量，初始化顺序：从左到右、从上到下，所以对于*局部*的`var a int=b+1`, `var b int=1`，会报错(b未定义)
+            * 但对于*全局*定义:`var a int=b+1`, `var b int=1`，可先于b定义就使用b，使用正常
+                - 对于package级别的变量，初始化顺序与初始化依赖有关
+                - 若依赖关系出现嵌套循环(a依赖b,b依赖a)，则会报错：`initialization loop`
+        + 2. 初始化包作用域的`变量`(不一定按从上到下、从左到右顺序)，runtime解析变量依赖关系，没有依赖的变量最先被初始化
+        + 3. 执行包的`init`函数
+    - import包根据依赖关系初始化的示例，见链接
+* init函数的主要用途：初始化不能使用初始化表达式初始化的变量，如下示例：
+
+```golang
+var initArg [20]int
+func init() {
+   initArg[0] = 10
+   for i := 1; i < len(initArg); i++ {
+       initArg[i] = initArg[i-1] * 2
+   }
+}
+```
+
+* golang对没有使用的导入包会编译报错，但是有时我们只想调用该包的init函数，不使用包导出的变量或者方法
+    - 可以导入时用`_`操作符：`import _ "net/http/pprof"`
+

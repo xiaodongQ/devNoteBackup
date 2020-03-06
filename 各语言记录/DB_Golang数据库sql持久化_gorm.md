@@ -87,7 +87,13 @@ func Open(driverName, dataSourceName string) (*DB, error)
 e.g.
 root:hikc45b6@tcp(127.0.0.1:3306)/xd_new_schema"
 
-Open函数可能只是验证其参数，而不创建与数据库的连接。如果要检查数据源的名称是否合法，应调用返回值的Ping方法。
+Open函数可能只是验证其参数，而不创建与数据库的连接。如果要检查数据源的名称是否合法，应调用返回值的`Ping`方法。
+
+```golang
+if err := db.Ping(); err != nil{
+  log.Fatalln(err)
+}
+```
 
 #### 查询列表Query
 读取mysql的数据需要有一个绑定的过程，db.Query方法返回一个rows对象，这个数据库连接随即也转移到这个对象，因此我们**需要定义row.Close**操作。
@@ -317,7 +323,7 @@ db.Model(&User{}).RemoveIndex("idx_user_name")
 * gorm.Model 结构体
 包括字段ID，CreatedAt，UpdatedAt，DeletedAt
 
-**删除具有DeletedAt字段的记录，它不会冲数据库中删除，但只将字段DeletedAt设置为当前时间，并在查询时无法找到记录**
+**删除具有DeletedAt字段的记录，它不会从数据库中删除，但只将字段DeletedAt设置为当前时间，并在查询时无法找到记录**
 
 软删除:
 如果模型有DeletedAt字段，它将自动获得软删除功能！
