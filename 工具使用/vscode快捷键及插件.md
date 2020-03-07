@@ -353,6 +353,10 @@ go install golang.org/x/tools/cmd/guru
 go install github.com/go-delve/delve/cmd/dlv
 ```
 
+* VSCode里运行时用的环境变量，光配置.bashrc或.bash_profile并不行，需要在配置文件中进行配置gopath
+    - e.g. 在settings.json里添加配置: `"go.gopath": "/Users/xd/workspace/src/go_path",`
+    - 编辑配置：配置settings.json中的GOROOT和GOPATH点击VS Code，点击最顶部栏的Code选项，选中Preferences，点击Settings，选中Extensions，点击Go configuration，在点击Edit in settings.json，打开settings.json文件，可以通过搜索go.go查到，settings.json 文件里面默认的go.gopath和go.goroot都是null，需要自己设置，设置完gopath和goroot后按command+s保存文件
+
 ## koroFileHeader的user配置备份
 
 ```json
