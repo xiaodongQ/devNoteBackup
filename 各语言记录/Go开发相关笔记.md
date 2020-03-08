@@ -1124,3 +1124,18 @@ func init() {
 * golang对没有使用的导入包会编译报错，但是有时我们只想调用该包的init函数，不使用包导出的变量或者方法
     - 可以导入时用`_`操作符：`import _ "net/http/pprof"`
 
+
+## 极客时间Go专栏
+
+* main()
+    - 不支持返回值
+        + 可通过`os.Exit()`来返回(可指定返回错误码： `os.Exit(-1)`)
+    - 不支持传入参数`func main(str []string)`是错误的
+        + 若要获取命令行参数，使用`os.Args`来获取(是个数组，`len(os.Args)`, if len>1则第一个参数：`os.Args[1]`)
+* 并发编程
+    - 协程访问共享内存
+        + 互斥`var mtx sync.Mutex`, `mtx.Lock()`, `mtx.Unlock()` 互斥锁，Unlock可以放到defer里去执行
+        + 等待完成(而不用sleep去模拟)`var wg sync.WaitGroup`, `wg.Add(1)`, `wg.Done()`, `wg.Wait()` 
+    - CSP并发机制
+        + CSP：Communication Sequential Process （简称CSP）是著名计算机科学家C.A.R.Hoare为解决并发现象而提出的代数理论，是一个专为描述并发系统中通过消息交换进行交互通信实体行为而设计的一种抽象语言
+        + 使用channel通道 `chan`类型
