@@ -1141,11 +1141,12 @@ func init() {
         + 使用channel通道 `chan`类型
     - 多路选择和超时
         + `select {case xxx: xxx}`，结合 `<-time.After(时间)`类型的读channel，可以实现超时退出功能(加一个检查该channel的case)
-    - 关闭channel，来通知使用channel的程序已结束
-        + `close(ch)`
+    - `close(ch)`关闭channel，
+        + 对读取channel的语句`xxx,ok:=<-ch1`判断返回值来确认是否已结束
+        + 对写channel的语句，可用一个新的channel来辅助判断channel是否已关闭，用`select`先判断这个辅助channel是否关闭
+            * 对各种情况的发送端和接收端(1发多收/多发1收/多发多收)，可参考下面链接中的示例
+                - [有关Golang channel关闭的优雅方式](https://blog.csdn.net/studyhard232/article/details/88996434?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)
+            * 示例中有使用到对channel的`for...range`语法：
+                - Go提供了range关键字，将其使用在channel上时，会自动等待channel的动作一直到channel被关闭
+                - for range 可以遍历通道（channel），但是通道在遍历时，只输出一个值，即管道内的类型对应的数据
         + 对于已关闭的channel进行操作的结果，搜索本笔记中的 "* `chan`" 章节(读取没事，发送和再次关闭会panic)
-        + 对各种情况的发送端和接收端(1发多收/多发1收/多发多收)，可参考下面链接中的示例
-            * [有关Golang channel关闭的优雅方式](https://blog.csdn.net/studyhard232/article/details/88996434?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)
-        + 示例中有使用到对channel的`for...range`语法：
-            * Go提供了range关键字，将其使用在channel上时，会自动等待channel的动作一直到channel被关闭
-            * for range 可以遍历通道（channel），但是通道在遍历时，只输出一个值，即管道内的类型对应的数据
