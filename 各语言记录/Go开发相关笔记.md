@@ -348,7 +348,7 @@ type Block interface {
                 - `a[2:]` 相当于 `a[2:len(a)]`
                 - `a[:3]` 相当于 `a[0:3]`
                 - `a[:]` 相当于 `a[0:len(a)]`
-            * 对于string和数组，索引不超过(`<=`)`len(a)`，否则超出范围
+            * 对于string和数组，索引不超过(`<=`) `len(a)`，否则超出范围
             * 对于slice，索引上限为`cap(a)`，而不是`len(a)`
     - 切片的结果和原数组共享空间，即slice切片截取赋值时，修改新变量成员会影响之前的切片(共享存储空间)
         + `year := []string{"Jan", "Feb", "Mar", "Apr", "May", "6", "7", "8", "9", "10", "11", "12"}`
@@ -366,6 +366,14 @@ type Block interface {
         + `for i:=1; i<10; i++ {}`, 类似C的for(i=0; i<10; i++){}
         + `for {}`, 无限循环，类似while(1){}或for(;;){}
         + `for condition {}`, 类似C的while(condition){}
+* 类型断言
+    - `x.(T)`
+    - `var x interface{} = 7`，x有动态类型int，值为7，,`i := x.(int)`则新增变量i为int类型，值为7
+    - `type I interface { m() }`，`var y I`，则
+        + `s := y.(string)`，非法，string类型并没有实现I接口
+        + `r := y.(io.Reader)`，新增r类型可为 io.Reader，若要使该表达式成立，则y必须实现I和io.Reader接口
+    - 为了防止上面的非法情况，类型断言赋值时可以使用如下方式：
+        + `v, ok := x.(T)`，如果断言成立，则ok为true，如果不成立则ok为false，v为零值，该情况不产生panic
 
 ### 值类型
 
