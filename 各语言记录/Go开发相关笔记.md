@@ -1143,7 +1143,7 @@ func init() {
         + `select {case xxx: xxx}`，结合 `<-time.After(时间)`类型的读channel，可以实现超时退出功能(加一个检查该channel的case)
     - `close(ch)`关闭channel，
         + 对读取channel的语句`xxx,ok:=<-ch1`判断返回值来确认是否已结束
-        + 对写channel的语句，可用一个新的channel来辅助判断channel是否已关闭，用`select`先判断这个辅助channel是否关闭
+        + 对写channel的语句，可用一个新的channel来辅助判断channel是否已`close`(向所有读取channel的地方广播)，用`select`先判断这个辅助channel是否关闭
             * 对各种情况的发送端和接收端(1发多收/多发1收/多发多收)，可参考下面链接中的示例
                 - [有关Golang channel关闭的优雅方式](https://blog.csdn.net/studyhard232/article/details/88996434?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)
             * 示例中有使用到对channel的`for...range`语法：
