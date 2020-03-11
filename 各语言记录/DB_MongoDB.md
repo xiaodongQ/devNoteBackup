@@ -35,6 +35,27 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
             * [MongoDB CRUD Operations](https://docs.mongodb.com/manual/crud/)
     - C++ API
         + [MongoDB C++ Driver](http://mongocxx.org/api/current/)，可以在搜索框搜索api
+* 连接池
+    - [examples/mongocxx/pool.cpp](https://github.com/mongodb/mongo-cxx-driver/blob/master/examples/mongocxx/pool.cpp)
+    - 使用 `mongocxx::pool`
+    - url添加pool大小：`mongodb://192.168.50.118:27017/?authSource=xdtest&minPoolSize=5&maxPoolSize=10`
+
+```cpp
+#include <mongocxx/pool.hpp>
+
+    mongocxx::instance inst{};
+    mongocxx::uri uri{"mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=3"};
+    mongocxx::pool pool{uri};
+
+    // mongocxx::client
+    auto client = pool.acquire();
+    // (*client)["test"] 为 mongocxx::database
+    // coll 为 mongocxx::collection
+    auto coll = (*client)["test"][collection_names];
+
+    // coll.insert_one，find等操作
+    // mongocxx::cursor cur = coll.find(xxx);
+```
 
 ### NoSQL
 
