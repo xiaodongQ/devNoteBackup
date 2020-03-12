@@ -39,6 +39,11 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
     - [examples/mongocxx/pool.cpp](https://github.com/mongodb/mongo-cxx-driver/blob/master/examples/mongocxx/pool.cpp)
     - 使用 `mongocxx::pool`
     - url添加pool大小：`mongodb://192.168.50.118:27017/?authSource=xdtest&minPoolSize=5&maxPoolSize=10`
+    - api
+        + 官网说明：[Connection pools](http://mongocxx.org/mongocxx-v3/connection-pools/)
+            * [examples](mongo-cxx-driver/examples/mongocxx/pool.cpp)
+        + [pool.hpp](http://mongocxx.org/api/current/pool_8hpp_source.html)
+        + [mongocxx::client](http://mongocxx.org/api/current/classmongocxx_1_1client.html)
 
 ```cpp
 #include <mongocxx/pool.hpp>
@@ -47,7 +52,7 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
     mongocxx::uri uri{"mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=3"};
     mongocxx::pool pool{uri};
 
-    // mongocxx::client
+    // mongocxx::client，每个线程用一个client 不要多个复用
     auto client = pool.acquire();
     // (*client)["test"] 为 mongocxx::database
     // coll 为 mongocxx::collection
