@@ -374,6 +374,22 @@ type Block interface {
         + `r := y.(io.Reader)`，新增r类型可为 io.Reader，若要使该表达式成立，则y必须实现I和io.Reader接口
     - 为了防止上面的非法情况，类型断言赋值时可以使用如下方式：
         + `v, ok := x.(T)`，如果断言成立，则ok为true，如果不成立则ok为false，v为零值，该情况不产生panic
+* 函数传参
+    - `func Greeting(prefix string, who ...string)`
+        + 可以用 `参数名 ...T`表示传入一个`[]T`类型的切片(slice)，调用函数时不送值则为nil
+            * `Greeting("nobody")`，第二个参数为nil
+            * `Greeting("hello:", "Joe", "Anna", "Eileen")`，第二个参数为`[]string{"Joe", "Anna", "Eileen"}`
+* 操作符优先级
+    - `*p++` 和 `(*p)++` 效果一样，取值后，指针++ ?
+* 转换表达式 (使用`T(x)`形式，T是要转换为的类型，x是值，必要时须使用括号来避免歧义)
+    - `*Point(p)` 表示构造一个 Point类型，值为p，再解引用取值，同`*(Point(p))`
+    - `(*Point)(p)` 表示构造一个 `*Point`类型(Point的指针)，其中的值为p
+    - `<-chan int(c)` 和 `<-(chan int(c))`一样： c为`chan int`类型，再进行c进行读取
+    - `(<-chan int)(c)` 表示构造一个`<-chan int`类型，赋值为c
+    - `func()(x)` 表示函数签名 `func() x`(单个返回值可不用括号)
+    - `(func())(x)` x被转换为 `func()` 函数(无返回值)
+    - `(func() int)(x)` x被转换为`func() int`函数(一个int返回值)
+    - `func() int(x)` x被转换为 `func() int` 函数，注意没有二义性，和上面的表示是一致的
 
 ### 值类型
 
