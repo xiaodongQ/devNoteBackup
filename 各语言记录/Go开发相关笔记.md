@@ -6,9 +6,19 @@
     - 本文档就如何编写清晰、地道的 Go 代码提供了一些技巧。它是对 `语言规范`、`Go 语言之旅` 以及 `如何使用 Go 编程` 的补充说明，因此我们建议您先阅读这些文档。
         + [Go编程语言规范](https://go-zh.org/ref/spec)
             * 英文版：[The Go Programming Language Specification](https://golang.org/ref/spec)
+            * 阅读笔记查章节: `### [Go编程语言规范]`
         + [Go 语言之旅](https://tour.golang.org/)
         + [如何使用 Go 编程](https://go-zh.org/doc/code.html)
             * 英文版：[How to Write Go Code](https://golang.org/doc/code.html)
+            * 阅读笔记查章节: `### 如何使用 Go 编程`
+    - 格式化
+        + 在 Go 中让机器来处理大部分的格式化问题。gofmt 程序（也可用 go fmt，它以包为处理对象而非源文件）将 Go 程序按照标准风格缩进、 对齐，保留注释并在需要时重新格式化
+        + 你无需花时间将结构体中的字段注释对齐，gofmt 将为你代劳
+        + 标准包中所有的 Go 代码都已经用 gofmt 格式化过了
+        + 部分格式化细节
+            * 缩进：使用制表符(tab)缩进，gofmt 默认也使用它。
+            * 比起 C 和 Java，Go 所需的括号更少：控制结构（if、for 和 switch）在语法上并不需要圆括号。
+
 * [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
 ### 如何使用 Go 编程
