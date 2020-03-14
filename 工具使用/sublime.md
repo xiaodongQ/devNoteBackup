@@ -1,13 +1,14 @@
 ## sublime
 
-回到上一个位置
-alt+-
-下一个位置
-alt+shift+-
+* 回到上一个位置
+	- `alt + -`
+	- mac: `control + -`
+* 下一个位置
+	- `alt + shift + -`
+	- mac: `control + shift + -`
 
-显示空格和tab，首选项->设置->json中添加配置：
-
-    "draw_white_space": "all"
+* 显示空格和tab，首选项->设置->json中添加配置：
+	- "draw_white_space": "all"
 
 **fileheader插件，生成注释** 每次保存都会修改，不便于浏览修改别人代码
 

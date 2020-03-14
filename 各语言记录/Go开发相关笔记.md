@@ -390,6 +390,36 @@ type Block interface {
     - `(func())(x)` x被转换为 `func()` 函数(无返回值)
     - `(func() int)(x)` x被转换为`func() int`函数(一个int返回值)
     - `func() int(x)` x被转换为 `func() int` 函数，注意没有二义性，和上面的表示是一致的
+    - 注意
+        + string(65.0) 非法
+            * string(-1)合法，会将整数代表的utf表示的字符串(若数字超出unicode限制，则转换为"\uFFFD"，此处-1即表示"\ufffd")
+            * string('a') 合法，代表"a"
+            * string(0xf8)      // "\u00f8" == "ø" == "\xc3\xb8"
+            * 可以用`[]byte{}`转换string
+                - e.g. `string([]byte{'h', 'e', 'l', 'l', '\xc3', '\xb8'})` 表示`"hellø"`
+                    + 注意最后字符 "\u00f8" == "ø" == "\xc3\xb8"
+                - `string([]byte{})`表示 `""`
+                - `string([]byte(nil))` 表示`""`
+            * 可以用`[]rune{}`转换string
+                - rune类型，代表一个 UTF-8 字符，当需要处理中文、日文或者其他复合字符时，则需要用到 `rune` 类型。`rune` 类型等价于 `int32` 类型
+                - e.g. `string([]rune{0x767d, 0x9d6c, 0x7fd4})`表示 "\u767d\u9d6c\u7fd4" == "白鵬翔"
+                - `string([]rune{})` 表示`""`
+                - `string([]rune(nil))`表示`""`
+        + int(1.2) 非法
+            * float32(5)合法
+* 语句(statement)
+    - 几个单词
+        + expression 表达式
+        + statement 语句 (控制语句 control statements)
+* 程序初始化
+    - 存储一个分配的变量时(无论通过声明还是new)，变量都会有一个默认值(初始化为对应类型的零值)
+        + `var i int` 和 `var i int = 0` 是相同的
+        + 结构体类型的变量定义后，其成员各自初始化为零值
+* `unsafe`包(内置)
+    - 内置的unsafe包 告诉编译器，为低级别的编程提供了便利，包括违反类型系统的操作
+    - 为了安全起见，使用unsafe包必须经过手动审核，并且可能不可移植。
+    - `unsafe.Pointer` 所有基础类型的指针都可以转换为`Pointer`类型
+        + `var f float64`, `bits = *(*uint64)(unsafe.Pointer(&f))`
 
 ### 值类型
 
