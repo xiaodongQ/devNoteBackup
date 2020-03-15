@@ -18,6 +18,25 @@
         + 部分格式化细节
             * 缩进：使用制表符(tab)缩进，gofmt 默认也使用它。
             * 比起 C 和 Java，Go 所需的括号更少：控制结构（if、for 和 switch）在语法上并不需要圆括号。
+    - 命名(Names)
+        + 包名(Package names)
+            * 当一个包被导入后，包名就会成了内容的访问器 e.g. `import "bytes"`
+            * 按照惯例，包应当以小写的单个单词来命名，且不应使用下划线或驼峰记法。
+            * 另一个约定就是包名应为其源码目录的基本名称
+                - 在 src/pkg/encoding/base64 中的包应作为 "encoding/base64" 导入，其包名应为 base64， 而非 encoding_base64 或 encodingBase64
+            * 包的导入者可通过包名来引用其内容，因此包中的可导出名称可以此来避免冲突
+                - bufio包中的缓存读取器类型叫做Reader而非BufReader，长命名并不会使其更具可读性。一份有用的说明文档通常比额外的长名更有价值
+                - bufio.Reader 不会与 io.Reader 发生冲突
+        - 获取器(Getters)
+            * Go 并不对获取器（getter）和设置器（setter）提供自动支持， 你应当自己提供获取器和设置器，通常很值得这样做
+                - 若你有个名为 owner（小写，未导出）的字段，其获取器应当名为 `Owner`（大写，可导出）而非 `GetOwner`
+                - 若要提供设置器方法，`SetOwner` 是个不错的选择
+                - e.g. `owner := obj.Owner()`, `obj.SetOwner(user)`
+        - 接口名(Interface names)
+            * 按照约定，只包含一个方法的接口应当以该方法的名称加上 `er` 后缀来命名，如 Reader、Writer、 Formatter、CloseNotifier 等。
+            * 请将字符串转换方法命名为 String 而非 ToString
+        - `驼峰记法`
+            * Go 中约定使用驼峰记法 `MixedCaps` 或 `mixedCaps` 而非下划线的方式来对多单词名称进行命名
 
 * [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
@@ -232,6 +251,27 @@ const (
         + 若类型实现了某个接口，则同时也实现了任何由该接口子集组成的接口
     - 未初始化的接口类型，值是nil
     - 所有类型实现了空接口 `interface{}`
+
+### 接口
+
+```
+接口的实现
+自定义类型(type)实现接口，需要实现接口中声明的所有方法
+
+1）接口不能实例化（类似于C++中的抽象类），可以指向一个实现了该接口的自定义类型的变量。
+2）只要是自定义数据类型，就可以实现接口，不仅仅是结构体类型
+3）一个自定义类型可以实现多个接口。
+
+4）接口之间可以实现继承，利用嵌套匿名接口。
+
+5）interface类型默认是一个指针（引用类型），如果没有对interface初始化，则其为nil。
+
+6）空接口type T interface{}没有任何方法，所有的类型都实现了该空接口，也就可以将任何变量赋给空接口。
+```
+
+类型断言
+由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
+
 * `map`
     - map是由一组无序的元素组成的类型
     - `make(map[string]int)`, `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
@@ -519,6 +559,7 @@ func TestMapWithFuncValue(t *testing.T) {
 
 类型断言
 由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
+
 
 ### 包安装相关问题
 
