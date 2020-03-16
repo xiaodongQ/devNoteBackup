@@ -62,6 +62,12 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
     // mongocxx::cursor cur = coll.find(xxx);
 ```
 
+* double精度问题
+    - 货币使用 Decimal类型 (New in version 3.4.)
+    - `NumberDecimal()`
+        + `NumberDecimal("2.099")`
+    - [Using the Decimal BSON Type](https://docs.mongodb.com/manual/tutorial/model-monetary-data/index.html#using-the-decimal-bson-type)
+
 ### NoSQL
 
 关系数据库管理系统（Relational Database Management System：RDBMS）

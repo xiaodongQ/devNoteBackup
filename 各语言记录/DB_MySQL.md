@@ -174,6 +174,12 @@ done
 lftp -u $FTPU,$FTPP -e "mkdir /mysql/$NOW;cd /mysql/$NOW; mput /backup/mysql/*; quit" $FTPS
 ```
 
+* double精度问题(存金额)
+    - 使用 `DECIMAL(M,D)`
+        + M is the maximum number of digits (the precision). It has a range of 1 to 65
+        + D is the number of digits to the right of the decimal point (the scale). It has a range of 0 to 30 and must be no larger than M.
+        + If D is omitted, the default is 0. If M is omitted, the default is 10
+    - [ DECIMAL Data Type Characteristics](https://dev.mysql.com/doc/refman/5.7/en/precision-math-decimal-characteristics.html)
 
 ## 27.8 MySQL C API
 
