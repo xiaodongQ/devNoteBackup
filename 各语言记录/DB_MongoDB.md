@@ -410,6 +410,9 @@ MongoDB 使用 insert() 或 save() 方法向集合中插入文档，语法如下
 
 除了 `find()` 方法之外，还有一个 `findOne()` 方法(注意：大小写敏感)，它只返回一个文档。
 
+* [查询条件](https://docs.mongodb.com/manual/tutorial/query-documents/)
+    - `db.inventory.find( { status: "A", qty: { $lt: 30 } } )`
+
 ##### MongoDB AND 条件
 MongoDB 的 find() 方法可以传入多个键(key)，每个键(key)以逗号隔开，即常规 SQL 的 AND 条件。
 `>db.col1.find({key1:value1, key2:value2}).pretty()`
