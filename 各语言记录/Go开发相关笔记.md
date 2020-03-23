@@ -2,6 +2,8 @@
 
 ## Go文档
 
+### 《Effective Go》
+
 * [《Effective Go》中英双语版](https://bingohuang.gitbooks.io/effective-go-zh-en/content/)
     - 本文档就如何编写清晰、地道的 Go 代码提供了一些技巧。它是对 `语言规范`、`Go 语言之旅` 以及 `如何使用 Go 编程` 的补充说明，因此我们建议您先阅读这些文档。
         + [Go编程语言规范](https://go-zh.org/ref/spec)
@@ -92,8 +94,71 @@
         + 要删除映射中的某项，可使用内建函数 `delete`，它以映射及要被删除的键为实参
             * 即便对应的键不在该映射中，此操作也是安全的
             * `delete(timeZone, "PDT")`
+    - `init`
+        + golang的init函数
+        + [五分钟理解golang的init函数](https://zhuanlan.zhihu.com/p/34211611)
+        + `init`函数
+            * `init`函数先于`main`函数自动执行，不能被其他函数调用(*注意*)；
+            * `init`函数没有输入参数、返回值；
+            * 每个包可以有多个`init`函数；
+            * 包的每个源文件也可以有多个`init`函数(一个文件中可有多个init)，这点比较特殊；
+            * 同一个包的多个init执行顺序，golang没有明确定义，编程时要注意程序不要依赖这个执行顺序
+                - 链接中有个示例，猜测是按源文件名称的字典序，注意没找到根据
+            * *不同包*的init函数按照包导入的`依赖关系`决定执行顺序
+        + Golang程序初始化
+            * golang程序初始化先于main函数执行，由runtime进行初始化，初始化顺序如下：
+                - 1. 初始化`导入的包`(不一定从上到下顺序)，runtime需要解析包依赖关系，没有依赖的包最先被初始化，与变量初始化依赖关系类似
+                    + 链接中演示了(全局/局部)变量初始化顺序：[golang变量的初始化](https://mp.weixin.qq.com/s/PGDzMaYznZVuDiO6V-zYDw)
+                    + 函数作用域内的局部变量，初始化顺序：从左到右、从上到下，所以对于*局部*的`var a int=b+1`, `var b int=1`，会报错(b未定义)
+                    + 但对于*全局*定义:`var a int=b+1`, `var b int=1`，可先于b定义就使用b，使用正常
+                        * 对于package级别的变量，初始化顺序与初始化依赖有关
+                        * 若依赖关系出现嵌套循环(a依赖b,b依赖a)，则会报错：`initialization loop`
+                - 2. 初始化包作用域的`变量`(不一定按从上到下、从左到右顺序)，runtime解析变量依赖关系，没有依赖的变量最先被初始化
+                - 3. 执行包的`init`函数
+            * import包根据依赖关系初始化的示例，见链接
+        + golang对没有使用的导入包会编译报错，但是有时我们只想调用该包的`init`函数，而不使用包导出的变量或者方法
+            * 可以导入时用`_`操作符：`import _ "net/http/pprof"`
+        + init函数的主要用途：初始化不能使用初始化表达式初始化的变量，如下示例：
 
-* [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
+```golang
+var initArg [20]int
+func init() {
+   initArg[0] = 10
+   for i := 1; i < len(initArg); i++ {
+       initArg[i] = initArg[i-1] * 2
+   }
+}
+```
+
+* 方法
+    - 查看本笔记中的 "method`方法`声明" 章节
+* 空白标识符 `_`
+    - 空白标识符可被赋予或声明为任何类型的任何值，而其值会被无害地丢弃，可用于for-range 循环和 map
+    - for range 循环中对空白标识符的用法是一种具体情况，更一般的情况即为多重赋值
+        + `fi, _ := os.Stat(path)` 丢弃错误值(不过忽略错误是种糟糕的实践)
+    - 未使用的导入和变量
+        + 若导入某个包或声明某个变量而不使用它就会产生错误。未使用的包会让程序膨胀并拖慢编译速度， 而已初始化但未使用的变量不仅会浪费计算能力，还有可能暗藏着更大的 Bug。 然而在程序开发过程中，经常会产生未使用的导入和变量
+        + a. `import "fmt"`但是未使用, 可用`var _ = fmt.Printf` 来让编译器停止报错
+        + b. `fd, err := os.Open("test.go")`，fd暂时未用到，则可 `_ = fd`来停止报错，建议加上注释提醒`// TODO: use fd`
+    - 为次要作用而导入
+        +  导入某个包只是为了其次要的作用，没有其它使用该包的可能
+        +  `import _ "net/http/pprof"` 如net/http/pprof包的init函数中记录了HTTP处理程序的调试信息，部分客户端只需要这些信息
+    - 若只需要判断某个类型是否是实现了某个接口，而不需要实际使用接口本身（可能是错误检查部分），就使用空白标识符来忽略类型断言的值：
+        + `if _, ok := val.(json.Marshaler); ok {`
+    - 若某个类型（例如 `json.RawMessage`） 需要一种定制的 JSON 表现时，它应当实现 `json.Marshaler`， 不过现在没有静态转换可以让编译器去自动验证它，可在该包中用空白标识符声明一个全局变量：
+        + `var _ json.Marshaler = (*RawMessage)(nil)`
+        + 在此声明中，我们调用了一个 *RawMessage 转换并将其赋予了 Marshaler，以此来要求 *RawMessage 实现 Marshaler，这时其属性就会在编译时被检测
+        + 在这种结构中出现空白标识符，即表示该声明的存在只是为了类型检查。不过请不要为满足接口就将它用于任何类型。作为约定， 仅当代码中不存在静态类型转换(`.(具体类型)`)时才能这种声明，毕竟这是种罕见的情况。
+            * 静态类型转换的要求：该类型必须为该接口所拥有的具体类型， 或者该值可转换成的第二种接口类型，可参考本笔记中的`* 类型断言`章节
+* 并发
+    - 链接中的示例，循环创建goroutine时存在的循环变量req共享的问题，两种解决方式：
+        + a. 将 req 的值作为实参传入到该 goroutine 的闭包中
+        + b. 用相同的名字获得了该变量的一个新的版本， 以此来局部地刻意屏蔽循环变量，使它对每个 goroutine 保持唯一
+            * `req := req` 它的写法看起来有点奇怪，但在 Go 中这样做是合法且惯用的。用相同的名字获得了该变量的一个新的版本， 以此来局部地刻意屏蔽循环变量，使它对每个 goroutine 保持唯一
+    - 可参考`* 并发编程`章节的笔记
+
+
+### [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
 ### 如何使用 Go 编程
 
@@ -293,9 +358,14 @@ const (
                     + 若`tp`为`*T`类型(结构体指针)，`Mv`方法接收者为`T`，则会自动对指针解引用：`tp.Mv` 和 `(*tp).Mv`是一样的
                 - 函数体内并不会改变传入地址(指针)对应的值
             * 对于接收者是指针类型时，**不能**用值类型(非指针类型)来调用函数
-                - 对接收者为值的方法的引用，会自动取地址，t为`T`类型，`f := t.Mp; f(7)`，和`(&t).Mp(7)`效果一样
-                    + 此处先取方法`t.Mp`再调用定义的函数合法，`t.Mp(7)`非法？ **存疑**
+                - 对接收者为值的方法的调用，会自动取地址，t为`T`类型，`f := t.Mp; f(7)`，和`(&t).Mp(7)`效果一样
+                    + 此处先取方法`t.Mp`再调用定义的函数合法，而`t.Mp(7)`非法 (Mp的接收者是`*T`类型)
                 - 指针类型接收者的方法，并不在值类型的方法集中
+            * 以指针或值为接收者的区别在于：值方法可通过指针和值调用，而指针方法只能通过指针来调用
+                - 之所以会有这条规则是因为指针方法可以修改接收者；
+                - 而通过值调用它们会导致方法接收到该值的副本， 因此任何修改都将被丢弃，因此该语言不允许这种错误
+                - 若该值是可寻址的， 那么该语言就会自动插入取址操作符来对付一般的通过值调用的指针方法。在上面`f := t.Mp`的例子中，变量 t 是可寻址的，因此只需通过 t.Mp 来调用它的 Mp 方法，编译器会将它重写为 (&t).Mp
+                - 参考[Effective Go](https://bingohuang.gitbooks.io/effective-go-zh-en/content/10_Methods.html)
     - 类型`T`被称作接收者基本类型，`T`不能是指针或者接口类型，且必须和方法(method)定义在同一个包(package)中
     - 方法被称作绑定到类型`T`，并且方法名仅在这个类型的使用时可见
 * `interface`
@@ -306,11 +376,9 @@ const (
         + 若类型实现了某个接口，则同时也实现了任何由该接口子集组成的接口
     - 未初始化的接口类型，值是nil
     - 所有类型实现了空接口 `interface{}`
-
-### 接口
+    - 接口`interface`的实现
 
 ```
-接口的实现
 自定义类型(type)实现接口，需要实现接口中声明的所有方法
 
 1）接口不能实例化（类似于C++中的抽象类），可以指向一个实现了该接口的自定义类型的变量。
@@ -324,14 +392,69 @@ const (
 6）空接口type T interface{}没有任何方法，所有的类型都实现了该空接口，也就可以将任何变量赋给空接口。
 ```
 
-类型断言
-由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
+* 类型断言
+    - 由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
 
 * `map`
     - map是由一组无序的元素组成的类型
     - `make(map[string]int)`, `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
     - `len()`获取元素个数
     - nil map和空map，除了nil map不允许添加元素外，两者一样
+    - [Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
+        + `cap()`不能用于求map
+        + 创建和使用(*注意需要创建后才能使用*)
+
+```golang
+// 创建
+map1 := make(map[string]string)
+var map2 map[string]string{"lisi":"xxx"}  // 定义时初始化
+// 插入
+map1["zhangsan"] = "a"
+map1["lisi"] = "b"
+```
+
+* 访问(key不存在时返回零值)
+
+```golang
+map1["lisi"] = "assign"             // map是引用类型
+fmt.Printf("map:%s", map1["none"])  // 找不到的记录，map会返回零值(对不同类型对应零值是有区别的)
+```
+
+*  遍历
+
+```golang
+for key,value := range map1 {
+
+}
+```
+
+* 检测是否存在(不存在时map[unexistkey]会返回零值，不能通过nil来判断是否存在)
+
+```golang
+// 检测一个键是否存在于一个 map
+value, ok := map1["haha"] // 如果 ok 是 true，则键存在，value 被赋值为对应的值。如果 ok 为 false，则表示键不存在
+if !ok {
+    fmt.Println("not exist")
+}
+```
+
+**注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 for range 遍历 map 的顺序总是一致的。**
+
+* 使用map实现set (go中没有set基本类型)
+    - map[anytype]bool
+
+* 利用value为函数时实现工厂模式
+
+```
+func TestMapWithFuncValue(t *testing.T) {
+    m := map[int]func(op int) int{} //定义一个map, key为int,value为函数(函数是一等公民)
+    m[1] = func(op int) int { return op }
+    m[2] = func(op int) int { return op * op }
+    m[3] = func(op int) int { return op * op * op }
+    t.Log(m[1](3), m[2](3), m[3](3))
+}
+```
+
 * `chan`
     - 通道(channel)提供了并发执行函数来发送和读取的一种机制
     - 未初始化的通道值为nil
@@ -479,6 +602,12 @@ type Block interface {
         + `r := y.(io.Reader)`，新增r类型可为 io.Reader，若要使该表达式成立，则y必须实现I和io.Reader接口
     - 为了防止上面的非法情况，类型断言赋值时可以使用如下方式：
         + `v, ok := x.(T)`，如果断言成立，则ok为true，如果不成立则ok为false，v为零值，该情况不产生panic
+    - `.(type)`和`.(具体类型)`可参考：[Effective Go接口转换与类型断言](https://bingohuang.gitbooks.io/effective-go-zh-en/content/11_Interfaces_and_other_types.html)
+        + `switch str := value.(type) {`，然后用`case`子句依次判断类型，`case string:` `case Stringer:`
+        + `str, ok := value.(string)` ()中的类型必须为该接口所拥有的具体类型，或者该值可转换成的第二种接口类型
+            * 下面if...else if组合起来，和对`.(type)`判断switch...case等价
+            * `if str, ok := value.(string); ok {`
+            * `else if str, ok := value.(Stringer); ok {`
 * 函数传参
     - `func Greeting(prefix string, who ...string)`
         + 可以用 `参数名 ...T`表示传入一个`[]T`类型的切片(slice)，调用函数时不送值则为nil
@@ -533,88 +662,6 @@ int、float、bool 和 string 这些基本类型都属于值类型，使用这�
 ### 引用类型
 
 Golang中只有三种引用类型：slice(切片)、map(字典)、channel(管道)；
-
-
-#### map
-
-[Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
-
-**cap()不能用于求map**
-
-* 创建和使用
-
-*注意需要创建后才能使用*
-
-```golang
-// 创建
-map1 := make(map[string]string)
-var map2 map[string]string{"lisi":"xxx"}  // 定义时初始化
-// 插入
-map1["zhangsan"] = "a"
-map1["lisi"] = "b"
-```
-
-* 访问(key不存在时返回零值)
-
-```
-map1["lisi"] = "assign"             // map是引用类型
-fmt.Printf("map:%s", map1["none"])  // 找不到的记录，map会返回零值(对不同类型对应零值是有区别的)
-```
-
-*  遍历
-
-```
-for key,value := range map1 {
-
-}
-```
-
-* 检测是否存在(不存在时map[unexistkey]会返回零值，不能通过nil来判断是否存在)
-
-```
-// 检测一个键是否存在于一个 map
-value, ok := map1["haha"] // 如果 ok 是 true，则键存在，value 被赋值为对应的值。如果 ok 为 false，则表示键不存在
-if !ok {
-    fmt.Println("not exist")
-}
-```
-
-**注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 for range 遍历 map 的顺序总是一致的。**
-
-* 使用map实现set (go中没有set基本类型)
-    - map[anytype]bool
-
-* 利用value为函数时实现工厂模式
-
-```
-func TestMapWithFuncValue(t *testing.T) {
-    m := map[int]func(op int) int{} //定义一个map, key为int,value为函数(函数是一等公民)
-    m[1] = func(op int) int { return op }
-    m[2] = func(op int) int { return op * op }
-    m[3] = func(op int) int { return op * op * op }
-    t.Log(m[1](3), m[2](3), m[3](3))
-}
-```
-
-### 接口
-
-接口的实现
-自定义类型实现接口，需要实现接口中声明的所有方法
-
-1）接口不能实例化（类似于C++中的抽象类），可以指向一个实现了该接口的自定义类型的变量。
-2）只要是自定义数据类型，就可以实现接口，不仅仅是结构体类型
-3）一个自定义类型可以实现多个接口。
-
-4）接口之间可以实现继承，利用嵌套匿名接口。
-
-5）interface类型默认是一个指针（引用类型），如果没有对interface初始化，则其为nil。
-
-6）空接口type T interface{}没有任何方法，所有的类型都实现了该空接口，也就可以将任何变量赋给空接口。
-
-
-类型断言
-由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
-
 
 ### 包安装相关问题
 
@@ -1246,43 +1293,6 @@ string:=strconv.FormatInt(int64,10)
 
 * [xiaodongQ/douban-movie](https://github.com/xiaodongQ/douban-movie)
     - fork自：[go-crawler/douban-movie](https://github.com/go-crawler/douban-movie)
-
-## golang的init函数
-
-* [五分钟理解golang的init函数](https://zhuanlan.zhihu.com/p/34211611)
-* `init`函数
-    - `init`函数先于`main`函数自动执行，不能被其他函数调用(*注意*)；
-    - `init`函数没有输入参数、返回值；
-    - 每个包可以有多个`init`函数；
-    - 包的每个源文件也可以有多个`init`函数(一个文件中可有多个init)，这点比较特殊；
-    - 同一个包的多个init执行顺序，golang没有明确定义，编程时要注意程序不要依赖这个执行顺序
-        + 链接中有个示例，猜测是按源文件名称的字典序，注意没找到根据
-    - *不同包*的init函数按照包导入的`依赖关系`决定执行顺序
-* Golang程序初始化
-    - golang程序初始化先于main函数执行，由runtime进行初始化，初始化顺序如下：
-        + 1. 初始化`导入的包`(不一定从上到下顺序)，runtime需要解析包依赖关系，没有依赖的包最先被初始化，与变量初始化依赖关系类似
-            * 链接中演示了(全局/局部)变量初始化顺序：[golang变量的初始化](https://mp.weixin.qq.com/s/PGDzMaYznZVuDiO6V-zYDw)
-            * 函数作用域内的局部变量，初始化顺序：从左到右、从上到下，所以对于*局部*的`var a int=b+1`, `var b int=1`，会报错(b未定义)
-            * 但对于*全局*定义:`var a int=b+1`, `var b int=1`，可先于b定义就使用b，使用正常
-                - 对于package级别的变量，初始化顺序与初始化依赖有关
-                - 若依赖关系出现嵌套循环(a依赖b,b依赖a)，则会报错：`initialization loop`
-        + 2. 初始化包作用域的`变量`(不一定按从上到下、从左到右顺序)，runtime解析变量依赖关系，没有依赖的变量最先被初始化
-        + 3. 执行包的`init`函数
-    - import包根据依赖关系初始化的示例，见链接
-* init函数的主要用途：初始化不能使用初始化表达式初始化的变量，如下示例：
-
-```golang
-var initArg [20]int
-func init() {
-   initArg[0] = 10
-   for i := 1; i < len(initArg); i++ {
-       initArg[i] = initArg[i-1] * 2
-   }
-}
-```
-
-* golang对没有使用的导入包会编译报错，但是有时我们只想调用该包的init函数，不使用包导出的变量或者方法
-    - 可以导入时用`_`操作符：`import _ "net/http/pprof"`
 
 
 ## 极客时间Go专栏

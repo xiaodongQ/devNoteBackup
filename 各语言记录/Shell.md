@@ -392,3 +392,22 @@ fi
         + 也可以引用变量 `res=$(echo "scale=2;$val+4.5"|bc)`
     - `echo "obase=10;ibase=2;$abc" | bc`，十进制转换为二进制
     - `echo "sqrt(100)" | bc`、`echo "10^10" | bc`，计算开方和平方
+
+## 把各个子目录的文件移动到当前目录，并加各子目录的前缀
+
+* 源于clone github上的示例项目时，各目录按章节区分"ch1 ch2 ch3"形式，每次找文件要点开目录查找
+
+```sh
+#!/bin/bash
+
+for dir in `ls -l|grep "^d"|awk -F' ' '{print $9}'`
+do
+    echo $dir
+    for file in `ls $dir`
+    do
+        echo "name: $file"
+        echo "dst: "${dir}_$file""
+        mv $dir/$file "${dir}_$file"
+    done
+done
+```
