@@ -87,16 +87,25 @@
 						* `sudo apt-get install docker-ce-cli=5:18.09.0~3-0~ubuntu-xenial` 安装时会卸载docker-ce。。。暂时不安装
 					+ 查看 containerd.io 满足版本`apt-cache madison containerd.io`
 						* `sudo apt-get install containerd.io=1.2.0~beta.2-1`，也要apt-cache madison查看能安装的版本。。。
-
+	- CentOS
+		+ [Get Docker Engine - Community for CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
+		+ 步骤参考链接：
+			* 卸载老版本 `sudo yum remove docker docker-client docker-client-latest docker-common docker-latestdocker-latest-logrotate docker-logrotate docker-engine`
+			* 安装社区版Docker引擎，使用仓库方式安装(也可rpm包和脚本方式安装)
+				- 设置仓库
+				- 安装DOCKER ENGINE - COMMUNITY，最新版本：`sudo yum install docker-ce docker-ce-cli containerd.io -y`
 	- 验证安装是否成功
-		+ `docker version`, ubuntu 16.04-xenial中，`Version:      17.09.1-ce`、`Go version:   go1.8.3`
+		+ `docker version`, ubuntu 16.04-xenial中，`Version: 17.09.1-ce`、`Go version:   go1.8.3`
 		+ 或 `docker info`，非root用户执行会报错，没有权限，可以把用户加到docker用户组中，按下面的操作：
 	- Docker 需要用户具有 sudo 权限，为了避免每次命令都输入sudo，可以把用户加入 Docker 用户组
-		+ `sudo usermod -aG docker $USER`
-		+ 更新用户组：`newgrp docker` (否则普通用户还是没权限)
-			* 没权限会报错：Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock
-	- Docker 是服务器----客户端架构。命令行运行docker命令的时候，需要本机有 Docker 服务。如果这项服务没有启动，可以用下面的命令启动
+		+ Docker的守护进程(daemon)是和Unix socket绑定，而不是TCP端口，默认情况下Unix socket属于root用户，其他用户需要sudo访问
+		+ 创建组`groupadd docker`， 用户添加到组 `sudo usermod -aG docker $USER`
+		+ 更新用户组：`newgrp docker` (或者退出登录重新登录，否则普通用户还是没权限)
+			* 没权限会报错：`Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`
+	- Docker 是服务器-客户端架构。命令行运行docker命令的时候，需要本机有 Docker 服务。如果这项服务没有启动，可以用下面的命令启动
 		+ `sudo service docker start` 或 `sudo systemctl start docker`
+	- 配置自启动
+		+ `sudo systemctl enable docker`
 
 ### image文件
 
@@ -112,7 +121,7 @@
 ### 实例
 
 * 仓库修改
-	- 需要说明的是，国内连接 Docker 的官方仓库很慢，还会断线，需要将默认仓库改成国内的镜像网站。这里推荐使用官方镜像 registry.docker-cn.com 。
+	- 需要说明的是，国内连接 Docker 的官方仓库很慢，还会断线，需要将`默认仓库`改成*国内的镜像网站*。这里推荐使用官方镜像 registry.docker-cn.com 。
 		+ 打开/etc/default/docker文件（需要sudo权限），在文件的底部加上一行。`DOCKER_OPTS="--registry-mirror=https://registry.docker-cn.com"`
 		+ 然后，重启 Docker 服务。`sudo service docker restart`，就会自动从镜像仓库下载 image 文件了
 	- 修改参考：[Docker 微服务教程](http://www.ruanyifeng.com/blog/2018/02/docker-wordpress-tutorial.html)

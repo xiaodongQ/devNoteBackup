@@ -31,8 +31,8 @@ boost子目录是最为重要的目录。以头文件的形式分门别类存放
 boost库大多数组件不需要编译链接就可以使用，在自己的工程中直接包含头文件即可。  
 如要使用boost xpressive正则库(与regex库不同，该正则库不需要编译)，只需要在自己的源代码中包含头文件`#include <boost/xpressive/xpressive_dynamic.hpp>`即可。
 
-* `bootstrap.bat` 该脚本为boost.build系统运行准备环境，是编译前的配置工作。
-* `b2.exe`和`bjam.exe`
+* `bootstrap.bat` (linux下执行./bootstrap.sh) 该脚本为boost.build系统运行准备环境，是编译前的配置工作。
+* `b2.exe`和`bjam.exe` (执行完提示使用./b2)
     - 执行完该脚本后，在boost源码安装包的根目录会生成`b2.exe`和`bjam.exe`两个可执行文件
     - 这两个文件是一样的，只是名字不同。
     - `b2 --show-libraries`命令可查看所有必须编译才能使用的库
@@ -47,7 +47,7 @@ boost库大多数组件不需要编译链接就可以使用，在自己的工程
         + 本linux仅装date_time和test:
             * 动态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=shared runtime-link=shared threading=multi`
             * 静态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=static runtime-link=static threading=multi`
-            * `./b2 install` 安装会把`boost_1_70_0/boost`(156MB)里面大部分(154MB)内容拷贝到指定的prefix下面的include中，不如手动创建include后将boost(包含boost)拷贝过去
+            * `./b2 install --prefix=/usr/local` 安装会把`boost_1_70_0/boost`(156MB)里面大部分(154MB)内容拷贝到指定的prefix下面的include中，不如手动创建include后将boost(包含boost)拷贝过去
 
 * 关于link和runtime-link的组合关系：
     - [link 和 runtime-link，搭配shared 和 static](https://blog.csdn.net/yasi_xi/article/details/8660549)

@@ -32,6 +32,7 @@
 
 * 使用systemd管理mysql服务(docker部署的mysql用不了这种方式，容器方式单独说明)
     - 官网文档：[Managing MySQL Server with systemd](https://dev.mysql.com/doc/refman/8.0/en/using-systemd.html)
+        + 包含安装步骤
     - MySQL启动、停止、重启常用命令
         * `systemctl {start/stop/restart/status} mysqld`
         * 或者 `service mysqld {start|stop|restart|status}`
