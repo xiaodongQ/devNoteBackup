@@ -106,6 +106,7 @@
 		+ `sudo service docker start` 或 `sudo systemctl start docker`
 	- 配置自启动
 		+ `sudo systemctl enable docker`
+			* 取消自启动：`systemctl disable docker`
 
 ### image文件
 
@@ -129,7 +130,7 @@
 * 实例
 	- `docker image pull library/hello-world` 抓取 image 文件，library/hello-world是 image 文件在仓库里面的位置，其中library是 image 文件所在的组，hello-world是 image 文件的名字。
 		+ 由于 Docker 官方提供的 image 文件，都放在library组里面，所以它的是默认组，可以省略。因此，上面的命令可以写成：`docker image pull hello-world`
-	- `docker image ls` 查看
+	- `docker image ls` / `docker images` 查看
 	- `docker container run hello-world` 命令会从 image 文件，生成一个正在运行的容器实例。
 		+ 注意，`docker container run`命令具有自动抓取 image 文件的功能。如果发现本地没有指定的 image 文件，就会从仓库自动抓取。因此，前面的docker image pull命令并不是必需的步骤。
 	- 有些容器不会自动终止，因为提供的是服务。
@@ -149,6 +150,8 @@
 	- e.g. `docker logs mysql`
 * `docker exec -it`
 	- 进入容器
+		+ -i, --interactive[=false] 保持STDIN打开，即使没有连接
+		+ -t, --tty[=false]  分配一个伪 tty 设备
 	- e.g. `docker exec -it mysql bash`
 * `docker run`
 	- [Docker run 命令](https://www.runoob.com/docker/docker-run-command.html)
@@ -167,3 +170,16 @@
 		后台运行容器，并返回容器ID；
 * `docker image`
 	- 参考上面的章节记录(ls/rm/pull)
+
+* 关于mysql容器相关的其他操作：
+    - 启动一个进入到容器中的shell终端 `docker exec -it mysql1 bash`
+        + 进入容器后操作和linux一致，mysql路径：/var/lib/mysql
+    - 停止容器
+        + `docker stop mysql1`
+        + 会发送一个SIGTERM信号给mysqld进程，因此服务能优雅关闭
+        + 注意，容器中的主进程停止的话，容器也会停止。 若mysqld停止，则包含其的容器也会停止
+    - 再次启动容器 `docker start mysql1`
+    - 重启容器 `docker restart mysql1`
+    - 删除容器(两步，先停止再删除)
+        + `docker stop mysql1`
+        + `docker rm mysql1`

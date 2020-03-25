@@ -144,3 +144,14 @@ count(col)的执行效率比count(distinct col)高，不过这个结论的意义
         + 所以在使用Left (right) join的时候，一定要在先给出尽可能多的匹配满足条件，减少Where的执行(参考链接中的示例)
     - 尽量避免子查询，而用join
         + 参考链接中的示例
+
+## 两数据表归档
+
+* 场景：有两个相同结构的表 `table1`, `table1_his`，每日将`table1`的数据归档到`table1_his`，并清空`table1`表
+    - 表中存在自增id，xxx表示感兴趣字段(e.g. "name,id,class")
+    - 使用not exists语法：`insert into table1_his(xxx) select xxx from table1 as a where not exists(select name from table1_his as b where a.key=b.key);`
+        + `where a.key=b.key` 过滤是为了防止已经插入数据后，再次执行归档会插入重复记录
+            * 此处的key是笼统表示，表示能区分两表数据是否同一记录的条件
+        + (虽然定时操作只执行一次，但可能多个测试服务的场景，或无法保证一定只执行一次)
+        + `not exists`中`select`的内容并不重要，重要的是`not exists` true还是false
+* exists子查询可参考：[SQL 子查询 EXISTS 和 NOT EXISTS](https://blog.csdn.net/qq_27571221/article/details/53090467)

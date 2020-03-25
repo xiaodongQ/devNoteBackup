@@ -1,23 +1,62 @@
-## Windows MySQL部署
+## MySQL部署
 
-* 步骤
-    - 下载mysql zip
-    - 没有data目录，如果没有data目录，安装后`net start mysql`启动的时候就会报这个错：MySQL 服务无法启动。
-    - 需要使用命令生成data文件夹
-        + 到bin目录，`mysqld -install`
-        + `mysqld --initialize --user=root --console`初始化后可看到新的data目录(可能会产生一个默认生成的密码)
-        + 启动`net start mysql`
-        + 登录`mysql -uroot -p` 若生成默认密码则用其登录，若没有回车即可进入mysql控制台
-    - `mysqld -remove mysql` 卸载安装的mysql
-    - 如果是通过安装包安装的，则可以查看启动的命令：`控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)`
+* Windows下部署
+    - 步骤
+        + 下载mysql zip
+        + 没有data目录，如果没有data目录，安装后`net start mysql`启动的时候就会报这个错：MySQL 服务无法启动。
+        + 需要使用命令生成data文件夹
+            * 到bin目录，`mysqld -install`
+            * `mysqld --initialize --user=root --console`初始化后可看到新的data目录(可能会产生一个默认生成的密码)
+            * 启动`net start mysql`
+            * 登录`mysql -uroot -p` 若生成默认密码则用其登录，若没有回车即可进入mysql控制台
+        + `mysqld -remove mysql` 卸载安装的mysql
+        + 如果是通过安装包安装的，则可以查看启动的命令：`控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)`
+    - Windows下检查mysql是否开机启动：
+        + 控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)-启动类型为"自动"则为开机启动
+    - mysql远程连接mysql时报错： `Host * is not allowed to connect to this MySQL server`
+        + `mysql -h 192.xxx.xxx.xxx -u root -p` 报上述错误(检查防火墙对mysql的端口是否开放，有这个报错防火墙应该是支持入栈规则)
+        + 到本机上终端连接后执行：`select user,host from mysql.user;`，可以看到`host`列都是`localhost`
+        + `create user root identified by 'xxxx';`，可以看到host为`%`，且有两个`root`用户
+        + `grant all on *.* to root;`
 
-* Windows下检查mysql是否开机启动：
-    - 控制面板-系统和安全-管理工具-服务(双击打开)-找到MySQL-属性(右键)-启动类型为"自动"则为开机启动
-* mysql远程连接mysql时报错： `Host * is not allowed to connect to this MySQL server`
-    - `mysql -h 192.xxx.xxx.xxx -u root -p` 报上述错误(检查防火墙对mysql的端口是否开放，有这个报错防火墙应该是支持入栈规则)
-    - 到本机上终端连接后执行：`select user,host from mysql.user;`，可以看到`host`列都是`localhost`
-    - `create user root identified by 'xxxx';`，可以看到host为`%`，且有两个`root`用户
-    - `grant all on *.* to root;`
+* Linux下通过容器部署
+    - [ Basic Steps for MySQL Server Deployment with Docker](https://dev.mysql.com/doc/refman/8.0/en/docker-mysql-getting-started.html)
+        + 下载docker镜像(不是必要的，操作该步可保证本地包是对应版本最新的)
+            * `docker pull mysql/mysql-server:tag`，tag是镜像版本(例如5.5, 5.6, 5.7, 8.0, or latest)
+            * 此处我选择latest，直接省略:tag即可，默认也是latest，最新版本
+        + 运行实例
+            * `docker run --name=mysql1 -p 3306:3306 -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
+                - 如果docker镜像没有通过之前的`docker pull` or `docker run`命令下载，则会自动下载，并运行
+                - `-d`表示后台运行容器(container)
+                - `-p 8080:80`可以将容器中的端口(80)映射到服务器上的端口(8080)，这样外部就可以通过该端口8080访问容器中的服务
+                    + 若没有该映射(`-p 3306:3306`)，则其他机器访问不到mysql的3306端口
+            * `docker logs mysql1` 查看容器的输出
+        + mysql启动后，会给root生成一个随机密码，从日志中查找密码：
+            * `docker logs mysql1 2>&1 | grep GENERATED`
+        + `docker exec -it mysql1 mysql -uroot -p` 启动一个客户端连接到mysql
+            * 修改默认的root@localhost用户的密码(若不修改则无法运行命令，会提示修改)
+                - `alter user root@localhost identified by '新密码';`
+                - root@localhost和root用户有区别，关于用户名和密码，可以参考笔记中下面的章节：搜"用户名和密码"
+                - 创建用户`create user root identified by 'xd123456';`，创建后指定权限：`grant all on *.* to root;`
+    - 关于mysql容器相关的其他操作：
+        + 启动一个进入到容器中的shell终端 `docker exec -it mysql1 bash`
+            * 进入容器后操作和linux一致，mysql路径：/var/lib/mysql
+        + 停止容器
+            * `docker stop mysql1`
+            * 会发送一个SIGTERM信号给mysqld进程，因此服务能优雅关闭
+            * 注意，容器中的主进程停止的话，容器也会停止。 若mysqld停止，则包含其的容器也会停止
+        + 再次启动容器 `docker start mysql1`
+        + 重启容器 `docker restart mysql1`
+        + 删除容器(两步，先停止再删除)
+            * `docker stop mysql1`
+            * `docker rm mysql1`
+            * 如果要同时删除该数据库的数据(若该数据库还要继续使用则不要去删数据)，则`docker rm`加上`-v`选项
+                - 由于docker容器原则上是短暂的，其数据和配置容易丢失，所以docker卷提供了一种mount机制来持久化数据
+                - `docker inspect mysql1`来查看mount挂载的信息，"Mounts"部分(`docker inspect`返回docker对象的低层次信息)
+                    + 数据挂载目录一般在容器外的 "/var/lib/docker/volumes/xxxxxx" 下面
+                - [Persisting Data and Configuration Changes](https://dev.mysql.com/doc/refman/8.0/en/docker-mysql-more-topics.html#docker-persisting-data-configuration)
+        + 容器修改参数启动
+            * 
 
 
 ## linux mysql操作
@@ -58,13 +97,14 @@
     - MySQL将用户存储在表 `user` 中，MySQL用户名不能超过32字符长度(操作系统最大长度有不同的限制)
     - MySQL安装程序会使用初始用户`root`填充授权表
         + [2.10.4 Securing the Initial MySQL Account](https://dev.mysql.com/doc/refman/8.0/en/default-privileges.html)
-        + 初始化root用户时，可能会初始化一个随机密码，查找错误日志文件(CentOS下为/var/log/mysqld.log)，其中打印了初始随机密码
+        + 初始化root用户时，可能会初始化一个随机密码，查找错误日志文件(`CentOS下为/var/log/mysqld.log`)，其中打印了初始随机密码，查找关键字"GENERATED"
         + MySQL安装程序包含初始化数据目录，包含MySQL中定义的授权表
             * 具体参考：[2.10.1 Initializing the Data Directory](https://dev.mysql.com/doc/refman/8.0/en/data-directory-initialization.html)
-    - `mysql.user` 授权表定义了MySQL初始用户和其权限，定义了`'root'@'localhost'`超级用户
+    - `mysql.user` 授权表定义了MySQL初始用户和其权限，定义了`'root'@'localhost'`超级用户(该用户只允许本地使用)
+        + `root@localhost`和`root`并不相同，对于用户中的主机部分，"用户的格式"章节做了说明
     - 给初始化的root用户配置密码：
         + 登录：
-            * 若有初始密码(本地环境有) `mysql -u root -p` 则从错误日志中找到初始密码(参考上面的说明)
+            * 若有初始密码(本地环境有) `mysql -u root -p` 则从错误日志中找到初始密码(GENERATED，参考上面用户名和密码的说明)
             * 若没有密码 `mysql -u root --skip-password`
         + 修改密码：`ALTER USER 'root'@'localhost' IDENTIFIED BY 'root-password';`
             * [6.4.3 The Password Validation Component](https://dev.mysql.com/doc/refman/8.0/en/validate-password.html)
@@ -96,7 +136,7 @@
                 - e.g. `CREATE USER xd@localhost IDENTIFIED BY 'xd123456';`，创建后指定权限：`GRANT ALL ON *.* to xd@localhost;`
             * 撤销权限
                 - `revoke all on *.* from 'finley'@'localhost';`
-        + 查看用户表： `select user,host from mysql.user;`
+        + *查看用户表*： `select user,host from mysql.user;`
         + 查看指定用户权限： `show grants for root@localhost;`
         + 删除用户：`drop user finley;`
         + 用户的格式 root@% 和 root@localhost的区别
