@@ -48,6 +48,12 @@ boost库大多数组件不需要编译链接就可以使用，在自己的工程
             * 动态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=shared runtime-link=shared threading=multi`
             * 静态：`./b2 stage --stagedir=/home/xd/local/boost --with-date_time --with-test link=static runtime-link=static threading=multi`
             * `./b2 install --prefix=/usr/local` 安装会把`boost_1_70_0/boost`(156MB)里面大部分(154MB)内容拷贝到指定的prefix下面的include中，不如手动创建include后将boost(包含boost)拷贝过去
+                - 部署一个环境时安装忘记指定`--prefix=/usr/local`了，创建`/usr/local/boost`路径，并创建lib和include目录将默认安装的lib中和boost/include中所有信息移动到了该路径的子目录下
+                - 注意头文件的路径层次为 `/usr/local/boost/include/boost`
+                - 如上include中还有一级boost目录，否则编译踩坑：
+                    + 代码中包含头文件`#include <boost/shared_ptr.hpp>`
+                    + 编译时指定的路径`-I/usr/local/boost/include`
+                    + 所以编译会到 /usr/local/boost/include/boost 中找 shared_ptr.hpp
 
 * 关于link和runtime-link的组合关系：
     - [link 和 runtime-link，搭配shared 和 static](https://blog.csdn.net/yasi_xi/article/details/8660549)

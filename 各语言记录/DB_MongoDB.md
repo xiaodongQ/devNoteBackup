@@ -7,6 +7,7 @@ MongoDB并非芒果(mango)的意思，而是源于 Humongous（巨大）一词�
 MongoDB 是一个基于分布式文件存储的数据库。由 C++ 语言编写。旨在为 WEB 应用提供可扩展的高性能数据存储解决方案。
 MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 
+
 * 官网文档：
     - 关于手册
         + [guide, manual, tutorial之间的区别](https://www.cnblogs.com/jiangleads/p/11238232.html)
@@ -35,6 +36,72 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
             * [MongoDB CRUD Operations](https://docs.mongodb.com/manual/crud/)
     - C++ API
         + [MongoDB C++ Driver](http://mongocxx.org/api/current/)，可以在搜索框搜索api
+
+## centos7 mongodb c++驱动安装
+
+* [mongodb c++ 驱动](https://www.jianshu.com/p/c982a2960175)
+    - 翻译来自官网链接：[Installing the mongocxx driver](http://mongocxx.org/mongocxx-v3/installation/)
+    - 1. 安装c驱动，见下面的步骤
+    - 2. 下载最新的 mongocxx driver
+        + `git clone https://github.com/mongodb/mongo-cxx-driver.git --branch releases/stable --depth 1`
+        + `cd mongo-cxx-driver/build`
+    - 3. 配置驱动
+        + `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..`
+    - 4. 编译和安装驱动
+        + 若用默认的 MNMLSTC 的C++17 `make EP_mnmlstc_core` (实际安装未执行该步，不确定是否有影响，make正常安装成功)
+            * 编译步骤中有：`Performing download step (git clone) for 'EP_mnmlstc_core'`，会clone `EP_mnmlstc_core`
+            * 关于 `MNMLSTC Core`，MNMLSTC核心是一个c++ 11库，它添加了c++ 14及以后版本中包含的一些库特性，特性内容可以参考链接
+                - mongocxx驱动用了C++17的`std::optional` `std::string_view`特性，需要选择用`MNMLSTC/core`还是`boost`，两种库都有该特性，非Windows平台默认用的是`MNMLSTC/core`(可以通过宏配置)，官网链接做了说明：[Step 2: Choose a C++17 polyfill](http://mongocxx.org/mongocxx-v3/installation/)进行了说明
+                - 若要了解MNMLSTC Core可以参考：[MNMLSTC Core](http://mnmlstc.github.io/core/)
+        + `make && make install`
+
+* C驱动安装
+    - 参考: [mongodb c 驱动](https://www.jianshu.com/p/d77680254418) (第一步安装c驱动，翻译链接)
+        + 翻译来自官网链接：[Installing the MongoDB C Driver (libmongoc) and BSON library (libbson)](http://mongoc.org/libmongoc/current/installing.html)
+
+```sh
+  $ wget https://github.com/mongodb/mongo-c-driver/releases/download/1.13.0/mongo-c-driver-1.13.0.tar.gz
+  $ tar xzf mongo-c-driver-1.13.0.tar.gz
+  $ cd mongo-c-driver-1.13.0
+  $ mkdir cmake-build
+  $ cd cmake-build
+  $ cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF ..
+
+  $ make
+  $ make install
+```
+
+## mongodb安装(服务端安装)
+
+* 官网有一系列平台的安装指导
+    - 参考：[Install MongoDB Community Edition on Red Hat or CentOS](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-red-hat/)
+
+
+* 通过下载tar包安装(非官方文档)：[Linux平台安装MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
+    - `curl -O https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-4.0.12.tgz`   # 下载 (对应版本修改下)
+    - `tar -zxvf mongodb-linux-x86_64-3.0.6.tgz`                                   # 解压
+    - `mv  mongodb-linux-x86_64-3.0.6/ /usr/local/mongodb`                         # 将解压包拷贝到指定目录
+    - MongoDB 的可执行文件位于 bin 目录下，所以可以将其添加到 PATH 路径中：
+        + `export PATH=<mongodb-install-directory>/bin:$PATH`
+        + <mongodb-install-directory> 为MongoDB的安装路径。如本文的 /usr/local/mongodb 。
+*  创建数据库目录
+    - MongoDB的数据存储在data目录的db目录下，但是这个目录在安装过程不会自动创建，所以你需要手动创建data目录，并在data目录中创建db目录。
+    - `mkdir -p /data/db`
+* 命令行中运行 MongoDB 服务
+    - `$ ./mongod`
+* MongoDB后台管理 Shell
+    - 如果你需要进入MongoDB后台管理，你需要先打开mongodb装目录的下的bin目录，然后执行mongo命令文件。
+    - MongoDB Shell是MongoDB自带的交互式Javascript shell,用来对MongoDB进行操作和管理的交互式环境。
+    - 当你进入mongoDB后台后，它默认会链接到 test 文档（数据库）：
+
+```sh
+$ cd /usr/local/mongodb/bin
+$ ./mongo
+MongoDB shell version: 3.0.6
+connecting to: test
+Welcome to the MongoDB shell.
+```
+
 * 连接池
     - [examples/mongocxx/pool.cpp](https://github.com/mongodb/mongo-cxx-driver/blob/master/examples/mongocxx/pool.cpp)
     - 使用 `mongocxx::pool`

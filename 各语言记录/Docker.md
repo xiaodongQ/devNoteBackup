@@ -183,3 +183,7 @@
     - 删除容器(两步，先停止再删除)
         + `docker stop mysql1`
         + `docker rm mysql1`
+* 在运行docker容器时可以加如下参数来保证每次docker服务重启后容器也自动重启
+    - `docker run --restart=always`
+    - 如果已经启动了则可以使用如下命令
+    	+ `docker update --restart=always <CONTAINER ID>`

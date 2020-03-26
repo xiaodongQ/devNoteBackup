@@ -1,7 +1,8 @@
 ## grpc
 
 ### grpc介绍
-[Go使用grpc+http打造高性能微服务](https://blog.csdn.net/RA681t58CJxsgCkJ31/article/details/78601747)
+
+* [Go使用grpc+http打造高性能微服务](https://blog.csdn.net/RA681t58CJxsgCkJ31/article/details/78601747)
 
 gRPC是由Google主导开发的RPC框架，使用HTTP/2协议并用Protobuf作为序列化工具
 
@@ -20,37 +21,38 @@ gRPC是由Google主导开发的RPC框架，使用HTTP/2协议并用Protobuf作�
 * http1是持续repetitive，http2是compressed；
 * http1.1所有浏览器都默认支持，而http2只是部分支持。
 
-HTTP/1的主要问题
-[深度解析gRPC以及京东分布式服务框架跨语言实战](http://www.sohu.com/a/126977118_494947)
+* HTTP/1的主要问题
+    - Head-of-line blocking，新请求的发起必须等待服务器对前一个请求的回应，无法同时发起多个请求，导致很难充分利用TCP连接。
+    - 头部冗余
+        + HTTP头部包含大量重复数据，比如cookies，多个请求的cookie可能完全一样
 
-Head-of-line blocking，新请求的发起必须等待服务器对前一个请求的回应，无法同时发起多个请求，导致很难充分利用TCP连接。
-* 头部冗余
+### gRPC环境和protoc.exe、protoc-gen-go.exe (Go环境)
 
-HTTP头部包含大量重复数据，比如cookies，多个请求的cookie可能完全一样
-
-
-### gRPC环境和protoc.exe、protoc-gen-go.exe
+(C++环境查看下面的"C++示例流程和源码结构"章节)
 
 **gRPC调用时数据错位，可能是客户端pb协议和服务端不一致**
 
-[gRPC-go protoc](https://www.jianshu.com/p/ec3e75e5aad1)
+* 参考：[gRPC-go protoc](https://www.jianshu.com/p/ec3e75e5aad1)
+    - 由于之前安装比较早，找的参考来源都是各种博客，建议参考官网 [gRPC Go Quick Start](https://grpc.io/docs/quickstart/go/)
+    - 不过该参考链接中步骤与官网一致。(现在网络上各种技术博客复制粘贴同质化太严重，且不少有错误的也原样抄袭，建议从官网获取信息)
+* 步骤
 
 1、下载protobuf的编译器protoc
-https://github.com/google/protobuf/releases
+下载：`https://github.com/google/protobuf/releases`
 window：
-  下载: protoc-3.3.0-win32.zip (本人protoc-3.9.0-win64.zip)
+  下载: 本人protoc-3.9.0-win64.zip
   解压，把bin目录下的protoc.exe复制到GOPATH/bin下，GOPATH/bin加入环境变量。
 当然也可放在其他目录，需加入环境变量，能让系统找到protoc.exe (本人放到了C:\Go\bin)
 
 linux：
-    下载：protoc-3.3.0-linux-x86_64.zip 或 protoc-3.3.0-linux-x86_32.zip
+    下载：protoc-3.3.0-linux-x86_64.zip
 解压，把bin目录下的protoc复制到GOPATH/bin下，GOPATH/bin加入环境变量。
 如果喜欢编译安装的，也可下载源码自行安装，最后将可执行文件加入环境变量。
 
 2、获取protobuf的编译器插件protoc-gen-go
   进入GOPATH目录
   运行
-> go get -u github.com/golang/protobuf/protoc-gen-go
+> `go get -u github.com/golang/protobuf/protoc-gen-go`
   如果成功，会在GOPATH/bin下生成protoc-gen-go.exe文件 (在path中加下该环境变量)
 
 
@@ -135,6 +137,36 @@ for {
 ```
 
 ## C++示例流程和源码结构
+
+* CentOS下安装gRPC
+    - 参考：[gRPC C++ - Building from source](https://github.com/grpc/grpc/blob/master/BUILDING.md#grpc-c---building-from-source)
+    - 编译依赖的先决条件`pkg-config` `libtool` `cmake`等包和工具
+    - 先克隆项目(包括子模块)
+        + `git clone https://github.com/grpc/grpc`，也可加上-b选项指定tag
+        + `cd grpc`
+        + `git submodule update --init`
+            * 子模块也可通过克隆时用`--recursive`递归方式来克隆带子模块的版本库
+    - 使用cmake编译
+        + `mkdir -p cmake/build`
+        + `cd cmake/build`
+        + `cmake -DBUILD_SHARED_LIBS=ON ../..` (原链接中为=ON，设置不生效，grep查找看用到的地方都是ifeq)
+            * 若不`-DBUILD_SHARED_LIBS=ON`开启动态库编译，则只编译出.a静态库
+            * 执行完后会在 cmake/build目录生成编译需要的相关文件，检查是否生成，若没有则有问题
+        + `make`
+        + 安装gRPC(可以通过`CMAKE_INSTALL_PREFIX`配置安装位置，默认`/usr/local`):
+            * 配置表示需要生成protoc需要的各语言的plugin等包
+            * cmake ../.. -DgRPC_INSTALL=ON                \
+                  -DCMAKE_BUILD_TYPE=Release       \
+                  -DgRPC_ABSL_PROVIDER=package     \
+                  -DgRPC_CARES_PROVIDER=package    \
+                  -DgRPC_PROTOBUF_PROVIDER=package \
+                  -DgRPC_SSL_PROVIDER=package      \
+                  -DgRPC_ZLIB_PROVIDER=package
+        + `make`
+        + `make install`
+            * 遇到的问题：
+                - 安装后找不到grpc相关的pkgconfig，`gpr.pc` `grpc.pc` `grpc_unsecure.pc` `grpc++.pc` `grpc++_unsecure.pc`
+                - 重试过好多次，调整选项还是没有。。。从另外一台机器拷贝过来了
 
 * 实际使用遇到的问题
     - 使用`.set_`方法时，int 和 string类型混用，导致段错误，报错 `CHECK failed: value != nullptr:`

@@ -25,11 +25,12 @@
             * `docker pull mysql/mysql-server:tag`，tag是镜像版本(例如5.5, 5.6, 5.7, 8.0, or latest)
             * 此处我选择latest，直接省略:tag即可，默认也是latest，最新版本
         + 运行实例
-            * `docker run --name=mysql1 -p 3306:3306 -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
+            * `docker run --name=mysql1 -p 3306:3306 --restart=always -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
                 - 如果docker镜像没有通过之前的`docker pull` or `docker run`命令下载，则会自动下载，并运行
                 - `-d`表示后台运行容器(container)
                 - `-p 8080:80`可以将容器中的端口(80)映射到服务器上的端口(8080)，这样外部就可以通过该端口8080访问容器中的服务
                     + 若没有该映射(`-p 3306:3306`)，则其他机器访问不到mysql的3306端口
+                - `--restart=always` 每次docker服务重启后容器也自动重启
             * `docker logs mysql1` 查看容器的输出
         + mysql启动后，会给root生成一个随机密码，从日志中查找密码：
             * `docker logs mysql1 2>&1 | grep GENERATED`
@@ -55,8 +56,18 @@
                 - `docker inspect mysql1`来查看mount挂载的信息，"Mounts"部分(`docker inspect`返回docker对象的低层次信息)
                     + 数据挂载目录一般在容器外的 "/var/lib/docker/volumes/xxxxxx" 下面
                 - [Persisting Data and Configuration Changes](https://dev.mysql.com/doc/refman/8.0/en/docker-mysql-more-topics.html#docker-persisting-data-configuration)
-        + 容器修改参数启动
-            * 
+        + 在运行docker容器时可以加如下参数来保证每次docker服务重启后容器也自动重启
+            * `docker run --restart=always`
+            * 如果已经启动了则可以使用如下命令
+                - `docker update --restart=always <CONTAINER ID>`
+
+* Linux下安装Mysql 8.0
+    - 自己的CentOS虚拟机比较早安装，参考下面链接直接安装的mysql8.0，建议参考官网：[Installing MySQL on Linux Using the MySQL Yum Repository](https://dev.mysql.com/doc/refman/8.0/en/linux-installation-yum-repo.html)
+    - 本次安装参考：[CentOS 7 安装 Mysql 8.0 教程](https://blog.csdn.net/danykk/article/details/80137223)
+    - 1）配置Mysql 8.0安装源
+        + sudo rpm -Uvh https://dev.mysql.com/get/mysql80-community-release-el7-1.noarch.rpm
+    - 2）安装Mysql 8.0
+        + sudo yum --enablerepo=mysql80-community install mysql-community-server
 
 
 ## linux mysql操作
@@ -235,6 +246,8 @@ lftp -u $FTPU,$FTPP -e "mkdir /mysql/$NOW;cd /mysql/$NOW; mput /backup/mysql/*; 
             * -m32 int、long、指针都指定为4字节(32bits)
             * -m64 int指定为4字节，long、指针指定为8字节(64bits)
         + `--cxxflags`, 返回为： "-I/usr/include/mysql -m64 "
+* 若Linux无 MySQL C/C++驱动，则需安装mysql-devel包(会提供`mysql_config`和客户程序需要的相关.so库)
+    - `yum install mysql-devel`
 
 [27.8.6 C API Function Overview](https://dev.mysql.com/doc/refman/5.7/en/c-api-function-overview.html)
 
