@@ -1,4 +1,4 @@
-## MongoDB教程
+## MongoDB
 
 MongoDB并非芒果(mango)的意思，而是源于 Humongous（巨大）一词。
 

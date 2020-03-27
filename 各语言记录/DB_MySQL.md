@@ -1,4 +1,4 @@
-## MySQL部署
+## MySQL
 
 * Windows下部署
     - 步骤
