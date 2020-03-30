@@ -153,5 +153,11 @@
         + 可以在新增key的同时设置ttl
             * `set key1 "valuexxx" ex 10`，表示新增或修改key1的值为"valuexxx"，且生命周期为10秒
     - 结构体
+        + 对所有Redis数据结构，不需要先创建key再设置值，而可以直接添加新元素(副作用是key不存在则会创建)
         + list(list表示一系列有序值)
             * RPUSH, LPUSH, LLEN, LRANGE, LPOP, and RPOP
+            * `RPUSH friends "Alice"`，将新元素添加到list结尾
+            * `LPUSH friends "Sam"`，将新元素添加到list开头
+                - `get friends`会报错，需要用lrange
+            * `LRANGE friends 0 -1`，给出list的子集
+                - 第一个参数表示想查找的第一个元素的索引，第二个参数表示想查找的最后元素的索引
