@@ -108,6 +108,30 @@
         + `sudo systemctl enable docker`
             * 取消自启动：`systemctl disable docker`
 
+* Mac下报错`net/http: TLS handshake timeout`
+    - Mac下安装docker完成后，执行示例：`docker run hello-world`，但是报错：
+        + Unable to find image 'hello-world:latest' locally
+        + docker: Error response from daemon: Get https://registry-1.docker.io/v2/: net/http: TLS handshake timeout
+    - (尝试)生成证书，并没成功(为`https://registry.docker-cn.com`生成证书，最后curl发现链接并不通！)
+        + `mkdir -p certs`
+        + `openssl req \
+              -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key \
+              -x509 -days 365 -out certs/domain.crt`
+        + `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain domain.crt`
+        + [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
+        + 生成CA：[Use self-signed certificates](https://docs.docker.com/registry/insecure/#using-self-signed-certificates#use-self-signed-certificates)
+    - 国内镜像地址：`registry.docker-cn.com`
+        + Docker Desktop -> Preferences->Daemon->Insecure registries，添加地址重启，并没有用
+        + Registry mirrors中添加https不行，提示无认证，添加`http://registry.docker-cn.com`，还是不行。。
+    - Docker Desktop启动时很卡，卸载之，
+        + 找了一圈都是Desktop安装
+        + 下载[安装包](https://download.docker.com/mac/stable/Docker.dmg)，发现貌似还是desktop mac，从垃圾堆找回来。。心态崩了崩了
+        + [Mac平台上Docker安装与使用](https://blog.csdn.net/jiang_xinxing/article/details/58025417)
+    - **解决方式**最后用了网易的镜像源：`http://hub-mirror.c.163.com`
+        + Docker Desktop -> Preferences->Daemon->Insecure registries->Registry mirrors中添加该镜像源后重启
+        + `curl -v http://registry.docker-cn.com`连接**不通**，折腾了那么久!!!
+        + [国内 docker 仓库镜像对比](https://ieevee.com/tech/2016/09/28/docker-mirror.html)
+
 ### image文件
 
 * image文件
@@ -122,7 +146,7 @@
 ### 实例
 
 * 仓库修改
-    - 需要说明的是，国内连接 Docker 的官方仓库很慢，还会断线，需要将`默认仓库`改成*国内的镜像网站*。这里推荐使用官方镜像 registry.docker-cn.com 。
+    - 需要说明的是，国内连接 Docker 的官方仓库很慢，还会断线，需要将`默认仓库`改成*国内的镜像网站*。这里推荐使用官方镜像 `registry.docker-cn.com`。
         + 打开/etc/default/docker文件（需要sudo权限），在文件的底部加上一行。`DOCKER_OPTS="--registry-mirror=https://registry.docker-cn.com"`
         + 然后，重启 Docker 服务。`sudo service docker restart`，就会自动从镜像仓库下载 image 文件了
     - 修改参考：[Docker 微服务教程](http://www.ruanyifeng.com/blog/2018/02/docker-wordpress-tutorial.html)
