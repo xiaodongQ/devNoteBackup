@@ -125,6 +125,8 @@
         + 优点：数据的完整性和一致性更高
         + 缺点：因为AOF记录的内容多，文件会越来越大，数据恢复也会越来越慢
 * 教程
+    - 完整的各种命令可以参考官网：[commands](https://redis.io/commands#hash)
+        + `keys *` 查找所有满足模式的key，此处为`*`所有key
     - [Redis interactive tutorial](http://try.redis.io/)
     - `SET server:name "fido"`，存储值"fido"，key为"server:name"
         + 若key存在，则为修改，可以修改value的类型
@@ -154,10 +156,53 @@
             * `set key1 "valuexxx" ex 10`，表示新增或修改key1的值为"valuexxx"，且生命周期为10秒
     - 结构体
         + 对所有Redis数据结构，不需要先创建key再设置值，而可以直接添加新元素(副作用是key不存在则会创建)
-        + list(list表示一系列有序值)
+        + *list(list表示一系列有序值)*
             * RPUSH, LPUSH, LLEN, LRANGE, LPOP, and RPOP
             * `RPUSH friends "Alice"`，将新元素添加到list结尾
+                - 操作后会返回list的长度
+                - `RPUSH friends 1 2 3` 支持同时添加多个
+                - 若key不存在则会新建list
+                - 遍历不能用`get friends`，需要用lrange遍历
             * `LPUSH friends "Sam"`，将新元素添加到list开头
-                - `get friends`会报错，需要用lrange
             * `LRANGE friends 0 -1`，给出list的子集
                 - 第一个参数表示想查找的第一个元素的索引，第二个参数表示想查找的最后元素的索引
+                    + 索引从0开始，表示第一个
+                    + 第二个索引为`-1`则表示检索到最后一个，`-2`表示倒数第二个，以此类推(`-3`倒数第三个)
+            * `LPOP friends` 删除list第一个元素并返回这个元素
+            * `RPOP friends` 删除list最后一个元素并返回这个元素
+            * `LLEN friends` list大小
+        + *set*
+            * set和list类似，不过它没有顺序，且每个元素只出现一次
+                - list访问元素接近访问头尾元素的速度，且保留了顺序
+                - set检查元素是否存在速度很快，且每个元素只有一个副本
+            * SADD, SREM, SISMEMBER, SMEMBERS and SUNION
+            * `SADD superpowers "flight"` 添加给定元素到set
+                - 可以同时添加多个，返回添加成功的个数，全部添加失败返回0个
+                - 对于已存在的非set数据，sadd会报错WRONGTYPE Operation against a key holding the wrong kind of value
+            * `SREM superpowers "reflexes"` 从set删除元素
+                - 可同时多个，返回删除成功的个数
+            * `SISMEMBER superpowers "flight"` 检查是否存在于set，返回1存在，0不存在
+            * `SMEMBERS superpowers` 返回set中所有成员
+            * `SUNION superpowers birdpowers` 联合两个set，并返回所有成员(去重)
+            * `SPOP letters 2` 从set中删除并返回几个元素
+                - `SRANDMEMBER letters 2` 从set中随机返回几个元素，并不删除，若数量为负数则可能返回重复的元素值
+        + sorted set 有序集合
+            * Redis 1.2引入，有序集合中每个元素都有一个关联的score，用于排序
+            * `ZADD hackers 1940 "Alan Kay"` 添加成员
+                - 向常规set中添加会报错 WRONGTYPE Operation against a key holding the wrong kind of value
+                - `smembers`也不能用于查看有序集合
+            * `ZRANGE hackers 2 4` 查看有序集合，两个参数是索引范围
+    - *hashes*
+        + 哈希是string域和string值的映射，是表示目标绝佳的类型
+        + `HSET user:1000 name "John Smith"`，key为user:1000，域为name，域的值为"John Smith"
+            * `HGET user:1000 name` 获取指定域
+            * `HGETALL user:1000` 获取保存的数据，返回结果中域和域的值都会作为单独的成员返回
+        + `HMSET user:1001 name "Mary Jones" password "hidden" email "mjones@example.com"` 同时添加多个域
+            * 类似多次对同一个key数据进行`hset`添加域
+        + `HINCRBY user:1000 visits 1` 对hash中的visit域进行加1(原子加)
+            * hash域中的数值类型和简单字符串处理一样
+        + `HDEL user:1000 visits` 删除hash中某个域
+
+## Go使用Redis
+
+* [package redis](https://pkg.go.dev/github.com/garyburd/redigo/redis?tab=doc)

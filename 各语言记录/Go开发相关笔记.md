@@ -1115,32 +1115,31 @@ go get : git clone + go install
 ### time包 获取时间
 
 * [golang timestamp time 时间戳小结](https://pylist.com/t/1438769640)
-    - 将utc时间戳秒转换为Time类型，`tm := time.Unix(timestamp, 0)`， 返回Time类型
+    - 将utc时间戳(秒数)转换为Time类型
+        + `tm := time.Unix(timestamp, 0)`，返回Time类型，原型：`func Unix(sec int64, nsec int64) Time {`
+        + `tm.Format("2006-01-02 15:04:05")`，返回格式化的文本，原型：`func (t Time) Format(layout string) string {`
     - 将Time类型转换为utc时间戳：
         + `t := time.Now()` 获取当前时间的Time结构体
-        + 对Time结构体调用可获取相关秒数：`secs := t.Unix()`秒，`t.UnixNano()`纳秒，根据纳秒/1000000获得毫秒
-        + `t.Year(),Month(),Day()` 等分别获取`Time`结构的年月日
-* 比较时间，Time的比较是使用`Before`,`After`和`Equal`方法
+        + `secs := t.Unix()`秒，`t.UnixNano()`纳秒，根据纳秒/1000000获得毫秒，可获取Time结构秒数
+        + `t.Year(), t.Month(), t.Day()` 等分别获取`Time`结构的年月日
+* 比较时间，`Time`的比较是使用`Before`,`After`和`Equal`方法
     - `t1.Before(t2)`
     - `Sub`方法返回的是两个时间点之间的时间距离
     - `Add`方法和Sub方法是相反的，获取t0和t1的时间距离d是使用Sub，将t0加d获取t1就是使用Add方法
     - `IsZero`方法：Time的zero时间点是January 1, year 1, 00:00:00 UTC，这个函数判断一个时间是否是zero时间点
-    - Local，UTC，Ln是用来显示和计算地区时间的
+    - `Local`，`UTC`，`Ln`是用来显示和计算地区时间的
     - [Go语言_时间篇](https://www.cnblogs.com/yjf512/archive/2012/06/12/2546243.html)
 * [golang包time用法详解](https://blog.csdn.net/wschq/article/details/80114036)
 * golang提供以下两种基础类型
-    - 时间点(Time)
-    - 时间段(Duration)
+    - 时间点(`Time`)
+    - 时间段(`Duration`)
 * 此外还提供：
-    + 时区(Location)
-    + Ticker
-    + Timer(定时器)
-
-* 获取当前时间
-    - (1) `currentTime:=time.Now()`     //获取当前时间，类型是Go的时间类型Time
-
+    + 时区(`Location`)
+    + `Ticker`
+    + `Timer`(定时器)
 * 时间格式化：
-    - `tm2, _ := time.Parse("01/02/2006", "02/08/2015")` 从字符串转为时间戳，第一个参数是格式，第二个是要转换的时间字符串
+    - `tm2, _ := time.Parse("01/02/2006", "02/08/2015")`
+        + 从字符串转为时间戳，第一个参数是格式，第二个是要转换的时间字符串
 
 ```golang
 BeginTime := "20191126 145500"
@@ -1168,7 +1167,6 @@ const (
     Hour                 = 60 * Minute
 )
 ```
-
 
 ## string
 

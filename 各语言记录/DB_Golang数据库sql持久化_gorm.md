@@ -195,6 +195,10 @@ ORM只是一种帮助我们解决一些重复的、简单的劳动，我们不�
     -  注意和Grails框架的GORM区分开，`Grails' object relational mapping (ORM)` 是 `Grails` 的 ORM 实现，基于 Hibernate 3。 Grails 是一套用于快速 Web 应用开发的开源框架，它基于 Groovy 编程语言，并构建于 Spring、Hibernate 和其它标准 Java 框架之上，从而为大家带来一套能实现超高生产力的一站式框架。
         + **注意，此处的for MongoDB，并不是go中的gorm**
         + 参考：[GORM for MongoDB 3.0​ 发布](https://www.oschina.net/news/51215/gorm-for-mongodb-3-0%E2%80%8B)
+    - 支持的数据库
+        + MySQL, PostgreSQL, Sqlite3, SQL Server
+        + GORM provides official support for sqlite, mysql, postgres, mssql
+            * [Dialect Specific Data Type](https://gorm.io/docs/dialects.html)
 * 数据库驱动
     - 关于MongoDB
         + mongodb官方**没有**关于go的mongodb的驱动，因此只能使用第三方驱动
