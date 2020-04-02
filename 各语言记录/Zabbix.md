@@ -124,10 +124,14 @@
         * 对于 Zabbix server 和 proxy 守护进程而言，数据库是必须的。而运行 Zabbix agent 是不需要的。如果 Zabbix server 和 Zabbix proxy 安装在相同的主机，它们必须创建不同名字的数据库！
     + 导入数据
         * 使用 MySQL 来导入 Zabbix server 的初始数据库 schema 和数据
-            - 创建数据库`create database zabbix`(若从另外一台机器导入数据，则不需要再创建，不过下面的用户还是需要创建)
+            - 创建数据库`create database zabbix character set utf8 collate utf8_bin;`
             - 创建zabbix用户 `create user zabbix identified by 'zabbix';`，选择zabbix.*赋全部权限：`grant all on zabbix.* to zabbix;`
+                + 若grant时出现，Access denied for user 'root'@'%' to database 'zabbix'，则可能root没有权限
+                + `select host,user,grant_priv,super_priv from mysql.user;`查询`grant_priv`和`super_priv`权限，若没有权限则`update mysql.user set grant_priv='Y' where user='root' and host='%';`(发现环境中grant_priv是'N')，然后`flush privileges;`，再重启mysql
             - `zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p zabbix`
-            - `zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -h 192.168.xxx.xxx -uroot -p zabbix` 使用root，docker环境的mysql
+                + `zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -h 192.168.xxx.xxx -uroot -p zabbix`
+                    * 使用root，连接远程环境的mysql
+                    * 后面的`zabbix`是指定数据库
     + 为 Zabbix server/proxy 配置数据库(本地proxy不使用)
         * `vi /etc/zabbix/zabbix_server.conf`
             - DBHost=localhost(设置ip)
@@ -192,12 +196,12 @@
         * Zabbix中的主机（Host）是一个你想要监控的网络实体（物理的，或者虚拟的）。
         * 配置（Configuration） → 主机（Hosts）菜单，查看已配置的主机信息。
             - 默认已有一个名为'Zabbix server'的预先定义好的主机。
-            - 建议不要修改该默认名称，该名称和zabbix_agentd.conf里面的Hostname要一样，否则会报“cannot send list of active checks to "127.0.0.1": host [Zabbix server] not found”
+            - 建议不要修改该默认名称(默认就是Zabbix server)，**该名称和zabbix_agentd.conf里面的Hostname要一样**，否则会报“cannot send list of active checks to "127.0.0.1": host [Zabbix server] not found”
         * 主机名称，可以使用字母数字、空格、点"."、中划线"-"、下划线"_"。
         * 选择一个或者多个组
-        * 输入主机的IP地址。注意如果这是Zabbix server的IP地址，它必须是Zabbix agent配置文件中‘Server’参数的值。
+        * 输入主机的IP地址。注意如果这是Zabbix server(那台设备)的IP地址，它必须是Zabbix agent配置文件中‘Server’参数的值。
             - 要监控的主机上，zabbix_agentd.conf配置文件中的Server或者ServerActive配置加上zabbix server的地址(,分隔)并重启服务
-            - 配置文件可以配置日志位置，和日志等级，出现问题时可以开启debug等级排查问题`DebugLevel`设置为4
+            - 配置文件可以配置日志位置，和日志等级，出现问题时可以开启debug等级排查问题`DebugLevel`设置为4(注意日志会很多)
     + 新建监控项
         * 监控项是Zabbix中获得数据的基础。没有监控项，就没有数据——因为一个主机中只有监控项定义了单一的指标或者需要获得的数据。
         * 所有的监控项都是依赖于主机的。当我们要配置一个监控项时，先要进入 `配置` → `主机` 页面查找到新建的主机。
@@ -210,6 +214,7 @@
             - (如果`Key`参数错误，修改后点击`现在检查`，再点更新，日志提示"xxxname:system.cpu.load" became supported)
         * 查看数据
             - 监控/或监测（Monitoring）(页面最上面一栏) → 最新数据（Latest data）, 在过滤器中选择刚才新建的主机，然后点击应用（Apply)。
+                + **注意**，添加监控项时若不存储历史记录，则最新数据里看不到数据(并不保存)，若不需要数据存很久可配置短一点(1d,1h,10s等，时间格式参考章节：搜 `- 时间格式`)
             - 如果你在没有看到类似截图中的监控项信息，请确认：
                 + 输入的监控项'值（Key）' 和 '信息类型（Type of information）'正确
                 + agent和server都在运行状态
@@ -236,6 +241,9 @@
                     * 使用外部SMTP服务器(e.g. 注册qq邮箱开启SMTP获取授权码，可参考：[Zabbix使用QQ邮箱通知](https://www.cnblogs.com/yinzhengjie/p/10389897.html))
                     * 自己尝试Linux搭建SMTP服务器，postfix/dovecot，尝试失败。。。
                 + 现在你已经配置了'Email'作为一种可用的媒体类型。一个媒体类型必须通过发送地址来关联用户(如同我们在配置一个新用户中做的)，否则它将无法生效。
+                + 最后自己注册一个126邮箱用于邮件发送
+                    * 登录邮箱->设置->POP3/SMTP/IMAP，开启SMTP(选一个支持的即可，我选的IMAP/SMTP服务)，会生成一个授权码
+                    * SMTP服务器: smtp.126.com，用户名/密码/授权码，web上设置的用户名为邮箱，密码填授权码
             - `新建动作`
                 + 发送通知是Zabbix中动作（actions）执行的操作之一
                 + 因此，为了`建立一个通知`，前往`配置（Configuration）` → `动作（Actions）`，然后点击`创建动作（Create action）`。
@@ -355,7 +363,7 @@
 * 动作
     - 若要远程操作，则需agent配置文件里配置选项 `EnableRemoteCommands=1`，是否日志记录也可选择开启`LogRemoteCommands=1`
     - `sudo sh /root/xxx.sh` 执行命令时需要指定`sudo`
-        + 且在/etc/sudoers文件中加上(通过`visudo`编辑)：`zabbix     ALL=NOPASSWD: ALL`
+        + 且在/etc/sudoers文件中加上(通过`visudo`编辑)：`zabbix  ALL=(ALL)   NOPASSWD: ALL`
         + 默认情况下，Zabbix用户没有权限重新启动系统服务。
     - 远程命令不适用于主动模式Zabbix代理
     - 可以设置循环多个通知或操作(通过步骤列来控制次数)，参考下面链接示例(但每个操作之间默认时间60s-604800s之间，如果要立即执行操作和通知，目前自己方式是新建两个动作分别处理。。。)

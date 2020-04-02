@@ -117,6 +117,13 @@
         + 登录：
             * 若有初始密码(本地环境有) `mysql -u root -p` 则从错误日志中找到初始密码(GENERATED，参考上面用户名和密码的说明)
             * 若没有密码 `mysql -u root --skip-password`
+            * 关于版本问题报错
+                - 报错：plugin 'caching_sha2_password' cannot be loaded: /usr/lib64/mysql/plugin/caching_sha2_password.so
+                - mysql8 之前的版本中加密规则是mysql_native_password,而在mysql8之后,加密规则是caching_sha2_password, 解决问题方法有两种,一种是升级navicat驱动,一种是把mysql用户登录密码加密规则还原成mysql_native_password
+                - 修改加密规则：
+                    + `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';` 更新一下用户的密码
+                    + `FLUSH PRIVILEGES;` 刷新权限
+                - 参考：[MySQL 连接出现 Authentication plugin 'caching_sha2_password' cannot be loaded](https://www.cnblogs.com/zhurong/p/9898675.html)
         + 修改密码：`ALTER USER 'root'@'localhost' IDENTIFIED BY 'root-password';`
             * [6.4.3 The Password Validation Component](https://dev.mysql.com/doc/refman/8.0/en/validate-password.html)
             * 默认密码策略长度需要至少8个字符，否则报错Your password does not satisfy the current policy requirements

@@ -239,3 +239,8 @@
     - `docker run --rm`
         + `--rm`指定退出容器时自动清理容器和文件系统(默认情况是不清理容器和数据的，便于查询上一次的最终状态)
         + 当设置`--rm`选项时，Docker也会移除容器关联的匿名卷，运行情况和 `docker rm -v my-container` 类似
+
+## 官网文档
+
+* Quickstart
+    - [Orientation and setup](Orientation and setup)
