@@ -117,14 +117,14 @@
             - `yum-config-manager --enable rhel-7-server-optional-rpms`
     + 安装 Server/proxy/前端 (自己只安装server和web前端)
         * 安装 Zabbix server（适用于 RHEL7，在 RHEL 6 上弃用）并使用 MySQL 数据库(若用pg数据库则mysql替换为pgsql)：
-            - `yum install zabbix-server-mysql`
+            - `yum install zabbix-server-mysql -y`
         * 安装 Zabbix 前端（适用于 RHEL 7，在 RHEL 6 上弃用）并使用 MySQL 数据库：
-            - `yum install zabbix-web-mysql`
+            - `yum install zabbix-web-mysql -y`
     + 创建数据库
         * 对于 Zabbix server 和 proxy 守护进程而言，数据库是必须的。而运行 Zabbix agent 是不需要的。如果 Zabbix server 和 Zabbix proxy 安装在相同的主机，它们必须创建不同名字的数据库！
     + 导入数据
         * 使用 MySQL 来导入 Zabbix server 的初始数据库 schema 和数据
-            - 创建数据库`create database zabbix`
+            - 创建数据库`create database zabbix`(若从另外一台机器导入数据，则不需要再创建，不过下面的用户还是需要创建)
             - 创建zabbix用户 `create user zabbix identified by 'zabbix';`，选择zabbix.*赋全部权限：`grant all on zabbix.* to zabbix;`
             - `zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p zabbix`
             - `zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -h 192.168.xxx.xxx -uroot -p zabbix` 使用root，docker环境的mysql
@@ -143,11 +143,15 @@
         * 取消 "date.timezone" 注释，并设置当前时区，ll /etc/localtime查看链接的时区文件为`../usr/share/zoneinfo/Asia/Shanghai`，则设置为"Asia/Shanghai"
     + SELinux 配置
         * getenforce本地关闭了SELinux，若开启需要参考进行配置
+        * 可以开放防火墙：zabbix-agent zabbix-server
+            - `firewall-cmd --permanent --add-service=zabbix-server`
+            - `firewall-cmd --permanent --add-service=zabbix-agent`
+            - `firewall-cmd --reload`
     + 前端和SELinux配置完成后重新启动Apache web服务器
-        * `service httpd restart`
+        * `service httpd restart`，若没有服务则`yum install httpd`
         * 设置httpd开机启动 `systemctl enable httpd`
     + 安装 Agent
-        * 安装：`yum install zabbix-agent`
+        * 安装：`yum install zabbix-agent -y`
         * 启动：`service zabbix-agent start`
     + 安装完成，按链接检查前端安装项，数据库地址、用户密码等
         * [前端安装步骤](https://www.zabbix.com/documentation/4.0/manual/installation/install#installing_frontend)
