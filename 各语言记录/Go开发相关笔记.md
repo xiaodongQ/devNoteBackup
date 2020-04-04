@@ -860,10 +860,38 @@ func Errorf(format string, a ...interface{}) error {
 
 
 ### log包
-log模块主要提供了3类接口。分别是
-    Print 、Panic 、Fatal
-对每一类接口其提供了3种调用方式
-    Xxxx 、 Xxxxln 、Xxxxf
+* log模块主要提供了3类接口。分别是
+    - Print 、Panic 、Fatal
+        + `Fatal`相当于调用`Print`之后`os.Exit(1)`退出
+        + `Panic`相当于调用`Print`之后`panic()`
+* 对每一类接口其提供了3种调用方式
+    - Xxxx 、 Xxxxln 、Xxxxf
+* 可以设置log的打印格式(默认不带文件名和行号，默认标志为`Ldate | Ltime`)
+    - 使用 `log.SetFlags()` 设置，设置多个标志以`|`分隔
+        + `Ldate` 显示日期标志
+        + `Ltime` 显示时间
+        + `Lshortfile` 显示文件名和行号，`Llongfile` 以绝对路径显示文件名
+            * 两个选项设置时，打印信息中会显示一个`:`
+        + 个人习惯：`log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)`，可以将其放到`init()`初始化
+            * 打印内容形式为：`2020/04/04 10:54:28 linkedlist_palindromic.go:87: node value:b, ptr:&{b 0xc00005a420}`
+    - `SetPrefix(prefix string)` 设置打印前缀
+        + e.g. `log.SetPrefix("[xd] ")`
+    - `SetOutput(w io.Writer)` 设置输出目的地
+    - 设置不同等级需要定制创建，Info,Warning,Error
+        + 可以使用第三方log框架，如`logrus`
+            * 完全兼容golang标准库日志模块：logrus日志框架有六种日志级别，debug、info、warn、error、fatal和panic
+            * 可扩展的Hook机制：允许使用者通过hook的方式将日志分发到任意地方，如本地文件系统、标准输出、logstash、elasticsearch或者mq等，或者通过hook定义日志内容和格式等
+                - 初始化前添加相应自定义的hook即可，`log.AddHook(hook)` (hook变量对应类型要实现`Hook`接口，可自己实现，也有一些第三方HOOK供使用)
+            * 可选的日志输出格式
+                - logrus(1.2.0之前，现已提供)没有提供文件名和行号(出于性能考虑)，这在大型项目中通过日志定位问题时有诸多不便，若要支持可：自己实现一个hook；或通过装饰器包装`logrus.Entry`
+                    + 貌似从logrus 1.2.0开始已经支持在日志中写入 文件名，行号，函数等定位信息
+                    + 搜v1.2.0(版本发布时间2018.11.1)，新增了`SetReportCaller`，[logrus releases](https://github.com/Sirupsen/logrus/releases)
+                        * 使用 `logrus.SetReportCaller(true)`开启
+            * Field机制：logrus鼓励通过Field机制进行精细化的、结构化的日志记录，而不是通过冗长的消息来记录日志
+            * logrus是一个可插拔的、结构化的日志框架
+            * [golang日志框架之logrus](https://blog.csdn.net/wslyk606/article/details/81670713)
+            * [logrus Github](https://github.com/sirupsen/logrus)
+                - 对于文件名、函数名和行号，可选择第三方formatter: powerful-logrus-formatter
 
 ```go
 func main(){
@@ -873,6 +901,20 @@ func main(){
     log.Printf("Printf array with item [%d,%d]\n",arr[0],arr[1])
 }
 ```
+
+```golang
+// logrus鼓励使用第二种方式替代方式1
+// 方式1
+log.Fatalf("Failed to send event %s to topic %s with key %d", event, topic, key)
+
+// 方式2，Fields形式
+log.WithFields(log.Fields{
+  "event": event,
+  "topic": topic,
+  "key": key,
+}).Fatal("Failed to send event")
+```
+
 
 ### bytes.NewReader
 
