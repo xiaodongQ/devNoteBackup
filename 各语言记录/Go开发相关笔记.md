@@ -568,7 +568,10 @@ type Block interface {
         + 向一个nil map赋值，会引发运行时panic
 * slice
     - 初始化方式
-        + `make([]int, 3, 8)`
+        + `make([]T, length)` 或 `make([]T, length, capacity)`同时指定容量
+            * e.g. `make([]int, 3, 8)`
+            * 注意长度为length，即使没有append成员，其长度也是length`arr := make([]int, 5)`，则`len(arr)`为5
+                - 而`arr = append(arr, 1)`之后，`len(arr)`变为6了
         + `var sl []int`
         + 对于strint/array/array指针/slice，`a[low:high]`构造一个string子串或slice切片
             * 得到的结果中，索引从`0`开始，长度为`high-low`
@@ -592,6 +595,7 @@ type Block interface {
         + `for index, v := range arr {}`
     - append
         + `arr = append(arr, 3)`  // 把值3添加到[]int，len()新增，cap()按2^n可能受影响
+            * 注意append之后，len加1，而不是把之前的空填上了
     - 循环(三种形式，使用for，没有while关键字)
         + `for i:=1; i<10; i++ {}`, 类似C的for(i=0; i<10; i++){}
         + `for {}`, 无限循环，类似while(1){}或for(;;){}
