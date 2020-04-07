@@ -329,8 +329,12 @@ catch(boost::bad_lexical_cast& e)
 ## std::chrono
 
 * [C++11 std::chrono库详解](https://www.cnblogs.com/jwk000/p/3560086.html)
-    - chrono是一个time library, 源于boost，现在已经是C++标准
+    - chrono是一个time library, 源于boost，现在已经是C++标准，提供高精度的时间控制
     - 要使用chrono库，需要#include<chrono>，其所有实现均在std::chrono namespace下
+        + 定义了一些辅助类型(通过duration类)表示时间段，直接使用即可(类似于Go里面的Duration)
+            * std::chrono::seconds 秒，其定义为`duration</*至少 35 位的有符号整数类型*/>`
+            * std::chrono::minutes 分
+            * std::chrono::nanoseconds 纳秒、std::chrono::microseconds 微秒、std::chrono::milliseconds 毫秒
 * 另可参考
     - Boost.Chrono: [Chapter 7. Boost.Chrono 2.0.8](https://www.boost.org/doc/libs/1_71_0/doc/html/chrono.html)
     - cppreference: [标准库头文件 <chrono>](https://zh.cppreference.com/w/cpp/header/chrono)

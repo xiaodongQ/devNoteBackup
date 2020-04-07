@@ -750,11 +750,6 @@ namespace std {
             * `std::lock_guard`，与 Mutex RAII 相关，方便线程对互斥量上锁。
             * `std::unique_lock`，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了`更好的上锁和解锁控制`。
                 - 类 `unique_lock` 是通用互斥包装器，允许延迟锁定、锁定的有时限尝试、递归锁定、所有权转移和与条件变量一同使用。
-        + 另外还提供了几个与锁类型相关的 Tag 类
-            * `std::adopt_lock_t` 一个空的标记类，定义如下：`struct adopt_lock_t {};`
-            * `std::defer_lock_t`，一个空的标记类，定义如下：`struct defer_lock_t {};`
-            * `std::try_to_lock_t`，一个空的标记类，定义如下：`struct try_to_lock_t {};`
-                - 三个Tag通常作为参数传入给 `unique_lock` 或 `lock_guard` 的构造函数。
         * 构造(可以选择以哪种方式锁定提供的互斥锁m)
             - 默认构造函数 `unique_lock() noexcept;`
                 + 新创建的 unique_lock 对象不管理任何 Mutex 对象。
@@ -766,20 +761,32 @@ namespace std {
                 + 延迟加锁，初始化后并不调用lock
             - `unique_lock( mutex_type& m, std::adopt_lock_t t );`
                 + 当前线程已经获得锁，创建unique_lock对象来管理m，创建后的对象接手锁的所有权
-            - 另外几个
+            - 另外几个的构造函数说明
                 + `unique_lock(mutex_type& m, const chrono::duration<Rep,Period>& rel_time);`
                     * 创建并试图通过调用 `m.try_lock_for(rel_time)` 来锁住 Mutex 对象一段时间
                 + `unique_lock(mutex_type& m, const chrono::time_point<Clock,Duration>& abs_time);`
                     * 创建并试图通过调用 `m.try_lock_until(abs_time)` 来在某个时间点(abs_time)之前锁住 Mutex 对象
                 + 拷贝构造被禁用，`unique_lock(const unique_lock&) = delete;`
                 + 移动(move)构造 `unique_lock(unique_lock&& x);`
-                    * 新创建的 unique_lock 对象获得了由 x 所管理的 Mutex 对象的所有权(包括当前 Mutex 的状态)。调用 move 构造之后， x 对象如同通过默认构造函数所创建的，就不再管理任何 Mutex 对象了
+                    * 新创建的 unique_lock 对象获得了由 x 所管理的 Mutex 对象的所有权(包括当前 Mutex 的状态)。调用 `move` 构造之后， x 对象如同通过默认构造函数所创建的，就不再管理任何 Mutex 对象了
         * 操作函数
             - `lock()`              //阻塞等待加锁
             - `try_lock()`          //非阻塞等待加锁
-            - `try_lock_fo r()`      //在一段时间内尝试加锁
+            - `try_lock_for()`      //在一段时间内尝试加锁
             - `try_lock_until()`    //在某个时间点之前尝试加锁
+            - `unlock()`            //解锁
     + `std::lock`
+        * 定义：`void lock( Lockable1& lock1, Lockable2& lock2, LockableN&... lockn );` Lockablen等类型都是模板类
+        * 锁定给定的*可锁定*对象lock1、lock2...，用免死锁算法避免死锁
+            - 满足一定条件则为可锁定Lockable，需要满足m.lock()/m.unlock()/m.try_lock()等表现要求
+            - 可锁定要求可参考：[C++ 具名要求： 可锁定 (Lockable)](https://zh.cppreference.com/w/cpp/named_req/Lockable)
+        * [std::lock](https://zh.cppreference.com/w/cpp/thread/lock)
+        * 可以看一下链接中的示例，`std::lock`获取第二个锁而不用担心死锁，可多个互斥量同时加锁。示例中列出了几个等价加锁的方式：
+            - a. `std::lock(e1.m, e2.m);` `std::lock_guard<std::mutex> lk1(e1.m, std::adopt_lock);`，相同方式对e2.m加锁
+                + std::adopt_lock方式，会接管锁，并lock
+            - b. `std::unique_lock<std::mutex> lk1(e1.m, std::defer_lock);`，e2.m同样方式定义，再`std::lock(lk1, lk2);`
+                + std::defer_lock方式，初始化后并不调用lock
+            - c. C++17中有较优解法：`std::scoped_lock lk(e1.m, e2.m);`
     + `std::lock_guard`跟mutex本身是强关联的，也就是说`lock_guard`一旦存在，mutex就必须是锁定的，而条件变量中有过程是要求释放锁的。这个场景下可以用`unique_lock`
 
 * `unique_lock`的示例:
@@ -2176,3 +2183,34 @@ void assert( int expression );
 #include <assert.h>
 ```
 
+## 条件变量
+
+* `std::condition_variable`
+    - `#include <condition_variable>`
+    - [C++11条件变量使用详解](https://blog.csdn.net/c_base_jin/article/details/89741247)
+    - C++11引入，可以使用条件变量（condition_variable）实现多个线程间的同步操作；当条件不满足时，相关线程被一直阻塞，直到某种条件出现，这些线程才会被唤醒
+    - API
+        + 参考cpp reference：[std::condition_variable](https://zh.cppreference.com/w/cpp/thread/condition_variable)
+        + `notify_one()` 通知一个等待的线程
+        + `notify_all()` 通知所有等待的线程
+        + `wait` 阻塞当前线程，直到条件变量被唤醒
+            * `void wait( std::unique_lock<std::mutex>& lock );`
+            * `void wait( std::unique_lock<std::mutex>& lock, Predicate pred );`
+                - 其中Predicate为模板类`template< class Predicate >`
+                - lock 参考：必须为当前线程所锁定
+                - pred 参数：判定函数，若应该继续等待则返回false，即达到true的条件后就退出等待
+                    + 判定函数的签名应等价于：`bool pred();`
+                    + 中文cpp reference上此处翻译有点不通顺，参考en：[std::condition_variable::wait](https://en.cppreference.com/w/cpp/thread/condition_variable/wait)
+                - 该`wait`等价于：`while(!pred()) { wait(lock);}`
+            * 调用该函数前，需要获得锁
+        + `wait_for` 阻塞当前线程，直到条件变量被唤醒，或到指定时限时长后结束阻塞
+    - 利用线程间共享的全局变量进行同步，主要包括两个动作
+        + 一个线程因等待"条件变量的条件成立"而挂起；
+            * 等待条件成立使用的是`condition_variable类`成员`wait`、`wait_for` 或 `wait_until`
+        + 另外一个线程使"条件成立"，给出信号，从而唤醒被等待的线程。
+            * 给出信号使用的是`condition_variable类`成员`notify_one()`或者`notify_all()`函数
+    - 为了防止竞争，条件变量的使用总是和一个互斥锁结合在一起；
+        + 通常情况下这个锁是std::mutex
+        + 并且管理这个锁 只能是 `std::unique_lock<std::mutex>` RAII模板类。
+            * 以上两个类型的`wait`函数都在会阻塞时自动释放锁权限，即调用`unique_lock`的成员函数`unlock()`，以便其他线程能有机会获得锁，搜索："* `std::unique_lock`"
+    - 
