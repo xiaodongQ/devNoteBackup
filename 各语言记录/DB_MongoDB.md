@@ -41,28 +41,33 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
 
 * [mongodb c++ 驱动](https://www.jianshu.com/p/c982a2960175)
     - 翻译来自官网链接：[Installing the mongocxx driver](http://mongocxx.org/mongocxx-v3/installation/)
-    - 1. 安装c驱动，见下面的步骤
+    - 1. 安装c驱动，见下面的步骤(**步骤一**)
     - 2. 下载最新的 mongocxx driver
         + `git clone https://github.com/mongodb/mongo-cxx-driver.git --branch releases/stable --depth 1`
         + `cd mongo-cxx-driver/build`
     - 3. 配置驱动
-        + `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..`
+        + `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..` (CentOS)
     - 4. 编译和安装驱动
-        + 若用默认的 MNMLSTC 的C++17 `make EP_mnmlstc_core` (实际安装未执行该步，不确定是否有影响，make正常安装成功)
+        + 若用默认的 MNMLSTC 的C++17 `make EP_mnmlstc_core` (实际安装未执行该步，不确定是否有影响，make正常安装成功，应该是之前已经安装了boost的原因，若无boost则需要进行该步骤)
             * 编译步骤中有：`Performing download step (git clone) for 'EP_mnmlstc_core'`，会clone `EP_mnmlstc_core`
             * 关于 `MNMLSTC Core`，MNMLSTC核心是一个c++ 11库，它添加了c++ 14及以后版本中包含的一些库特性，特性内容可以参考链接
                 - mongocxx驱动用了C++17的`std::optional` `std::string_view`特性，需要选择用`MNMLSTC/core`还是`boost`，两种库都有该特性，非Windows平台默认用的是`MNMLSTC/core`(可以通过宏配置)，官网链接做了说明：[Step 2: Choose a C++17 polyfill](http://mongocxx.org/mongocxx-v3/installation/)进行了说明
                 - 若要了解MNMLSTC Core可以参考：[MNMLSTC Core](http://mnmlstc.github.io/core/)
+            * 在一台ubuntu上尝试部署时MNMLSTC这个模块报错了，指定了使用boost(需另外安装)，第3步的配置进行调整：`cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DBSONCXX_POLY_USE_MNMLSTC:Bool=OFF -DBSONCXX_POLY_USE_BOOST:Bool=ON -DBOOST_INCLUDEDIR=/usr/local/boost/include ..`
+                - 但是有的应用程序并不需要使用到boost，该方式下也需要包含boost的头，所以还是放弃了这种方式
+                - 尝试git clone最新版本的mongocxx driver(安装时提示要求mongodb C驱动的版本至少为1.15.0)，下面的make时会去下载：`[  1%] Performing download step (git clone) for 'EP_mnmlstc_core'`
         + `make && make install`
 
-* C驱动安装
+* C驱动安装(**步骤一**)
     - 参考: [mongodb c 驱动](https://www.jianshu.com/p/d77680254418) (第一步安装c驱动，翻译链接)
         + 翻译来自官网链接：[Installing the MongoDB C Driver (libmongoc) and BSON library (libbson)](http://mongoc.org/libmongoc/current/installing.html)
 
 ```sh
-  $ wget https://github.com/mongodb/mongo-c-driver/releases/download/1.13.0/mongo-c-driver-1.13.0.tar.gz
-  $ tar xzf mongo-c-driver-1.13.0.tar.gz
-  $ cd mongo-c-driver-1.13.0
+# 版本可能变化，比如我在一台新机器安装时mongocxx要求1.15.0(截止20200409最新版本1.16.2)
+# 当前版本可查看：https://github.com/mongodb/mongo-c-driver/releases/
+  $ wget https://github.com/mongodb/mongo-c-driver/releases/download/1.16.2/mongo-c-driver-1.16.2.tar.gz
+  $ tar xzf mongo-c-driver-1.16.2.tar.gz
+  $ cd mongo-c-driver-1.16.2
   $ mkdir cmake-build
   $ cd cmake-build
   $ cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF ..

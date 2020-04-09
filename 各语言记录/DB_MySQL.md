@@ -68,7 +68,9 @@
         + sudo rpm -Uvh https://dev.mysql.com/get/mysql80-community-release-el7-1.noarch.rpm
     - 2）安装Mysql 8.0
         + sudo yum --enablerepo=mysql80-community install mysql-community-server
-
+* 客户端
+    - `apt-get install mysql-client` 安装客户端(Ubuntu)
+    - `sudo apt-get install libmysqlclient-dev` 若开发时需要用客户端连接，则需要该包
 
 ## linux mysql操作
 
