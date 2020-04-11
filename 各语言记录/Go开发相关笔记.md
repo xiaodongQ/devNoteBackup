@@ -234,6 +234,15 @@ func init() {
 
 * [Go编程语言规范](https://go-zh.org/ref/spec)
     - 源码为采用 `UTF-8` 编码的 Unicode 文本
+* 数值类型(Numeric types)
+    - **注意**
+        + `int` 和 `uint`位数一样，或者32位或者64位，取决于系统
+        + `byte`为`uint8`的别名，8位
+        + `rune`为`int32`的别名，32位
+        + `uintptr` 一个足够大的无符号整型，用来表示任意地址
+            * an unsigned integer large enough to store the uninterpreted bits of a pointer value
+            * 并没有明确说位数，最大应该为64位
+    - [Numeric types](https://go-zh.org/ref/spec#Numeric_types)
 * `struct类型`
     - 允许有声明类型而没有明确字段域名字的域(成员)，这种成员称为匿名域(也叫嵌入式域)
     - 不过在一个struct中，匿名域必须是独一无二的，下面示例的情况是不允许的(三者都会冲突)
@@ -570,9 +579,27 @@ type Block interface {
     - 初始化方式
         + `make([]T, length)` 或 `make([]T, length, capacity)`同时指定容量
             * e.g. `make([]int, 3, 8)`
-            * 注意长度为length，即使没有append成员，其长度也是length`arr := make([]int, 5)`，则`len(arr)`为5
-                - 而`arr = append(arr, 1)`之后，`len(arr)`变为6了
+            * 若未指定则cap和len一样，
+            * 注意长度为length，即使没有append成员，其长度也是length
+                - `arr := make([]int, 5)`，则`len(arr)`为5
+                - 遍历打印切片，会打印5个成员(默认零值)
+                - `arr = append(arr, 1)`之后，`len(arr)`变为6了
+                - 超出容量后，会自动扩展成一个新的更大的空间(2倍)，成员拷贝到新空间(比较耗费时间)
         + `var sl []int`
+            * `cap`和`len`都是0
+        + 对于slice的自动扩容
+            * 很多copy-paste的博客说的并不完全准确(只是覆盖到部分分支)：
+                - slice扩容，cap不够1024的，直接翻倍；cap超过1024的，新cap变为老cap的1.25倍
+            * 扩容后的slice容量和成员类型也有关系，`[]int32` 和 `[]int`，从原来3个成员`append`一个成员后，
+                - `e := []int32{1,2,3}`，`e = append(e,4)`，cap从3到8
+                - `f := []int{1,2,3}`，`f = append(f,4)`，cap从3到6
+            * 链接中gdb单步并跟踪源码，可参考跟踪的过程。结论：
+                - append的时候发生扩容的动作：
+                    + append单个元素，或者append少量的多个元素，这里的少量指double之后的容量能容纳，这样就会走以下扩容流程，不足1024，双倍扩容，超过1024的，1.25倍扩容
+                    + 若是append多个元素，且double后的容量不能容纳，直接使用预估的容量
+                - 此外，以上两个分支得到新容量后，均需要根据slice的类型size，算出新的容量所需的内存情况`capmem`，然后再进行`capmem`向上取整(`roundupsize`)，得到新的所需内存，除上类型size，得到真正的最终容量,作为新的slice的容量
+                    + 内存对齐，涉及Golang的内存管理
+            * [Go slice扩容分析之 不是double或1.25那么简单](https://www.jianshu.com/p/303daad705a3)
         + 对于strint/array/array指针/slice，`a[low:high]`构造一个string子串或slice切片
             * 得到的结果中，索引从`0`开始，长度为`high-low`
             * e.g. 数组 `a := [5]int{1, 2, 3, 4, 5}`
@@ -1219,7 +1246,7 @@ const (
 * 是一个不可变的byte切片，初始化后不能修改成员
 * Go语言的字符有以下两种：
     - 一种是 `uint8` 类型，或者叫 `byte` 型，代表了 ASCII 码的一个字符
-    - 另一种是 `rune` 类型，代表一个 UTF-8 字符，当需要处理中文、日文或者其他复合字符时，则需要用到 `rune` 类型。`rune` 类型等价于 `int32` 类型。
+    - 另一种是 `rune` 类型，代表一个 UTF-8 字符，当需要处理中文、日文或者其他复合字符时，则需要用到 `rune` 类型。`rune` 类型等价于 `int32` 类型。(注意`int`和系统位数有关==，64位系统上为8字节，笔记中搜索：`* 数值类型(Numeric types)`章节)
     - **互转**
         + string转[]byte：`var data []byte = []byte(str)`
         + []byte转string：`var str string = string(data[:])`

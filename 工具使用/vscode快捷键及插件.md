@@ -112,24 +112,21 @@ file->perferences->settings->搜 renderWhitespace->选all
     }
 
 * 缩进设置为tab (makefile空格和tab有区别)
-
-在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
-
+    - 在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
+* 不自动提示代码片段或补全，若要开启自动提示(可指定某个工作空间单独生效，有时每次都自动提示也挺烦的)，在设置里搜`prevent`
+    - 出来的 `Editor › Suggest: Snippets Prevent Quick Suggestions`，取消勾选即可
+    - 代码补全/代码片段提示的触发快捷键，容易和其他键冲突，自己改成了ctrl+shift+space (下面也有说明)
 
 ### 实用快捷键修改：
 
-```
-vim相关键冲突：
-将vim中ctrl相关的键取消，ctrl+c,v,x,a,b,f,g,b等
-
-代码补全提示冲突：
-ctrl+shift+space 改成别的，ctrl+space(代码补全提示)改成ctrl+shift+space
-
-VS Code默认无切换大小写，映射快捷键：
-    转换为大写: Ctrl+Shift+u
-    转换为小写: Ctrl+Shift+l
-    (keyboards shortcuts搜upper,lower进行映射 之前已存在的快捷键remove)
-```
+* vim相关键冲突：
+    - 将vim中ctrl相关的键取消，ctrl+c,v,x,a,b,f,g,b等
+* 代码补全提示冲突(`代码片段提示`)：
+    - ctrl+shift+space 改成别的，ctrl+space(代码补全提示)改成ctrl+shift+space
+* VS Code默认无切换大小写，映射快捷键：
+    - 转换为大写: Ctrl+Shift+u
+    - 转换为小写: Ctrl+Shift+l
+    - (keyboards shortcuts搜upper,lower进行映射 之前已存在的快捷键remove)
 
 ### 自定义代码片段snippets设置
 
@@ -145,8 +142,7 @@ VS Code默认无切换大小写，映射快捷键：
 2. 然后再选择你需要将此代码块作用在哪种类型的文件，会生成一个json文件
     - 也可以选全局，生成的json文件中会多一个key，用于设置代码生效范围
 3. 然后配置一个json文件
-
-File->Preferences->User Snippets->选择某个语言或者global->进行配置
+    - File->Preferences->User Snippets->选择某个语言或者global->进行配置
 
 配置方法说明(选的是全局为例)：
 
@@ -169,7 +165,7 @@ File->Preferences->User Snippets->选择某个语言或者global->进行配置
 }
 ```
 
-以自己在C/C++中常用的片段示例：
+* 以自己在C/C++中常用的片段示例：
 
 ```json
 {
