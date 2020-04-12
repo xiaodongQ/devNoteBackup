@@ -623,6 +623,13 @@ type Block interface {
     - append
         + `arr = append(arr, 3)`  // 把值3添加到[]int，len()新增，cap()按2^n可能受影响
             * 注意append之后，len加1，而不是把之前的空填上了
+        + 若要从slice中删除元素，则可以截取后赋值
+            * `a = a[:len(a)-1]` 删除最后一个元素，删除后n个则`len(a)-n`
+            * `a = a[1:]` 删除第一个元素
+            * `a = append(a[:i], a[i+1:]...)` 删除第i个元素(i不为最后元素)，通过append来截取拼接，注意拼接一个slice时需要`...`
+        + append的用法有两种：
+            * `slice = append(slice, elem1, elem2)`，拼接元素到slice中
+            * `slice = append(slice, anotherSlice...)`，拼接slice到slice后面
     - 循环(三种形式，使用for，没有while关键字)
         + `for i:=1; i<10; i++ {}`, 类似C的for(i=0; i<10; i++){}
         + `for {}`, 无限循环，类似while(1){}或for(;;){}
