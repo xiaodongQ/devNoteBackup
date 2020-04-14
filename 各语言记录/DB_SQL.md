@@ -155,3 +155,10 @@ count(col)的执行效率比count(distinct col)高，不过这个结论的意义
         + (虽然定时操作只执行一次，但可能多个测试服务的场景，或无法保证一定只执行一次)
         + `not exists`中`select`的内容并不重要，重要的是`not exists` true还是false
 * exists子查询可参考：[SQL 子查询 EXISTS 和 NOT EXISTS](https://blog.csdn.net/qq_27571221/article/details/53090467)
+
+## group by
+
+* `group by` 结合聚合函数，可根据一个或多个列对结果集进行分组。
+    - 参考链接中的示例：[SQL GROUP BY 语句](https://www.runoob.com/sql/sql-groupby.html)
+    - `SELECT site_id, SUM(access_log.count) AS nums FROM access_log GROUP BY site_id;` 统计每个站点site_id对应的访问次数
+    - `select site_id, count(1) as num from access_log [where...] group by site_id;` 各个site_id的数据库记录条数
