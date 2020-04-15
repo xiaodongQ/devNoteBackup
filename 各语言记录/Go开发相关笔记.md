@@ -403,9 +403,6 @@ const (
 6）空接口type T interface{}没有任何方法，所有的类型都实现了该空接口，也就可以将任何变量赋给空接口。
 ```
 
-* 类型断言
-    - 由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
-
 * `map`
     - map是由一组无序的元素组成的类型
     - `make(map[string]int)`, `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
@@ -636,6 +633,7 @@ type Block interface {
         + `for condition {}`, 类似C的while(condition){}
 * 类型断言
     - `x.(T)`
+    - 由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
     - `var x interface{} = 7`，x有动态类型int，值为7，,`i := x.(int)`则新增变量i为int类型，值为7
     - `type I interface { m() }`，`var y I`，则
         + `s := y.(string)`，非法，string类型并没有实现I接口
@@ -1400,6 +1398,19 @@ string:=strconv.FormatInt(int64,10)
                 - Go提供了range关键字，将其使用在channel上时，会自动等待channel的动作一直到channel被关闭
                 - for range 可以遍历通道（channel），但是通道在遍历时，只输出一个值，即管道内的类型对应的数据
         + 对于已关闭的channel进行操作的结果，搜索本笔记中的 "* `chan`" 章节(读取没事，发送和再次关闭会panic)
+* 性能工具
+    - 准备工作
+        + 安装`graphviz`
+            * [Welcome to Graphviz](http://graphviz.org/)
+            * Graphviz是一个开源的图形可视化软件
+            * 进入pprof后执行`svg`命令生成图表需要该工具
+        + 下载并复制火焰图的`flamegraph.pl`到$GOPATH/bin
+            * [火焰图](https://github.com/brendangregg/FlameGraph)
+        + 安装`go-troch`：`go get github.com/uber/go-torch`
+            * 会生成一个go-torch.exe(windows下)到$GOPATH/bin
+    - 文件方式输出profile
+        + 手动调用`runtime/pprof`的API
+        + `go tool pprof [binary] [binary.prof]`
 
 * disruptor 框架
     - [高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)

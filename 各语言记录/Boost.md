@@ -330,7 +330,7 @@ catch(boost::bad_lexical_cast& e)
 
 * [C++11 std::chrono库详解](https://www.cnblogs.com/jwk000/p/3560086.html)
     - chrono是一个time library, 源于boost，现在已经是C++标准，提供高精度的时间控制
-    - 要使用chrono库，需要#include<chrono>，其所有实现均在std::chrono namespace下
+    - 要使用chrono库，需要`#include<chrono>`，其所有实现均在std::chrono namespace下
         + 定义了一些辅助类型(通过duration类)表示时间段，直接使用即可(类似于Go里面的Duration)
             * std::chrono::seconds 秒，其定义为`duration</*至少 35 位的有符号整数类型*/>`
             * std::chrono::minutes 分
@@ -338,3 +338,24 @@ catch(boost::bad_lexical_cast& e)
 * 另可参考
     - Boost.Chrono: [Chapter 7. Boost.Chrono 2.0.8](https://www.boost.org/doc/libs/1_71_0/doc/html/chrono.html)
     - cppreference: [标准库头文件 <chrono>](https://zh.cppreference.com/w/cpp/header/chrono)
+
+* 获取当前的毫秒时间戳
+
+```cpp
+#include <chrono>
+
+int64_t getCurrentLocalTimeStamp()
+{
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
+        std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
+    return tmp.count();
+
+    // return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+```
+
+* 已知毫秒时间戳，想获取年月日时分秒毫秒
+    - 假设为`millistamp`，则毫秒为`millistamp%1000`，
+    - 其他部分`millistamp/1000`换成秒数后再`struct tm *localtime(const time_t *timep);`获取到`tm`结构，再取对应数据
+    - 一直找chrono中的解决方法(还没搞清楚...)，没想到这种。。。
