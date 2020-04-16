@@ -25,12 +25,19 @@
             * `docker pull mysql/mysql-server:tag`，tag是镜像版本(例如5.5, 5.6, 5.7, 8.0, or latest)
             * 此处我选择latest，直接省略:tag即可，默认也是latest，最新版本
         + 运行实例
-            * `docker run --name=mysql1 -p 3306:3306 --restart=always -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
+            * `docker run --name=mysql1 -p 3306:3306 --restart=always -v /etc/localtime:/etc/localtime -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
                 - 如果docker镜像没有通过之前的`docker pull` or `docker run`命令下载，则会自动下载，并运行
                 - `-d`表示后台运行容器(container)
                 - `-p 8080:80`可以将容器中的端口(80)映射到服务器上的端口(8080)，这样外部就可以通过该端口8080访问容器中的服务
                     + 若没有该映射(`-p 3306:3306`)，则其他机器访问不到mysql的3306端口
                 - `--restart=always` 每次docker服务重启后容器也自动重启
+                - 可以`-v`指定映射关系，配置文件、数据目录等
+                    + e.g. `-v /opt/mysql/data:/var/lib/mysql` 映射数据目录
+                    + e.g. `-v /opt/mysql/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf`：映射配置文件
+                    + 可在`docker inspect xxxid`结果中的Binds中看到映射关系
+                    + 启动时可能要`--privileged`(自己没做映射，没尝试)，使用该参数，container内的root拥有真正的root权限，否则，container内的root只是外部的一个普通用户权限
+                        * 若要映射可参考：[Docker安装MySql-挂载外部数据和配置](https://www.cnblogs.com/0oliumino0/p/10538207.html)
+                    + 指定时区：`-v /etc/localtime:/etc/localtime`
             * `docker logs mysql1` 查看容器的输出
         + mysql启动后，会给root生成一个随机密码，从日志中查找密码：
             * `docker logs mysql1 2>&1 | grep GENERATED`

@@ -240,7 +240,27 @@
         + `--rm`指定退出容器时自动清理容器和文件系统(默认情况是不清理容器和数据的，便于查询上一次的最终状态)
         + 当设置`--rm`选项时，Docker也会移除容器关联的匿名卷，运行情况和 `docker rm -v my-container` 类似
 
+* 时区问题
+    - 遇到docker时间不一致，大多是因为默认时区没有设置导致，一般在宿主机上使用 date 命令看到的是 CTS 时间，进入docker后使用 date 命令查看的是 UTC 时间。
+        + CTS： China Standard Time，UTC+8:00 中国沿海时间（北京时间）
+        + UTC： Universal Time Coordinated 世界协调时间
+    - 设置方法：
+        + 1、docker run 的时候增加环境变量 `-e TZ=Asia/Shanghai`（这个有时候不太好使）
+        + 2、添加volumes映射 /etc/localtime 映射到 /etc/localtime（可靠）
+            * `docker run -v /etc/localtime:/etc/localtime <IMAGE:TAG>`
+        + 3、如果是你的镜像是自己Dockerfile编译的，那么在你的Dockerfile中添加
+            * `RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone`
+    - [Docker时间不一致，时区设置](https://blog.csdn.net/catoop/article/details/89737861?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2)
+    - 宿主机上设置时区，可(到容器中这样操作后重启容器也可)
+        + a. 直接手动创建软链接 `ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime`
+        + b. `cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime`
+
+
 ## 官网文档
 
 * Quickstart
-    - [Orientation and setup](Orientation and setup)
+    - 安装并运行hello-world镜像测试
+        + [Orientation and setup](https://docs.docker.com/get-started/)
+    - 编译运行容器镜像
+        + 创建一个供应用程序运行的docker镜像，其提供程序需要的私有的文件系统
+        + [Build and run your image](https://docs.docker.com/get-started/part2/)

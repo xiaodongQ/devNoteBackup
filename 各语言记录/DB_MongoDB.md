@@ -7,7 +7,6 @@ MongoDB并非芒果(mango)的意思，而是源于 Humongous（巨大）一词�
 MongoDB 是一个基于分布式文件存储的数据库。由 C++ 语言编写。旨在为 WEB 应用提供可扩展的高性能数据存储解决方案。
 MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 
-
 * 官网文档：
     - 关于手册
         + [guide, manual, tutorial之间的区别](https://www.cnblogs.com/jiangleads/p/11238232.html)
@@ -80,6 +79,10 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
 
 * 官网有一系列平台的安装指导
     - 参考：[Install MongoDB Community Edition on Red Hat or CentOS](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-red-hat/)
+    - docker安装：
+        + `docker pull mongo`
+        + 启动：`docker run -p 27017:27017 --restart=always --name mymongodb -d mongo`
+            * -v <LocalDirectoryPath>:/data/db 可选，指定数据存储位置
 
 
 * 通过下载tar包安装(非官方文档)：[Linux平台安装MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
@@ -492,6 +495,8 @@ MongoDB 的 find() 方法可以传入多个键(key)，每个键(key)以逗号隔
 e.g. 通过 "by" 和 "title" 键来查询 菜鸟教程 中 MongoDB 教程 的数据(by和title都是json中的字段键值，不是MongoDB的关键字)
 `> db.col1.find({"by":"菜鸟教程", "title":"MongoDB 教程"}).pretty()`
 
+* mongo中字段不存在或者为null：`{key:null}`
+
 ##### MongoDB OR 条件
 MongoDB OR 条件语句使用了关键字 $or
 
@@ -567,10 +572,15 @@ db.col1.find({"title" : {$type : 'string'}})
 我们除了可以使用limit()方法来读取指定数量的数据外，还可以使用skip()方法来跳过指定数量的数据
 `>db.COLLECTION_NAME.find().limit(NUMBER).skip(NUMBER)`
 
+* 实验结果：并不是先limit(m)获取到结果后，再skip(n)
+    - 会先skip(n)，再limit(m)
+
 #### MongoDB 排序
 
 在 MongoDB 中使用 sort() 方法对数据进行排序，sort() 方法可以通过参数指定排序的字段，并使用 1 和 -1 来指定排序的方式，其中 1 为升序排列，而 -1 是用于降序排列。
 `>db.COLLECTION_NAME.find().sort({KEY:1})`
+
+* 若为升序排列，则不存在该key或者key为null的文档排在前面
 
 e.g. 以下实例演示了 col1 集合中的数据按字段 likes 的降序排列：
 

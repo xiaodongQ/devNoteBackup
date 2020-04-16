@@ -157,6 +157,12 @@
     + 安装 Agent
         * 安装：`yum install zabbix-agent -y`
         * 启动：`service zabbix-agent start`
+        * Ubuntu 18.04 (bionic)(监测ubuntu的主机，需要安装agent):
+            - `apt install zabbix-agent`
+            - `service zabbix-agent start` (`systemctl list-unit-files`查看zabbix-agent.service是自动开机启动的)
+            - [参考](https://www.zabbix.com/documentation/4.0/zh/manual/installation/install_from_packages/debian_ubuntu)
+        * agent相关的配置
+            - 参考下面的章节：`+ 新建主机`
     + 安装完成，按链接检查前端安装项，数据库地址、用户密码等
         * [前端安装步骤](https://www.zabbix.com/documentation/4.0/manual/installation/install#installing_frontend)
         * 确认配置完成后，会出来登录页面，默认用户： Admin, 密码： zabbix
@@ -174,6 +180,7 @@
                 - 配置监控项、触发器、动作(和Linux一致)
                     + 关于动作：可以找到对应的服务名(控制面板-系统和安全-管理工具-服务(双击打开)-找到对应服务名)，然后`net start 服务名`进行启动
                     + 比如我的环境下，`服务`中mysql服务名是：`MySQL80`，则远程执行命令设置：`net start mysql80`(大小写均可)
+            * 默认安装位置(Windows10)：`C:\Program Files\Zabbix Agent`，若要修改配置则到该目录找`zabbix_agentd.conf`，修改后参考上面的方式重启zabbix_agentd.exe
         + 参考：[支持的平台](https://www.zabbix.com/documentation/4.0/zh/manual/concepts/server)
         + Zabbix server 需要 UTF-8 语言环境，以便可以正确解释某些文本项。
 
@@ -199,9 +206,15 @@
             - 建议不要修改该默认名称(默认就是Zabbix server)，**该名称和zabbix_agentd.conf里面的Hostname要一样**，否则会报“cannot send list of active checks to "127.0.0.1": host [Zabbix server] not found”
         * 主机名称，可以使用字母数字、空格、点"."、中划线"-"、下划线"_"。
         * 选择一个或者多个组
-        * 输入主机的IP地址。注意如果这是Zabbix server(那台设备)的IP地址，它必须是Zabbix agent配置文件中‘Server’参数的值。
-            - 要监控的主机上，zabbix_agentd.conf配置文件中的Server或者ServerActive配置加上zabbix server的地址(,分隔)并重启服务
+        * 输入主机的IP地址。
+            - 注意如果要监控的主机是Zabbix server(服务端在的那台设备)的IP地址，它必须是Zabbix agent配置文件中‘Server’参数的值。
+            - 要监控的主机上，zabbix_agentd.conf配置文件中的`Server`或者`ServerActive`配置加上zabbix server的ip地址(该地址可以有多个，用`,`分隔)并重启服务
+                + `ServerActive`用于主动检查，被监测的机器自己检查变化，并上报给zabbix服务端，可以参考应用：`* 日志文件监控`
             - 配置文件可以配置日志位置，和日志等级，出现问题时可以开启debug等级排查问题`DebugLevel`设置为4(注意日志会很多)
+        * 上面的说明偏文本，实际配置一台要监测的主机，要改的配置示例：
+            - `Server=` 改成zabbix服务端的ip，(如果要使用主动检查的功能如主动上报日志变化，则`ServerActive`中配置zabbix服务端的ip)
+            - `EnableRemoteCommands=`配置为1 允许服务端远程执行命令，`LogRemoteCommands=`配置为1(客户端日志中把执行的命令打印出来)
+            - 如果要支持zabbix服务端远程执行命令，需要把zabbix用户加到sudo列表中，参考章节：`* 动作`
     + 新建监控项
         * 监控项是Zabbix中获得数据的基础。没有监控项，就没有数据——因为一个主机中只有监控项定义了单一的指标或者需要获得的数据。
         * 所有的监控项都是依赖于主机的。当我们要配置一个监控项时，先要进入 `配置` → `主机` 页面查找到新建的主机。
@@ -214,7 +227,7 @@
             - (如果`Key`参数错误，修改后点击`现在检查`，再点更新，日志提示"xxxname:system.cpu.load" became supported)
         * 查看数据
             - 监控/或监测（Monitoring）(页面最上面一栏) → 最新数据（Latest data）, 在过滤器中选择刚才新建的主机，然后点击应用（Apply)。
-                + **注意**，添加监控项时若不存储历史记录，则最新数据里看不到数据(并不保存)，若不需要数据存很久可配置短一点(1d,1h,10s等，时间格式参考章节：搜 `- 时间格式`)
+                + **注意**，添加监控项时若不存储历史记录，则最新数据里看不到数据(并不保存)，若不需要数据存很久可配置短一点(1d,1h,10s等，时间格式参考章节：搜 `- 时间格式`，试了下貌似h级别不行)
             - 如果你在没有看到类似截图中的监控项信息，请确认：
                 + 输入的监控项'值（Key）' 和 '信息类型（Type of information）'正确
                 + agent和server都在运行状态
@@ -363,7 +376,7 @@
 * 动作
     - 若要远程操作，则需agent配置文件里配置选项 `EnableRemoteCommands=1`，是否日志记录也可选择开启`LogRemoteCommands=1`
     - `sudo sh /root/xxx.sh` 执行命令时需要指定`sudo`
-        + 且在/etc/sudoers文件中加上(通过`visudo`编辑)：`zabbix  ALL=(ALL)   NOPASSWD: ALL`
+        + 且在`/etc/sudoers`文件中加上(通过`visudo`编辑)：`zabbix  ALL=(ALL)   NOPASSWD: ALL`
         + 默认情况下，Zabbix用户没有权限重新启动系统服务。
     - 远程命令不适用于主动模式Zabbix代理
     - 可以设置循环多个通知或操作(通过步骤列来控制次数)，参考下面链接示例(但每个操作之间默认时间60s-604800s之间，如果要立即执行操作和通知，目前自己方式是新建两个动作分别处理。。。)
