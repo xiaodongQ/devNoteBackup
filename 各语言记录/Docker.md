@@ -254,7 +254,14 @@
     - 宿主机上设置时区，可(到容器中这样操作后重启容器也可)
         + a. 直接手动创建软链接 `ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime`
         + b. `cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime`
-
+* `docker build`
+    - build选项
+        + `-f`可指定dockerfile文件路径，e.g. `docker build -f /path/to/a/Dockerfile .`
+        + `-t`可指定tag(可包括存储库和版本)，e.g. `docker build -t shykes/myapp .`
+            * 同时指定多个存储库：`docker build -t shykes/myapp:1.0.2 -t shykes/myapp:latest .`
+        + 从Dockerfile进行编译，`docker build .`是docker daemon运行的(build第一步将内容发给daemon)，而不是客户端
+    - Dockerfile
+    - 参考自：[Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
 
 ## 官网文档
 
@@ -262,5 +269,26 @@
     - 安装并运行hello-world镜像测试
         + [Orientation and setup](https://docs.docker.com/get-started/)
     - 编译运行容器镜像
-        + 创建一个供应用程序运行的docker镜像，其提供程序需要的私有的文件系统
         + [Build and run your image](https://docs.docker.com/get-started/part2/)
+        + 创建一个供应用程序运行的docker镜像，其提供程序需要的私有的文件系统
+        + 通过示例学习容器化一个应用(Node.js写的一个简单的公告栏应用)
+            * `git clone https://github.com/dockersamples/node-bulletin-board`
+            * `cd node-bulletin-board/bulletin-board-app`
+            * 查看Dockerfile，`FROM`,`WORKDIR`,`COPY`,`RUN`,`EXPOSE`,`CMD`,`COPY`
+                - `FROM`,`WORKDIR`,`COPY`,`RUN`,`COPY` 用来构建镜像的文件系统
+                - `CMD`指定一些运行一个容器需要的元数据，`EXPOSE`指定监听端口
+                - 示例中是一个很好的组织Dockerfile的方式，总是从`FROM`开始，后续步骤是构建私有文件系统，然后指定一些元数据
+                - 关于Dockerfile可参考(查看本笔记中`docker build`章节)：[Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
+            * 编译
+                - `docker build --tag bulletinboard:1.0 .`
+                - 编译成功会显示："Successfully tagged bulletinboard:1.0"
+            * 运行
+                - `docker run --publish 8000:8080 --detach --name bb bulletinboard:1.0`
+                    + `--publish 8000:8080`(同`-p`) 要求docker将传入给主机端口8000的流量转发给容器中的8080端口
+                    + `--detach`(同`-d`) 后台运行
+                    + `--name bb` 容器命名为bb
+            * 删除容器
+                - `docker rm --force bb`
+                    + `--force`会移除容器(`docker ps -a`就看不到了)
+                - 如果只是停止容器(而不删除)，则用 `docker stop bb`(`docker ps -a`还能看到)
+            * 下一步是分享镜像到Docker Hub，便于任何机器来下载和运行
