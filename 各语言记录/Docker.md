@@ -292,3 +292,7 @@
                     + `--force`会移除容器(`docker ps -a`就看不到了)
                 - 如果只是停止容器(而不删除)，则用 `docker stop bb`(`docker ps -a`还能看到)
             * 下一步是分享镜像到Docker Hub，便于任何机器来下载和运行
+    - 在Docker Hub上分享镜像
+        + [Share images on Docker Hub](https://docs.docker.com/get-started/part3/)
+        + 注册Docker Hub账户，[Create a Docker ID](https://hub.docker.com/signup)
+        + 创建仓库
