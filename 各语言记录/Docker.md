@@ -295,4 +295,11 @@
     - 在Docker Hub上分享镜像
         + [Share images on Docker Hub](https://docs.docker.com/get-started/part3/)
         + 注册Docker Hub账户，[Create a Docker ID](https://hub.docker.com/signup)
-        + 创建仓库
+        + 创建仓库，登陆Docker Hub之后->Repositories标签下->Create Repository->创建仓库名称e.g.`bulletinboard`
+        + 设置镜像的命名空间 `docker tag bulletinboard:1.0 xdargs/bulletinboard:1.0` (xdargs个人Docker ID)
+        + 推送镜像到Docker Hub `docker push xdargs/bulletinboard:1.0`
+        + 访问Docker Hub的仓库就可以看到新镜像了
+        + 其他机器上pull使用容器即可
+* [Develop with Docker](https://docs.docker.com/develop/)
+    - 减小编译出来的镜像大小是最常见的一个挑战，常见一个方式是使用一个Dockerfile用于开发(包括编译应用需要的所有环境和组件)，另一个瘦身的Dockerfile用于产品发布(只包括需要运行的程序和运行需要的组件)
+        + 不过维护两个Dockerfile不是最理想的，链接中的示例展示了两个Dockerfile，Dockerfile.build和Dockerfile
