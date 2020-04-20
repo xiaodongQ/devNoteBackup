@@ -684,3 +684,12 @@ estimated_document_count 使用该接口快速返回近似值
     使用：xdcollection.estimated_document_count()
     对应终端js shell：db.collection.estimatedDocumentCount()
 
+
+## 内存问题
+
+* [MongoDB内存限制](https://blog.csdn.net/qq_32523587/article/details/82219170)
+    - 从3.4版本开始，默认情况下，WiredTiger 内部缓存将使用下面2种中更大的一种：
+        + `50% of (RAM - 1 GB)` 和`256 MB`。
+    - 通过文件系统缓存，MongoDB的自动使用未被wiredtiger缓存或由其他进程使用所有可用内存。
+    - 调整WiredTiger内部缓存的方法：`storage.wiredTiger.engineConfig.cacheSizeGB` 和 `--wiredTigerCacheSizeGB`
+    - [Memory Use](https://docs.mongodb.com/v3.4/core/wiredtiger/index.html#memory-use)
