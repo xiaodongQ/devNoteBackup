@@ -615,6 +615,82 @@ db.col1.dropIndexes()
 
 db.col1.dropIndex("索引名称")
 
+#### MongoDB 更新文档
+
+* 官网CRUD说明：[MongoDB CRUD Operations](https://docs.mongodb.com/manual/crud/)
+
+* [MongoDB 更新文档](https://www.runoob.com/mongodb/mongodb-update.html)
+* `update()`
+    - `update()` 方法用于更新已存在的文档
+    - `db.col.update({'title':'MongoDB 教程'},{$set:{'title':'MongoDB'}})`
+        + 该命令只会修改第一条记录，若要修改多条满足条件的记录，设置`multi`参数为true
+            * `db.col.update({'title':'MongoDB 教程'},{$set:{'title':'MongoDB'}},{multi:true})`
+    - 语法：
+
+```sql
+db.collection.update(
+   <query>,              #update的查询条件，类似sql update查询内where后面的
+   <update>,             #update的对象和一些更新的操作符（如$,$inc...）等，也可以理解为sql update查询内set后面的
+   {
+     upsert: <boolean>,  #可选，这个参数的意思是，如果不存在update的记录，是否插入objNew,true为插入，默认是false，不插入
+     multi: <boolean>,   #可选，mongodb默认是false,只更新找到的第一条记录，如果这个参数为true,就把按条件查出来多条记录全部更新
+     writeConcern: <document> #可选，抛出异常的级别
+   }
+)
+```
+
+* `save()`
+    - `save()` 方法通过传入的文档来替换已有文档
+    - 语法：
+
+```sql
+db.collection.save(
+   <document>,                #文档数据
+   {
+     writeConcern: <document> #可选，抛出异常的级别
+   }
+)
+```
+
+* 示例
+    - `db.col.update( { "count" : { $gt : 1 } } , { $set : { "test2" : "OK"} } );`
+        + 只更新第一条记录
+    - `db.col.update( { "count" : { $gt : 3 } } , { $set : { "test2" : "OK"} },false,true );`
+        + 全部更新
+        + 相当于{upsert:false, multi:true}
+    - `db.col.update( { "count" : { $gt : 4 } } , { $set : { "test5" : "OK"} },true,false );`
+        + 只添加第一条
+        + 相当于{upsert:true, multi:false}
+    - `db.col.update( { "count" : { $gt : 5 } } , { $set : { "test5" : "OK"} },true,true );`
+        + 全部添加进去
+        + 相当于{upsert:true, multi:true}
+    - `db.col.update( { "count" : { $gt : 10 } } , { $inc : { "count" : 1} },false,false );`
+        + 只更新第一条记录
+        + 相当于{upsert:false, multi:false}
+
+#### MongoDB 删除文档
+
+* [Delete Documents](https://docs.mongodb.com/manual/tutorial/remove-documents/#delete-documents)
+    - `db.collection名.deleteMany({xxx})` 删除所有
+    - `db.collection名.deleteOne({xxx})` 删除单个
+* [MongoDB 删除文档](https://www.runoob.com/mongodb/mongodb-remove.html)
+    - `remove()`函数用来移除集合中的数据
+        + 在执行remove()函数前先执行find()命令来判断执行的条件是否正确，这是一个比较好的习惯
+        + 示例
+            * `db.col.remove({'title':'MongoDB 教程'})`
+                - 若只想删除第一条找到的记录可以设置 justOne 为 1
+                - `db.col.remove({'title':'MongoDB 教程'}, 1)`
+            * `db.col.remove({})` 删除所有记录
+        + 语法：
+
+```sql
+db.collection.remove(
+   <query>,    #（可选）删除的文档的条件
+   <justOne>   #（可选）如果设为 true 或 1，则只删除一个文档，如果不设置该参数，或使用默认值 false，则删除所有匹配条件的文档
+)
+```
+
+
 ### 使用mongocxx操作
 
 为了使用 C++ 驱动创建一个文档，需要在两个可用的生成器接口（builder interfaces）中选择一个使用：

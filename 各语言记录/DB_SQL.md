@@ -104,6 +104,12 @@ count(col)的执行效率比count(distinct col)高，不过这个结论的意义
 （1） count(1) 会统计表中的所有的记录数，包含字段为null 的记录。
 （2） count(字段) 会统计该字段在表中出现的次数，忽略字段为null 的情况。即不统计字段为null 的记录。 
 
+## distinct
+
+* `SELECT distinct name,class,age FROM xdtest.student;`
+    - distinct要放在开头
+    - 可以作用于多列，此处即为name,class,age三者都不同时才会过滤
+
 ## join
 
 * 连接(join)
