@@ -1364,6 +1364,8 @@ string:=strconv.FormatInt(int64,10)
 
 * [govendor](https://github.com/kardianos/govendor)
     - `go get -u github.com/kardianos/govendor`
+        + The -u flag instructs get to use the network to update the named packages
+and their dependencies
     - Go modules 是Go1.11开始引入的(本机安装版本为go1.13.1)，并在Go1.11.2中修复提升，在Go1.12中有更好的表现
     - Go modules作为发布和构建工具，已经准备就绪可以立即使用。推荐在小项目和个人项目中使用Go modules
 

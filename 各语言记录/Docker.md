@@ -262,7 +262,16 @@
         + 从Dockerfile进行编译，`docker build .`是docker daemon运行的(build第一步将内容发给daemon)，而不是客户端
     - Dockerfile
     - 参考自：[Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
-
+* `docker commit`
+    - `docker commit xxxxx` 会产生悬挂镜像，一般悬挂镜像并不总是我们需要的，会浪费磁盘空间
+        + `docker images --filter "dangling=true" -q` 查看悬挂镜像，`|xargs docker rmi` 可用管道删除
+            * `-q` 只输出image ID
+            * `--no-trunc` 输出完整image ID
+* 导入镜像
+    - `docker import`
+        + 用于导入包含根文件系统的归档，并将之变成Docker镜像
+    - `docker load`
+        + 一般只用于通过`docker save`导出的镜像
 ## 官网文档
 
 * Quickstart

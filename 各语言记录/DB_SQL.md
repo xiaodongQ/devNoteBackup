@@ -168,3 +168,42 @@ count(col)的执行效率比count(distinct col)高，不过这个结论的意义
     - 参考链接中的示例：[SQL GROUP BY 语句](https://www.runoob.com/sql/sql-groupby.html)
     - `SELECT site_id, SUM(access_log.count) AS nums FROM access_log GROUP BY site_id;` 统计每个站点site_id对应的访问次数
     - `select site_id, count(1) as num from access_log [where...] group by site_id;` 各个site_id的数据库记录条数
+* `having`
+    - e.g. `select city, count(*),age from dbo.user where departmentID=2 group by city,age` (可以先where)
+    - Having用于对where和group by查询出来的分组经行过滤，查出满足条件的分组结果(mysql中实验不用where也可用having)
+        + WHERE 是用于在初始表中筛选查询，HAVING用于在WHERE和GROUP BY 结果分组中查询
+        + Having 子句中的每一个元素也必须出现在select列表中
+        + Having语句可以使用聚合函数，而where不使用
+    - 在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用
+        + `SELECT Customer,SUM(OrderPrice) FROM Orders GROUP BY Customer HAVING SUM(OrderPrice)<2000`
+
+* 算每个账户中，盈利>0的数量和总数量
+    - 不用inner则为隐式内连接，使用显式的内连接来避免隐式带来的不确定性(内连接则只会查询交集，profit<=0的记录不会返回)
+    - 使用`outer join`则会把b表全部查出来，不过a表字段为null。a表位置应该调整为`sum(profit>0)`
+    - 下面的几种方式，使用d方式
+
+```sql
+# a. 内连接只查交集(会缺失profit<=0)
+select a.account,a.ac,b.bc from (SELECT account,count(1) ac FROM deal where profit>0 group by account) as a 
+inner join (select account,count(1) bc from deal group by account) as b 
+on a.account=b.account
+
+# b. 右(外)连接返回右边全部(b有a无的记录，对应a中的字段为null)
+select a.account,a.ac,b.bc from (SELECT account,count(1) ac FROM deal where profit>0 group by account) as a 
+right outer join (select account,count(1) bc from deal group by account) as b 
+on a.account=b.account
+
+# c. 查询profit>0的数量时：count(1)调整为sum(profit>0)，b表操作也可调整为sum(1)算总量
+select a.account,a.ac,b.bc from (SELECT account,sum(profit>0) ac FROM deal group by account) as a 
+inner join (select account,count(1) bc from deal group by account) as b 
+on a.account=b.account
+```
+
+```sql
+# d. 不用连接
+select account,sum(profit>0) c1, count(*) c2 from deal group by account;
+
+# 算好占比
+select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 from deal group by account) as new;
+```
+
