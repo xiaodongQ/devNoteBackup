@@ -89,17 +89,17 @@ insert into player_count(player_id,count,name) value(1,1,”张三”)
  name=”张三”;
 ```
 
-### count(1) and count(字段) count(*)
+### `count(1)` and `count(字段)` `count(*)`
 
-[count(1)、count(*)与count(列名)的执行区别](https://blog.csdn.net/iFuMI/article/details/77920767)
+[`count(1)`、`count(*)`与`count(列名)`的执行区别](https://blog.csdn.net/iFuMI/article/details/77920767)
 
-count(*)和count(1)执行的效率是完全一样的。
-count(*)的执行效率比count(col)高，因此可以用count(*)的时候就不要去用count(col)。
-count(col)的执行效率比count(distinct col)高，不过这个结论的意义不大，这两种方法也是看需要去用。
+`count(*)`和`count(1)`执行的效率是完全一样的。
+`count(*)`的执行效率比`count(col)`高，因此可以用`count(*)`的时候就不要去用`count(col)`。
+`count(col)`的执行效率比`count(distinct col)`高，不过这个结论的意义不大，这两种方法也是看需要去用。
 
-如果想统计行数, 就用 count(*) 避开麻烦.
+如果想统计行数, 就用 `count(*)` 避开麻烦.
 
-2. count(1) and count(字段)
+2. `count(1)` and `count(字段)`
 两者的主要区别是
 （1） count(1) 会统计表中的所有的记录数，包含字段为null 的记录。
 （2） count(字段) 会统计该字段在表中出现的次数，忽略字段为null 的情况。即不统计字段为null 的记录。 
@@ -207,3 +207,35 @@ select account,sum(profit>0) c1, count(*) c2 from deal group by account;
 select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 from deal group by account) as new;
 ```
 
+## LeetCode
+
+* [182. 查找重复的电子邮箱](https://leetcode-cn.com/problems/duplicate-emails/)
+    - 编写一个 SQL 查询，查找 Person 表中所有重复的电子邮箱
+    - `select distinct a.Email from Person a, Person b where a.Id!=b.Id and a.Email=b.Email`
+        + 执行用时 :196 ms, 在所有 MySQL 提交中击败了42.57%的用户
+        + 内存消耗 :0B, 在所有 MySQL 提交中击败了100.00%的用户
+    - `select Stat.Email from (select Email,count(*) as count from Person group by Email) as Stat where Stat.count > 1`
+        + 使用`group by`查询每个Email的`count(*)`，再查>0的记录
+        + 执行用时 :167 ms, 在所有 MySQL 提交中击败了57.42%的用户
+        + 内存消耗 :0B, 在所有 MySQL 提交中击败了100.00%的用户
+    - `select Email as count from Person group by Email having count(*)>1`
+        + 使用`group by`, `having`
+        + 执行用时 :147 ms, 在所有 MySQL 提交中击败了96.06%的用户
+        + 内存消耗 :0B, 在所有 MySQL 提交中击败了100.00%的用户
+* [595. 大的国家](https://leetcode-cn.com/problems/big-countries/)
+    - `where` `or`条件查询 VS 单个`where`后通过`union`连接
+    - 通常情况下, 多个索引列时，用`UNION`替换`WHERE`子句中的`OR`将会起到较好的效果. 对索引列使用`OR`将造成全表扫描
+        + 若坚持要用`OR`, 那就需要返回记录最少的索引列写在最前面
+        + 防止`or`导致索引失效
+    - 另外几种索引失效的可能：[规避MySQL中的索引失效](https://juejin.im/post/5df8830cf265da339565e184?hmsr=coffeephp.com)
+        + 若where语句中索引列使用了负向查询，可能会导致索引失效
+            * 负向查询包括：NOT、!=、<>、!<、!>、NOT IN、NOT LIKE等
+            * 字段设为not null并提供默认值
+        + 在索引列上使用内置函数，一定会导致索引失效
+            * 尽量在应用程序中进行计算和转换
+        + 对索引列进行运算，一定会导致索引失效
+        + 联合索引中，where中索引列违背最左匹配原则，一定会导致索引失效
+            * 当创建一个联合索引的时候，如(k1,k2,k3)，相当于创建了(k1)、(k1,k2)和(k1,k2,k3)三个索引，这就是最左匹配原则
+            * k2=2/k3=3/k2=2 and k3=3并不会命中索引，k1=1 and k3=3只会命中k1
+            * 建立组合索引，必须把区分度高的字段放在前面
+    - 对于相同的列查多个值，用`in`来替换`or`，e.g. `id=1 or id=2`调整为`id in(1,2)`
