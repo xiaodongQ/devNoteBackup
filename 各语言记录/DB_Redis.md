@@ -9,7 +9,8 @@
             * 查1天，count:4374, cost:2m29.8772464s
             * 查1天，count:4375, cost:3m21.6757686s
             * 查3天(依次查询)，count:18409, cost:4m8.1853038s
-        + MongoDB部署机器的磁盘性能也是一个问题
+        + MongoDB部署机器的磁盘性能也是一个问题，磁盘快满了，，内存(共8G)也快用完了，主要还是这个服务器配置太低了，MongoDB的缓存内存没进行限制
+            * 从3.4版本开始，默认情况下，WiredTiger 内部缓存将使用下面2种中更大的一种：`50% of (RAM - 1 GB)` 和`256 MB`。
     - 现需要查询跨天的记录，直接查数据库响应时间太慢，因此查询资料找缓存方案
         + [Memcache,Redis,MongoDB（数据缓存系统）方案对比与分析](https://blog.csdn.net/suifeng3051/article/details/23739295)
         + [memcache和redis、Mongodb优缺点及应用场景](https://blog.csdn.net/weiyi_xingdong/article/details/79992032?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)

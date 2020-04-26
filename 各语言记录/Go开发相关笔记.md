@@ -1200,6 +1200,10 @@ go get : git clone + go install
         + `t := time.Now()` 获取当前时间的Time结构体
         + `secs := t.Unix()`秒，`t.UnixNano()`纳秒，根据纳秒/1000000获得毫秒，可获取Time结构秒数
         + `t.Year(), t.Month(), t.Day()` 等分别获取`Time`结构的年月日
+    - 当前日期加时间段
+        + `time.AddData(1,1,1)` 当前日期加1年1月1日
+        + `time.Add(d Duration)` 按Duration添加
+        + 均在 `time.go` 对应的package time包中
 * 比较时间，`Time`的比较是使用`Before`,`After`和`Equal`方法
     - `t1.Before(t2)`
     - `Sub`方法返回的是两个时间点之间的时间距离
