@@ -227,6 +227,11 @@ file->perferences->settings->搜 renderWhitespace->选all
             * magic，魔法效果(云状的爆炸效果)
             * clippy，回形针效果
             * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
+* vscode开发Go，提示太慢了
+    - 开启 Use Language Server，需要安装gopls，go get安装被墙
+    - `mkdir -p $GOPATH/github.com/Go-zh/`
+    - 到新建目录clone，`git clone https://github.com/Go-zh/tools.git`，clone比较慢的话，到该链接下载zip包，放到上面的路径里
+    - `go install github.com/Go-zh/tools/cmd/gopls`
 
 ### 配置云端同步
 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
