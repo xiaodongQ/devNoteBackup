@@ -612,6 +612,7 @@ type Block interface {
         + `Q2 := year[3:6]`      // 下标从3到5(注意不包含6, [3,6))，结果：[Apr May 6]
         + `summer := year[5:8]`  // 结果[6 7 8]
         + `summer[0] = "Unknow"` // 修改summer成员，Q2和year都会受影响，都变成 "Unknow"
+        + 切片的传值和指针问题，参考本笔记章节：`* slice作为形参`
     - 完整的切片表达式：`a[low : high : max]`
         + 和`a[low:high]`有一样的长度`(high-low)`，另外设置结果slice的容量为`(max-low)`，第一个索引可省略(默认0)
         + e.g. `a := [5]int{1, 2, 3, 4, 5}`，`t := a[1:3:5]`，结果t为`{2,3}`，len为2，容量为4(而不是5，5-1)
@@ -694,6 +695,87 @@ type Block interface {
     - 为了安全起见，使用unsafe包必须经过手动审核，并且可能不可移植。
     - `unsafe.Pointer` 所有基础类型的指针都可以转换为`Pointer`类型
         + `var f float64`, `bits = *(*uint64)(unsafe.Pointer(&f))`
+
+* slice作为形参
+    - 参考下面的实例
+    - 切片实现结构：数组指针ptr+切片大小len+切片容量cap
+    - `func test1(s []int) ([]int)` (操作s后再return s)
+        + `sliceA`作为参数传入时，会新建一个`sliceB`并将其复制为`sliceA`的内容传入(即传值)，其指向的数组和`sliceA`指向的数组(假设为`arrPA`)一样(取slice元素成员的地址，是一样的)
+        + 函数内修改`s`的成员时，切片指向的数组内容会被修改
+            * 表现是`sliceA`和`sliceB`的元素成员都被修改了
+        + `test1()`中操作导致传入slice扩容时，slice的地址不变，但是指向的数组地址会改变，假设为`arrPB`(不再是`arrPA`)
+            * 此时原来的`sliceA`指向的数组并不会改变(`arrPA`)
+            * 只是新建的`sliceB`指向的数组变成了`arrPB`
+        + return返回时，会新建一个新的切片`sliceC`，这个sliceC和传入的`s`就没有关系了
+            * 其指向的地址也是扩容时的新数组地址(`arrPB`)
+            * 若不扩容，则指向的地址还是和`sliceA`、`sliceB`指向的数组地址一样(均为`arrPA`)
+        + 向`s`新增成员的问题
+            * 新增成员时，只是新建传入的`sliceB`新增了成员，原来的`sliceA`并无变化(其指向的数组地址也不会变化，只是值随test1变化)
+    - `func test2(s *[]int)([]int)`
+        + 传slice指针时，传入`sliceA的地址`，则修改都会体现到`sliceA`上
+        + 若`test2()`中导致扩容，则`sliceA`指向的数组地址会改变
+    - 结论：若要改变原有的slice，则设计函数时，传入slice的指针
+        + 若不想改变原有的成员值，则新建一个slice(`make`或者`var`来定义)，再进行复制，而不是用`[:]`直接来截取
+    - 参考：[Golang 切片与函数参数"陷阱"](https://www.yuque.com/docs/share/6c07ca60-44d0-49ef-aff4-06ff20d57818)
+
+```golang
+package main
+
+import (
+    "log"
+)
+
+func changeSlice(s []int) []int {
+    s[1] = 12345
+    log.Printf("sptr:%p, m1p:%p\n", &s, &s[1])
+    s = append(s, 1)
+    log.Printf("after append, sptr:%p, m1p:%p\n", &s, &s[1])
+    return s
+}
+
+func changeSlicePtr(s *[]int) []int {
+    (*s)[1] = 12345
+    log.Printf("sptr:%p,  m1p:%p\n", s, &(*s)[1])
+    *s = append(*s, 1)
+    log.Printf("after append, sptr:%p, m1p:%p\n", s, &(*s)[1])
+    return *s
+}
+
+func main() {
+    log.SetFlags(log.Lshortfile)
+    sli := []int{1, 2, 3}
+    log.Printf("sli:%v, ptr:%p, m1p:%p\n", sli, &sli, &(sli[1]))
+
+    sli2 := changeSlice(sli)
+    log.Printf("\nsli:%v,ptr:%p,m1p:%p \nsli2:%v,ptr:%p,m1p:%p\n",
+        sli, &sli, &(sli[1]), sli2, &sli2, &(sli2[1]))
+    sli2[1] = 456
+    log.Printf("sli:%v, sli2:%v", sli, sli2)
+
+    log.Println("\n==================\n")
+    slip := []int{1, 2, 3}
+    log.Printf("slip:%v, ptr:%p, m1p:%p\n", slip, &slip, &(slip[1]))
+    slip2 := changeSlicePtr(&slip)
+    log.Printf("slip:%v, slip2:%v", slip, slip2)
+}
+
+// 结果
+slice_param.go:26: sli:[1 2 3], ptr:0xc000090020, m1p:0xc0000a6008
+slice_param.go:9: sptr:0xc000090080, m1p:0xc0000a6008
+slice_param.go:11: after append, sptr:0xc000090080, m1p:0xc000096098
+slice_param.go:29: 
+sli:[1 12345 3],ptr:0xc000090020,m1p:0xc0000a6008 
+sli2:[1 12345 3 1],ptr:0xc000090060,m1p:0xc000096098
+slice_param.go:32: sli:[1 12345 3], sli2:[1 456 3 1]
+slice_param.go:34: 
+==================
+
+slice_param.go:36: slip:[1 2 3], ptr:0xc000090120, m1p:0xc0000a6088
+slice_param.go:17: sptr:0xc000090120,  m1p:0xc0000a6088
+slice_param.go:19: after append, sptr:0xc000090120, m1p:0xc000096128
+slice_param.go:38: slip:[1 12345 3 1], slip2:[1 12345 3 1]
+```
+
 
 ### 值类型
 
@@ -1224,6 +1306,10 @@ go get : git clone + go install
 * 时间格式化：
     - `tm2, _ := time.Parse("01/02/2006", "02/08/2015")`
         + 从字符串转为时间戳，第一个参数是格式，第二个是要转换的时间字符串
+    - `time.ParseInLocation()`
+        + 按指定时区格式化，`time.Parse()`是按UTC格式化
+        + `func ParseInLocation(layout, value string, loc *Location) (Time, error)`
+        + `*Location`可以送`time.Local`系统本地时区
 
 ```golang
 BeginTime := "20191126 145500"
