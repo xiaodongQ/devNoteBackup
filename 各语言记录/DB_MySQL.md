@@ -78,6 +78,7 @@
 * 客户端
     - `apt-get install mysql-client` 安装客户端(Ubuntu)
     - `sudo apt-get install libmysqlclient-dev` 若开发时需要用客户端连接，则需要该包
+    - centos下：`yum install mysql-devel` C/C++驱动
 
 ## linux mysql操作
 

@@ -759,6 +759,8 @@ estimated_document_count 使用该接口快速返回近似值
     mongocxx::query_exception   if the count operation fails.
     使用：xdcollection.estimated_document_count()
     对应终端js shell：db.collection.estimatedDocumentCount()
+    New in version 4.0.3.
+
 
 
 ## 内存问题
@@ -769,3 +771,7 @@ estimated_document_count 使用该接口快速返回近似值
     - 通过文件系统缓存，MongoDB的自动使用未被wiredtiger缓存或由其他进程使用所有可用内存。
     - 调整WiredTiger内部缓存的方法：`storage.wiredTiger.engineConfig.cacheSizeGB` 和 `--wiredTigerCacheSizeGB`
     - [Memory Use](https://docs.mongodb.com/v3.4/core/wiredtiger/index.html#memory-use)
+
+## 服务状态
+
+* `db.serverStatus()`
