@@ -239,3 +239,4 @@ select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 f
             * k2=2/k3=3/k2=2 and k3=3并不会命中索引，k1=1 and k3=3只会命中k1
             * 建立组合索引，必须把区分度高的字段放在前面
     - 对于相同的列查多个值，用`in`来替换`or`，e.g. `id=1 or id=2`调整为`id in(1,2)`
+    - 可以用`explain sql语句`来查看执行过程，`key`列可以看到本次是否用到索引，据此判断索引是否失效

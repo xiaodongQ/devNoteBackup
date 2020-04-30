@@ -2188,6 +2188,8 @@ void assert( int expression );
 * `std::condition_variable`
     - `#include <condition_variable>`
     - [C++11条件变量使用详解](https://blog.csdn.net/c_base_jin/article/details/89741247)
+        + 注意里面的例子，在linux下编译时，添加`-std=c++11 -lpthread`
+            * 不加`-pthread`会报错"Enable multithreading to use std::thread: Operation not permitted"
     - C++11引入，可以使用条件变量（condition_variable）实现多个线程间的同步操作；当条件不满足时，相关线程被一直阻塞，直到某种条件出现，这些线程才会被唤醒
     - API
         + 参考cpp reference：[std::condition_variable](https://zh.cppreference.com/w/cpp/thread/condition_variable)
@@ -2214,3 +2216,26 @@ void assert( int expression );
         + 并且管理这个锁 只能是 `std::unique_lock<std::mutex>` RAII模板类。
             * 以上两个类型的`wait`函数都在会阻塞时自动释放锁权限，即调用`unique_lock`的成员函数`unlock()`，以便其他线程能有机会获得锁，搜索："* `std::unique_lock`"
     - 
+
+## std::thread
+
+* std::thread
+    - cppreference: [std::thread](https://zh.cppreference.com/w/cpp/thread/thread)
+    - `<thread>` C++11起
+    - 类 thread 表示单个执行线程，线程在构造关联的线程对象时，立即开始执行
+        + 若线程函数抛异常(若不能开始线程则会抛`std::system_error`异常)，则调用 std::terminate
+    - 构造函数
+        + 参考链接中的示例演示了几种不同的构造函数及其用法：
+        + 默认构造：
+            * `thread() noexcept;`
+            * 使用默认构造创建的对象，并不表示线程
+        + 给线程函数传参时可按值和按引用传参(若按引用传值，则需要包装传入的值，使用`std::ref()`或`std::cref()`来包装获取引用)
+            * `explicit thread( Function&& f, Args&&... args );`
+            * 两个包装模板，返回参数的引用或者const引用，参考：[std::ref, std::cref](https://zh.cppreference.com/w/cpp/utility/functional/ref)
+        + 移动构造会转移原线程到新对象，原对象不再是线程了
+            * `thread( thread&& other ) noexcept;`
+        + 拷贝构造函数是被删除的，`= delete`
+            * `thread(const thread&) = delete;`
+            * thread 不可复制，没有两个`std::thread`对象可表示同一执行线程
+        + 参考：[thread构造函数](https://zh.cppreference.com/w/cpp/thread/thread/thread)
+    - `std::thread`对象可能处于不表示任何线程的状态，默认构造、被移动、 detach 或 join 后则不表示线程

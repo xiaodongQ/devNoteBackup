@@ -339,3 +339,19 @@ mysql_errno()
     Some functions such as mysql_fetch_row() do not set mysql_errno() if they succeed
 ```
 
+## binlog
+
+* binlog
+    - binlog是一个二进制格式的文件，用于记录用户对数据库更新的SQL语句信息，例如更改数据库表和更改内容的SQL语句都会记录到binlog里，但是对库表等内容的查询不会记录(`binlog.000035`形式命名)
+    - 默认情况下，binlog日志是二进制格式的，不能使用查看文本工具的命令（比如，cat，vi等）查看，而使用`mysqlbinlog`解析查看。
+    - 主要作用是用于数据库的主从复制及数据的增量恢复
+    - `show variables like 'log_bin';` 查看数据库是否开启binlog
+    - 可以在配置文件`my.cnf`中开启：
+        + `log-bin = 目录如/data/3306/mysql-bin`
+    - [MySQL Binlog详解](https://www.cnblogs.com/xhyan/p/6530861.html)
+* [初探 MySQL 的 Binlog](https://segmentfault.com/a/1190000003072963)
+    - Binlog描述了数据库的改动，如建表、数据改动等，也包括一些潜在改动，比如 DELETE FROM ran WHERE bing = luan，然而一条数据都没被删掉的这种情况
+    - 更新类操作多的话，binlog可能很大，此次了解binlog就是因为binlog快40GB，导致磁盘占满。。。
+
+* 查看每个数据库大小
+    - `select table_schema, concat(round(sum(data_length/1024/1024),2),'MB') as data from information_schema.tables group by table_schema;`
