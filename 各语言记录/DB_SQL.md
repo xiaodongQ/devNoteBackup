@@ -240,3 +240,19 @@ select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 f
             * 建立组合索引，必须把区分度高的字段放在前面
     - 对于相同的列查多个值，用`in`来替换`or`，e.g. `id=1 or id=2`调整为`id in(1,2)`
     - 可以用`explain sql语句`来查看执行过程，`key`列可以看到本次是否用到索引，据此判断索引是否失效
+* `case...when...end`语句
+    - `update salary set sex=case sex when 'm' then 'f' else 'm' end` 条件更新
+    - [627. 交换工资](https://leetcode-cn.com/problems/swap-salary/)
+* `mod(id, 2) = 1` 字段值为奇数，或`id%2=1`，`mod`效率更高
+* [181. 超过经理收入的员工](https://leetcode-cn.com/problems/employees-earning-more-than-their-managers/)
+    - `select a.Name as Employee from Employee a join Employee b on a.ManagerId=b.Id and a.Salary>b.Salary` 268ms
+    - `select a.Name as Employee from Employee a, Employee b where a.ManagerId=b.Id and a.Salary>b.Salary` 301ms
+        + 使用`join...on`，避免产生笛卡尔积，产生冗余的数据
+        + ON语句的执行是在JOIN语句之前，先会判断是否满足on再进行join
+        + 当两张表的数据量比较大，又需要连接查询时，应该使用 FROM table1 JOIN table2 ON xxx的语法，避免使用 FROM table1,table2 WHERE xxx 的语法，因为后者会在内存中先生成一张数据量比较大的笛卡尔积表，增加了内存的开销
+        + sql执行流程顺序：from->on->join->where->group by->select->having->order by->limit
+        + [SQL与笛卡尔积](https://juejin.im/post/5c1c5301e51d451cdc394d13)
+    - `select Name as Employee from Employee a where a.ManagerId is not null and a.Salary>(select Salary from Employee b where b.Id=a.ManagerId)` 779ms，这个方式太直线思维了。。。
+* [183. 从不订购的客户](https://leetcode-cn.com/problems/customers-who-never-order/)
+    - `select a.Name as Customers from Customers a left join Orders b on a.Id=b.CustomerId where b.CustomerId is null` 359ms，注意`on`后面再接`where`过滤，而不是用`and`作为`join...on`的条件
+    - `not in` 411ms
