@@ -256,3 +256,23 @@ select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 f
 * [183. 从不订购的客户](https://leetcode-cn.com/problems/customers-who-never-order/)
     - `select a.Name as Customers from Customers a left join Orders b on a.Id=b.CustomerId where b.CustomerId is null` 359ms，注意`on`后面再接`where`过滤，而不是用`and`作为`join...on`的条件
     - `not in` 411ms
+* [1179. 重新格式化部门表](https://leetcode-cn.com/problems/reformat-department-table/)
+    - 每个id在各个月份的收入，使用`case 列 when 列值 then 需要的列值 end`，配合内置函数
+
+```sql
+# Write your MySQL query statement below
+select id, 
+sum(case month when 'Jan' then revenue end) Jan_Revenue,
+sum(case month when 'Feb' then revenue end) Feb_Revenue,
+sum(case month when 'Mar' then revenue end) Mar_Revenue,
+sum(case month when 'Apr' then revenue end) Apr_Revenue,
+sum(case month when 'May' then revenue end) May_Revenue,
+sum(case month when 'Jun' then revenue end) Jun_Revenue,
+sum(case month when 'Jul' then revenue end) Jul_Revenue,
+sum(case month when 'Aug' then revenue end) Aug_Revenue,
+sum(case month when 'Sep' then revenue end) Sep_Revenue,
+sum(case month when 'Oct' then revenue end) Oct_Revenue,
+sum(case month when 'Nov' then revenue end) Nov_Revenue,
+sum(case month when 'Dec' then revenue end) Dec_Revenue 
+ from Department group by id
+```
