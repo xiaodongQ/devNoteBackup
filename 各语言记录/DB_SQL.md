@@ -276,3 +276,27 @@ sum(case month when 'Nov' then revenue end) Nov_Revenue,
 sum(case month when 'Dec' then revenue end) Dec_Revenue 
  from Department group by id
 ```
+
+* [196. 删除重复的电子邮箱](https://leetcode-cn.com/problems/delete-duplicate-emails/)
+    - 删除重复并保留最小的记录
+    - `delete p1 from Person p1,Person p2 where p1.Email=p2.Email and p1.Id>p2.Id` p1记录大于所有p2表Id的记录
+        + 1949ms
+    - `delete p1 from Person p1 inner join Person p2 on p1.Email=p2.Email where p1.Id>p2.Id` 用join快一点
+        + 1540ms
+    - `delete from Person where Id not in (select id from (select min(Id) as id from Person group by Email) as temp)` 
+        + 1177ms
+        + 先用group by找出每个email最小的id，作为一个临时表，再删除Person表中id不存在于这个临时表中的id的记录
+* [197. 上升的温度](https://leetcode-cn.com/problems/rising-temperature/)
+    - `select w1.Id from Weather w1 inner join Weather w2 on datediff(w1.RecordDate, w2.RecordDate)=1 and w1.Temperature > w2.Temperature`
+    - `datediff()`函数保证日期间隔，id和日期都不一定是按顺序递增的，可能id=1对应的日期晚于id=2的日期，所以不能依赖于id的顺序
+    - 前面参数减后面参数，`select datediff('2015-01-01', '2015-01-02')`返回-1，`select datediff('2015-01-02', '2015-01-01')`返回1
+* [596. 超过5名学生的课](https://leetcode-cn.com/problems/classes-more-than-5-students/)
+    - `select class from courses group by class having count(distinct student)>=5` 216ms, 34.41%
+    - 需要加上`distinct`，记录里面并没有保证同一个人选同一门课只有一条记录
+* [176. 第二高的薪水](https://leetcode-cn.com/problems/second-highest-salary/)
+    - `select (select distinct Salary from Employee order by Salary desc limit 1 offset 1) as SecondHighestSalary`
+        + 使用`limit...offset...`，为防止offset没有记录(null问题)，再用`select ...`，并用`as`对列命名
+        + 解决null问题，还可用`ifnull(sql, NULL)`来处理
+        + 206ms,15.41%
+    - `select max(Salary) SecondHighestSalary from Employee where Salary < (select max(Salary) from Employee)`
+        + 190ms,19.36%，上面的order by得先排序，更耗时
