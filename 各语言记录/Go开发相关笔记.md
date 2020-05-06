@@ -1035,6 +1035,68 @@ log.WithFields(log.Fields{
 }).Fatal("Failed to send event")
 ```
 
+### os包
+
+* os包
+    - [golang中os包用法](https://blog.csdn.net/chenbaoke/article/details/42494851)
+    - os包中实现了平台无关的接口，设计向Unix风格，但是错误处理是go风格
+    - 部分函数
+        + `func Chdir(dir string) error` 设置dir目录为当前目录
+        + `func Getwd() (dir string, err error)` 类似`pwd`
+        + `func Chown(name string, uid, gid int) error` 修改文件所有者
+        + `func Getpid() int` 获取进程id
+        + `func Getgid() int` 组id
+        + `func Hostname() (name string, err error)` 获取主机名
+        + `func Link(oldname, newname string) error` 创建硬连接
+            * `func Symlink(oldname, newname string) error` 创建软连接
+        + `func IsPathSeparator(c uint8) bool` 查看是否为路径分隔符号
+            * 在不同系统上，路径分隔符可能有差异(linux:`/`, windows:`\`)
+            * `if os.IsPathSeparator('\\') {...}` 在该系统下是路径分隔符则返回true
+        + `func Mkdir(name string, perm FileMode) error` 创建目录
+            * FileMode参数指定权限
+            * 创建一个已经存在的目录时会报错
+            * `func MkdirAll(path string, perm FileMode) error` 存在目录时，该函数创建不会报错
+        + `func Remove(name string) error` 删除文件或目录
+            * `func RemoveAll(path string) error` 删除目录及子目录和文件
+        + 文件操作
+            * `func Create(name string) (file *File, err error)` 
+                - 创建一个文件，文件mode是0666(读写权限)，
+                - 如果文件已经存在，则重新创建一个，原文件被覆盖，创建的新文件具有读写权限，其相当于`OpenFile`的快捷操作，
+                    + 等同于`OpenFile(name string, O_CREATE, 0666)`
+            * `func Open(name string) (file *File, err error)`
+                - 打开一个文件，返回文件描述符，该文件描述符只有只读权限．
+                - 相当于`OpenFile(name string, O_RDWR, 0)`
+            * `func OpenFile(name string, flag int, perm FileMode) (file *File, err error)`
+                - 指定文件权限和打开方式打开name文件或者create文件
+                - flag标志如下:
+                    + O_RDONLY：只读模式(read-only)
+                    + O_WRONLY：只写模式(write-only)
+                    + O_RDWR：读写模式(read-write)
+                    + O_APPEND：追加模式(append)
+                    + O_CREATE：文件不存在就创建(create a new file if none exists.)
+                    + `O_EXCL`：与 `O_CREATE` 一起用，构成一个新建文件的功能，它要求文件必须不存在(used with O_CREATE, file must not exist)
+                    + O_SYNC：同步方式打开，即不使用缓存，直接写入硬盘
+                    + O_TRUNC：打开并清空文件
+                - 至于操作权限perm，除非创建文件时才需要指定，不需要创建新文件时可以将其设定为0
+                    + 虽然go语言给perm权限设定了很多的常量，但是习惯上也可以直接使用数字，如0666(具体含义和Unix系统的一致)
+            * `func (f *File) Close() error` 关闭文件，使其不能够再进行i/o操作，其经常和defer一起使用
+            * `func (f *File) Fd() uintptr` 返回系统文件描述符，也叫做文件句柄
+            * `func (f *File) Name() string` 返回文件名字，与`file.Stat().Name()`等价
+            * `func (f *File) Read(b []byte) (n int, err error)` 
+                - 从文件f中读取len(b)长度的数据到b中，如果无错，则返回n和nil,否则返回读取的字节数n以及响应的错误
+                - `func (f *File) ReadAt(b []byte, off int64) (n int, err error)` 和`Read()`类似，可指定读取的开始位置
+            * `func (f *File) Write(b []byte) (n int, err error)` 将b中的数据写入f文件
+                - `func (f *File) WriteAt(b []byte, off int64) (n int, err error)` 从指定位置写入
+            * `func (f *File) WriteString(s string) (ret int, err error)` 将字符串s写入文件
+        + 进程操作
+            * `func FindProcess(pid int) (p *Process, err error)` 通过进程pid查找运行的进程，返回相关进程信息及error
+            * `StartProcess(name string, argv []string, attr *ProcAttr) (*Process, error)` 启动一个新的进程
+                - StartProcess是一个低层次的接口。os/exec包提供了高层次的接口
+            * `func (p *Process) Kill() error` 杀死进程并直接退出
+            * `func (p *Process) Release() error` 释放进程p的所有资源
+            * `func (p *Process) Signal(sig Signal) error` 发送一个信号给进程p
+            * `func (p *Process) Wait() (*ProcessState, error)` 等待进程退出，并返回进程状态和错误
+
 
 ### bytes.NewReader
 
@@ -1375,8 +1437,8 @@ string/[]byte  [0xE4, 0xB8, 0xAD]
     - t.Logf("%[1]x, %[1]s", s)  // 打印："e4b8ad, 中"，[1]指定第一个参数
 
 * 常用字符串函数(包)
-    - strings 包
-    - strconv 包
+    - strings包
+    - strconv包
 
 * 中文编码问题，gbk转utf
     - `go get github.com/axgle/mahonia` BSD协议
@@ -1395,7 +1457,7 @@ func ConvertToByte(src string, srcCode string, targetCode string) []byte {
 }
 ```
 
-### strings 包 和 strconv 包
+### strings包 和 strconv包
 
 * strings
     - 切割
@@ -1424,7 +1486,7 @@ string:=strconv.FormatInt(int64,10)
 ```
 
 
-## net 包
+## net包
 
 * net 包
     - net包提供编写一个网络客户端或者服务器程序的基本组件，无论两者间通信是使用TCP，UDP或者Unix domain sockets
@@ -1434,7 +1496,7 @@ string:=strconv.FormatInt(int64,10)
 
 * [《Go语言标准库》The Golang Standard Library by Example](https://books.studygolang.com/The-Golang-Standard-Library-by-Example/)
 
-## flag 包
+## flag包
 
 * flag 包
     - 参考：[1. 13.1 flag - 命令行参数解析](https://books.studygolang.com/The-Golang-Standard-Library-by-Example/chapter13/13.1.html#131-flag---%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90)
@@ -1442,10 +1504,10 @@ string:=strconv.FormatInt(int64,10)
         + 示例见参考链接，实现了一个执行`nginx -h`时，对-h参数的解析返回，可以指定其他种类参数(-h为是否存在`h`的bool类型)
     - 定义 flags 有两种方式
         + `flag.Xxx()`，其中 Xxx 可以是 Int、String 等；返回一个相应类型的指针
-            * `func Int(name string(标志名称), value int(默认值), usage string(使用提示)) *int(存放标志值) {xxx}`
+            * `func Int(name string(标志名称), value int(默认值), usage string(使用提示)) *int(返回存放标志值) {xxx}`
             * e.g. `var ip = flag.Int("flagname", 1234, "help message for flagname")`
         + `flag.XxxVar()`，将 flag 绑定到一个变量上
-            * `func IntVar(p *int(存放标志flag的值), name string, value int, usage string) {xxx}` 无返回值
+            * `func IntVar(p *int(存放标志flag的值), name string(名称), value int(默认值), usage string(提示)) {xxx}` 无返回值
             * e.g. `var flagvar int`, `flag.IntVar(&flagvar, "flagname", 1234, "help message for flagname")`
     - 在所有的 flag 定义完成之后，可以通过调用 `flag.Parse()` 进行*解析*，命令行flag的语法有如下三种形式
         + `-flag` // 只支持 bool 类型
@@ -1503,10 +1565,47 @@ and their dependencies
         + 安装`go-troch`：`go get github.com/uber/go-torch`
             * 会生成一个go-torch.exe(windows下)到$GOPATH/bin
     - 文件方式输出profile
-        + 手动调用`runtime/pprof`的API
+        + 手动调用`runtime/pprof`的API，结束后会生成一个文件
         + `go tool pprof [binary] [binary.prof]`
+    - 具体用法示例，见下面的章节：`## Go性能工具`
 
 * disruptor 框架
     - [高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)
         + Disruptor是一个高性能的线程间通信的框架，即在同一个JVM进程中的多线程间消息传递,由LMAX开发
     - [高性能的消息框架 go-disruptor](https://colobu.com/2016/07/22/using-go-disruptor/)
+
+## Go性能工具
+
+* pprof
+    - [Go pprof性能调优](https://my.oschina.net/u/4270922/blog/4262889)
+    - Go自带profiling的库
+        + 在计算机性能调试领域里，profiling 是指对应用程序的画像，画像就是应用程序使用 CPU 和内存的情况
+        + Go语言内置了获取程序的运行数据的工具，包括以下两个标准库：
+            * `runtime/pprof`  采集工具型应用运行数据进行分析
+            * `net/http/pprof` 采集服务型应用运行时数据进行分析
+        + pprof开启后，每隔一段时间（10ms）就会收集下当前的堆栈信息，获取各个函数占用的CPU以及内存资源；最后通过对这些采样数据进行分析，形成一个性能分析报告。
+            * 只应该在性能测试的时候才在代码中引入pprof
+    - Go语言项目中的性能优化主要有以下几个方面
+        + CPU profile
+            * 报告程序的 CPU 使用情况，按照一定频率去采集应用程序在 CPU 和寄存器上面的数据
+        + Memory Profile（Heap Profile）
+            * 报告程序的内存使用情况
+        + Block Profiling
+            * 报告 goroutines 不在运行状态的情况，可以用来分析和查找死锁等性能瓶颈
+        + Goroutine Profiling
+            * 报告 goroutines 的使用情况，有哪些 goroutine，它们的调用关系是怎样的
+    - 使用(runtime/pprof)
+        + CPU性能：`func StartCPUProfile(w io.Writer) error`
+            * 在测试结束的地方`pprof.StopCPUProfile()`，或者`defer pprof.StopCPUProfile()`测试整个函数
+            * 实现了`io.Writer`接口的结构体均可以作为入参，该interface中只有一个方法：`Write(p []byte) (n int, err error)`
+                - w可送一个文件句柄,`os.Create(filename)`创建
+        + Mem性能：`func WriteHeapProfile(w io.Writer) error`
+            * 写入前进行垃圾回收来获取最新统计 `runtime.GC()`
+    - 分析profile文件
+        + `go tool pprof profile文件`
+            * 会进入一个交互式界面，输入各命令来查看信息
+            * `top`
+                - 查看程序中占用CPU前n位(默认10)的函数，也可指定数量(`top3`/`top 3`)
+            * `list 函数名` 查看函数详情，各部分的消耗
+    
+
