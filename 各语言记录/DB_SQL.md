@@ -1,5 +1,16 @@
 ## 数据库
 
+* 关系型数据库遵循ACID规则
+    - 1、A (Atomicity) 原子性
+        + 事务里的所有操作要么全部做完，要么都不做
+    - 2、C (Consistency) 一致性
+        + 数据库要一直处于一致的状态，事务的运行不会改变数据库原本的一致性约束。
+        + 例如现有完整性约束a+b=10，如果一个事务改变了a，那么必须得改变b，使得事务结束后依然满足a+b=10，否则事务失败。
+    - 3、I (Isolation) 隔离性
+        + 指并发的事务之间不会互相影响
+    - 4、D (Durability) 持久性
+        + 指一旦事务提交后，它所做的修改将会永久的保存在数据库上，即使出现宕机也不会丢失。
+
 ### DML、DDL、DCL
 
 ```sql
@@ -206,6 +217,60 @@ select account,sum(profit>0) c1, count(*) c2 from deal group by account;
 # 算好占比
 select new.*, new.c1/new.c2 from (select account,sum(profit>0) c1, count(*) c2 from deal group by account) as new;
 ```
+
+## 视图
+
+* 视图(view)
+    - [12丨视图在SQL中的作用是什么，它是怎样工作的？](https://time.geekbang.org/column/article/105643)
+    - 视图作为一张虚拟表(视图不具有数据)，帮我们封装了底层与数据表的接口
+        + 它相当于是一张表或多张表的数据结果集。
+        + 视图的这一特点，可以帮我们简化复杂的 SQL 查询，比如在编写视图后，我们就可以直接重用它，而不需要考虑视图中包含的基础查询的细节
+    - 通常情况下，小型项目的数据库可以不使用视图，但是在大型项目中，以及数据表比较复杂的情况下，视图的价值就凸显出来了，它可以帮助我们把经常查询的结果集放到虚拟表中，提升使用效率
+    - 创建视图：`CREATE VIEW view_name AS SELECT column1, column2 FROM table WHERE condition`
+    - 当视图创建之后，它就相当于一个虚拟表，可以直接使用
+        + `SELECT * FROM player_above_avg_height` (`player_above_avg_height`是创建好的一个视图)
+        + 当我们创建好一张视图之后，还可以在它的基础上继续创建视图
+    - 修改视图：`ALTER VIEW view_name AS SELECT column1, column2 FROM table WHERE condition`
+    - 删除视图：`DROP VIEW view_name`
+
+## 存储过程
+
+* 存储过程(Stored Procedure)
+    - [13丨什么是存储过程，在实际项目中用得多么？](https://time.geekbang.org/column/article/106250)
+    - SQL 的存储过程和视图一样，都是对 SQL 代码进行封装，可以反复利用
+        + 不过它和视图不同，视图是虚拟表，通常不对底层数据表直接操作，而存储过程是程序化的 SQL，可以直接操作底层数据表，相比于面向集合的操作方式，能够实现一些更复杂的数据处理
+    - 存储过程可以说是由SQL语句和流控制语句构成的语句集合，它和我们之前学到的函数一样，可以接收输入参数，也可以返回输出参数给调用者，返回计算结果
+        + 一旦存储过程被创建出来，使用它就像使用函数一样简单，我们直接通过调用存储过程名即可
+        + 流控制语句
+            * `BEGIN…END`，中间的语句以`;`作为结束符
+                - `DECLARE` 用来声明变量，使用于 BEGIN…END 语句中间，而且需要在其他语句使用之前进行变量的声明
+                - `SET` 赋值语句，用于对变量进行赋值
+                - `SELECT…INTO` 把从数据表中查询的结果存放到变量中，也就是为变量赋值
+            * `IF…THEN…ENDIF` 条件判断语句
+            * `CASE` 用于多条件的分支判断
+                - `CASE WHEN expression1 THEN ... `
+                       `WHEN expression2 THEN ... `
+                       `... `
+                       `ELSE ` --ELSE语句可以加，也可以不加。加的话代表的所有条件都不满足时采用的方式。
+                  `END`
+            * `LOOP、LEAVE 和 ITERATE` LOOP 是循环语句，使用 LEAVE 可以跳出循环，使用 ITERATE 则可以进入下一次循环
+            * `REPEAT…UNTIL…END REPEAT` 循环语句
+            * `WHILE…DO…END WHILE` 循环语句
+    - 创建：`CREATE PROCEDURE 存储过程名称([参数列表]) BEGIN 需要执行的语句 END`
+        + 使用方式：`CALL add_num(50);`
+    - 删除存储过程：`DROP PROCEDURE`
+    - 更新：`ALTER PROCEDURE`
+    - 优点
+        + 存储过程可以一次编译多次使用
+        + 其次它可以减少开发工作量
+        + 还有一点，存储过程的安全性强，我们在设定存储过程的时候可以设置对用户的使用权限，这样就和视图一样具有较强的安全性
+        + 最后它可以减少网络传输量，因为代码封装到存储过程中，每次使用只需要调用存储过程即可，这样就减少了网络传输量
+        + 基于上面这些优点，不少大公司都要求大型项目使用存储过程，比如微软、IBM 等公司。但是国内的阿里并不推荐开发人员使用存储过程
+    - 存储过程虽然有诸如上面的好处，但缺点也是很明显的
+        + 它的可移植性差，存储过程不能跨数据库移植，比如在 MySQL、Oracle 和 SQL Server 里编写的存储过程，在换成其他数据库时都需要重新编写
+        + 其次调试困难，只有少数 DBMS 支持存储过程的调试
+        + 此外，存储过程的版本管理也很困难，比如数据表索引发生变化了，可能会导致存储过程失效
+        + 最后它不适合高并发的场景，高并发的场景需要减少数据库的压力，有时数据库会采用分库分表的方式，而且对可扩展性要求很高，在这种情况下，存储过程会变得难以维护，增加数据库的压力，显然就不适用了
 
 ## LeetCode
 
