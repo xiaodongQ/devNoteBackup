@@ -1601,11 +1601,21 @@ and their dependencies
                 - w可送一个文件句柄,`os.Create(filename)`创建
         + Mem性能：`func WriteHeapProfile(w io.Writer) error`
             * 写入前进行垃圾回收来获取最新统计 `runtime.GC()`
-    - 分析profile文件
+    - 分析profile文件(使用`go tool pprof`)
         + `go tool pprof profile文件`
-            * 会进入一个交互式界面，输入各命令来查看信息
+            * 会进入一个交互式界面，输入各命令来查看相关统计信息
             * `top`
                 - 查看程序中占用CPU前n位(默认10)的函数，也可指定数量(`top3`/`top 3`)
-            * `list 函数名` 查看函数详情，各部分的消耗
+                - top的结果：`flat  flat%   sum%        cum   cum%`
+                    + flat：当前函数占用CPU的耗时
+                    + flat%:当前函数占用CPU的耗时百分比
+                    + sum%：函数占用CPU的耗时累计百分比
+                    + cum：当前函数加上调用当前函数的函数占用CPU的总耗时
+                    + cum%：当前函数加上调用当前函数的函数占用CPU的总耗时百分比
+            * `list 函数名` 查看函数详情，可查看函数各部分的消耗
+                - 可以直接查看自己代码里的函数
+    - 图形化展示
+        + 安装`graphviz`
+            * 若windows下，将graphviz安装目录下的bin文件夹添加到Path环境变量中
     
 
