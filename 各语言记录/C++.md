@@ -358,6 +358,11 @@ li.remove(99);   // 除去所有等于99的元素：
 
 ## list
 
+* 删除成员
+    - `clist.erase(iter)` 迭代器
+    - `clist.erase(clist.begin(),clist.end());` 删除所有
+    - `clist.clear()` 从容器擦除所有元素。此调用后 size() 返回零
+ 
 ```cpp
 遍历，使用迭代器，不能使用下标
 iter = list1.begin(); != end(); iter++
@@ -371,6 +376,12 @@ iter = std::find(List.begin(),List.end(), info);  查找
 ```
 
 ## map
+
+* 删除成员
+    - `cmap.erase("bfff");` key
+    - `cmap.erase(iter);` 迭代器
+    - `cmap.erase(cmap.begin(),cmap.end());` 删除所有
+    - `cmap.clear()`从容器擦除所有元素。此调用后 size() 返回零
 
 迭代器遍历
 erase(iter)前，
@@ -948,6 +959,41 @@ C++是从14之后的版本才正式支持共享互斥量，也就是实现读写
 * decltype 4.8.1
     - 检查实体的声明类型，或表达式的类型和值类别。
 
+### decltype
+
+* `decltype`
+    - [C++11特性：decltype关键字](https://www.cnblogs.com/QG-whz/p/4952980.html)
+    - `typeid`
+        + `typeid`用于查询一个变量的类型，这种类型查询在运行时进行
+        + RTTI机制为每一个类型产生一个`type_info`类型的数据，而typeid查询返回的变量相应`type_info`数据，通过`name`成员函数返回类型的名称
+        + RTTI会导致运行时效率降低，且在泛型编程中，我们更需要的是编译时就要确定类型，RTTI并无法满足这样的要求
+        + 编译时类型推导的出现正是为了泛型编程，在非泛型编程中，我们的类型都是确定的，根本不需要再进行推导
+    - decltype与auto关键字一样，用于进行编译时类型推导
+        + decltype的类型推导并不是像auto一样是从变量声明的初始化表达式获得变量的类型，
+        + 而是总是以一个普通表达式作为参数，返回该表达式的类型,
+        + 而且decltype并不会对表达式进行求值
+        + e.g. `int i = 4;`, `decltype(i) a;` //推导结果为int。a的类型为int
+    - 与`using`/`typedef`合用，用于定义类型
+        + C++11里面，推荐使用using，而非typedef
+            * using 可以用于模板别名，typedef 不可用于模板别名，且using可读性较好
+                - 可读性e.g.
+                    + `typedef void (*FP) (int, const std::string&);`
+                    + `using FP = void (*) (int, const std::string&);`
+                - 模板中使用e.g.
+                    + `template <typename T>`, `using Vec = MyVector<T, MyAlloc<T>>;`, 使用: `Vec<int> vec;`
+                    + 而用typedef，`typedef MyVector<T, MyAlloc<T>> Vec;`，编译的时候，将会得到类似：error: a typedef cannot be a template的错误信息
+            * [Effective Modern C++ Note 02](https://zhuanlan.zhihu.com/p/21264013)
+        + e.g. `using size_t = decltype(sizeof(0));`
+        + e.g. `typedef decltype(vec.begin()) vectype;`
+    - 泛型编程中结合auto，用于追踪函数的返回值类型
+        + `template <typename _Tx, typename _Ty>`
+            * `auto multiply(_Tx x, _Ty y)->decltype(_Tx*_Ty) {...}`
+    - 推导规则
+        + 如果e是一个没有带括号的标记符表达式或者类成员访问表达式，那么的decltype（e）就是e所命名的实体的类型
+        + 否则 ，假设e的类型是T，如果e是一个将亡值，那么decltype（e）为T&&
+        + 否则，假设e的类型是T，如果e是一个左值，那么decltype（e）为T&
+        + 否则，假设e的类型是T，则decltype（e）为T
+
 ### C各版本
 
 参考：
@@ -1105,6 +1151,9 @@ K&R C语言到ANSI/ISO标准C语言 (C89/C90)的改进包括：
             * 用途：改变指针或引用的类型(别的类型指针)、将指针或引用转换为一个足够长度的整形、将整型转换为指针或引用类型
                 - 可以把一个指针转换成一个整数
                 - 也可以把一个整数转换成一个指针
+
+## 虚函数表
+
 * 虚函数表
     - [C++ 虚函数表解析](https://blog.csdn.net/haoel/article/details/1948051/)
         + 注意参考链接中的示例是基于32位系统的，虚函数地址表成员强转为`(int*)`类型是ok的(地址表里都保存int 4字节的地址)，但是对于64位系统，`(int*)`就有问题了，应该是`(long*)`，虚函数表中保存的指针为8字节数据
@@ -2087,6 +2136,7 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
 
 * 函数模板的写法如下：
     - `template <class 形参名1, class 形参名2, ...>`
+        + 建议还是用typename：`template <typename 形参名1, typename 形参名2, ...>`
     - `class` 关键字也可以用 `typename` 关键字替换 (在这里typename 和class没区别)
         + `template <typename 形参名1, typename 形参名2, ...>`
     - 编译器由模板自动生成函数时，会用具体的类型名对模板中所有的类型参数进行替换，其他部分则原封不动地保留。
@@ -2201,7 +2251,7 @@ void assert( int expression );
                 - 其中Predicate为模板类`template< class Predicate >`
                 - lock 参考：必须为当前线程所锁定
                 - pred 参数：判定函数，若应该继续等待则返回false，即达到true的条件后就退出等待
-                    + 判定函数的签名应等价于：`bool pred();`
+                    + 判定函数的签名应等价于：`bool pred();` (可以使用lambda表达式)
                     + 中文cpp reference上此处翻译有点不通顺，参考en：[std::condition_variable::wait](https://en.cppreference.com/w/cpp/thread/condition_variable/wait)
                 - 该`wait`等价于：`while(!pred()) { wait(lock);}`
             * 调用该函数前，需要获得锁
@@ -2247,7 +2297,7 @@ void producer_thread(int thread_id)
          //加锁
          std::unique_lock <std::mutex> lk(g_cvMutex);
          //当队列未满时，继续添加数据
-         g_cv.wait(lk, [](){ return g_data_deque.size() <= MAX_NUM; });
+         g_cv.wait(lk, [](){ return g_data_deque.size() <= MAX_NUM; });  //lambda表达式
          g_next_index++;
          g_data_deque.push_back(g_next_index);
          std::cout << "producer_thread: " << thread_id << " producer data: " << g_next_index;
@@ -2307,6 +2357,78 @@ int main()
     return 0;
 }
 ```
+
+## lambda表达式
+
+* lambda
+    - [C++11 lambda表达式](http://c.biancheng.net/view/3741.html)
+    - lambda 表达式是 C++11 最重要也最常用的一个特性之一，lambda 来源于函数式编程的概念
+    - 优点
+        + 声明式编程风格：就地匿名定义目标函数或函数对象，不需要额外写一个命名函数或者函数对象。以更直接的方式去写程序，好的可读性和可维护性
+        + 简洁：不需要额外再写一个函数或者函数对象，避免了代码膨胀和功能分散，让开发者更加集中精力在手边的问题，同时也获取了更高的生产率
+        + 在需要的时间和地点实现功能闭包，使程序更灵活
+    - 概念和基本用法
+        + lambda 表达式定义了一个匿名函数，并且可以捕获一定范围内的变量
+            * 语法形式：`[ capture ] ( params ) opt -> ret { body; };`
+                - capture 是捕获列表
+                - params 是参数表
+                - opt 是函数选项
+                - ret 是返回值类型
+                - body是函数体
+            * e.g. `auto f = [](int a) -> int { return a + 1; };` 定义了一个功能闭包，用来将输入加 1 并返回
+        + 返回值
+            * 返回值是通过`返回类型后置`语法来定义的
+                - [C++返回值类型后置（跟踪返回值类型）](http://c.biancheng.net/view/3727.html)
+                - 返回类型后置（trailing-return-type，又称跟踪返回类型），C++11新增，将 decltype 和 auto 结合起来完成返回值类型的推导
+                    + `template <typename T, typename U>`
+                    + `auto add(T t, U u) -> decltype(t + u) {...}`
+                - 返回值类型后置语法，是为了解决函数返回值类型依赖于参数而导致难以确定返回值类型的问题
+                - 有了这种语法以后，对返回值类型的推导就可以用清晰的方式（直接通过参数做运算）描述出来，而不需要像 C++98/03 那样使用晦涩难懂的写法
+                - 关于decltype关键字，查看章节：`### decltype`
+            * C++11中允许省略lambda表达式的返回值(很多时候返回值比较明显)
+                - `auto f = [](int a){ return a + 1; };`
+                - 这样编译器就会根据 return 语句自动推导出返回值类型
+            * 需要注意的是，初始化列表不能用于返回值的自动推导
+                - `auto x1 = [](int i){ return i; };  // OK: return type is int`
+                - `auto x2 = [](){ return { 1, 2 }; };  // error: 无法推导出返回值类型`
+            * lambda 表达式在没有参数列表时，参数列表是可以省略的，下面的写法都是正确的：
+                - `auto f1 = [](){ return 1; };`
+                - `auto f2 = []{ return 1; };  // 省略空参数表`
+        + 可以通过捕获列表捕获一定范围内的变量(即上面语法中的`[capture]`)
+            - 捕获含义为在lambda函数体里是否能使用被捕获的变量
+            - lambda 表达式的捕获列表精细地控制了 lambda 表达式能够访问的外部变量，以及如何访问这些变量
+            - `[]` 不捕获任何变量
+                + `auto f1 = []{ return a; };` // *error*，没有捕获外部变量
+                    * lambda表达式外定义了：`int a = 0, b = 1;`
+            - `[&]` 捕获外部作用域中所有变量，并作为引用在函数体中使用（按引用捕获）
+                + `auto f2 = [&]{ return a++; };` // OK，捕获所有外部变量，并对a执行自加运算
+            - `[=]` 捕获外部作用域中所有变量，并作为副本在函数体中使用（按值捕获）
+                + `auto f3 = [=]{ return a; };`   // OK，捕获所有外部变量，并返回a
+                + `auto f4 = [=]{ return a++; };` // *error*，a是以复制方式捕获的，无法修改
+            - `[=，&foo]` 按值捕获外部作用域中所有变量，并按引用捕获 foo 变量
+                + `auto f6 = [a, &b]{ return a + (b++); };` // OK，捕获a和b的引用，并对b做自加运算
+                + `auto f7 = [=, &b]{ return a + (b++); };` // OK，捕获所有外部变量和b的引用，并对b做自加运算
+            - `[bar]` 按值捕获 bar 变量，同时不捕获其他变量
+                + `auto f5 = [a]{ return a + b; };`  // *error*，没有捕获变量b
+            - `[this]` 捕获当前类中的 this 指针，让 lambda 表达式拥有和当前类成员函数同样的访问权限
+                + 如果已经使用了 & 或者 =，就默认添加此选项。捕获 this 的目的是可以在 lamda 中使用当前类的成员函数和成员变量
+                + `auto x4 = [this]{ return i_; };` // OK，捕获this指针(i_定义在类里面)
+            - lambda 表达式的延迟调用(容易出错)
+                + `int a=0;`, `auto f = [=]{ return a; };`, `a += 1;`, `cout << f() << endl;`，此时a还是0
+                + 原因：在捕获的一瞬间，a 的值就已经被复制到f中了，之后 a 被修改，但此时 f 中存储的 a 仍然还是捕获时的值，因此，最终输出结果是 0
+            - 定义lambda表达式定义时，此时所有被捕获的外部变量均被复制了一份存储在 lambda 表达式变量中
+                + 如果希望 lambda 表达式在调用时能够即时访问外部变量，我们应当使用引用方式捕获
+                + 或者使用`mutable`显式指定lambda为mutable
+                    * `auto f1 = [=]{ return a++; };`            // *error*，修改按值捕获的外部变量
+                    * `auto f2 = [=]() mutable { return a++; };` // OK，mutable
+                        - *注意* 被 mutable 修饰的 lambda 表达式就算没有参数也要写明参数列表
+    - lambda 表达式的类型
+        + lambda 表达式的类型在 C++11 中被称为“闭包类型（Closure Type）”
+        + 可以认为它是一个带有 `operator()` 的类，即*仿函数*
+        + 对于没有捕获任何变量的 lambda 表达式，还可以被转换成一个普通的函数指针(捕获了则不行)
+            * `using func_t = int(*)(int);` (入参int返回值int的函数指针)
+            * `func_t f = [](int a){ return a; };`, `f(123);`
+    - lambda表达式的价值在于，就地封装短小的功能闭包，可以极其方便地表达出我们希望执行的具体操作，并让上下文结合得更加紧密
 
 ## std::thread
 
