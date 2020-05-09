@@ -1577,7 +1577,7 @@ and their dependencies
 ## Go性能工具
 
 * pprof
-    - [Go pprof性能调优](https://my.oschina.net/u/4270922/blog/4262889)
+    - [Go pprof性能调优](https://www.cnblogs.com/Dr-wei/p/11742414.html)
     - Go自带profiling的库
         + 在计算机性能调试领域里，profiling 是指对应用程序的画像，画像就是应用程序使用 CPU 和内存的情况
         + Go语言内置了获取程序的运行数据的工具，包括以下两个标准库：
@@ -1616,6 +1616,11 @@ and their dependencies
                 - 可以直接查看自己代码里的函数
     - 图形化展示
         + 安装`graphviz`
-            * 若windows下，将graphviz安装目录下的bin文件夹添加到Path环境变量中
+            * 想要查看图形化的界面首先需要安装graphviz图形化工具
+            * 若windows下，将graphviz安装目录下的bin文件夹添加到Path环境变量中，`dot -version`验证是否安装ok
+        + 火焰图和`go-torch`
+            * go-torch是 uber 开源的一个工具，可以直接读取 golang profiling 数据，并生成一个火焰图的 svg 文件
+                - go-torch安装：`go get -v github.com/uber/go-torch`
+            * 火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容
     
 

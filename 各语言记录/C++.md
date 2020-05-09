@@ -974,7 +974,7 @@ C++是从14之后的版本才正式支持共享互斥量，也就是实现读写
         + 而且decltype并不会对表达式进行求值
         + e.g. `int i = 4;`, `decltype(i) a;` //推导结果为int。a的类型为int
     - 与`using`/`typedef`合用，用于定义类型
-        + C++11里面，推荐使用using，而非typedef
+        + C++11里面，**推荐使用using**，而非typedef
             * using 可以用于模板别名，typedef 不可用于模板别名，且using可读性较好
                 - 可读性e.g.
                     + `typedef void (*FP) (int, const std::string&);`
@@ -2256,6 +2256,11 @@ void assert( int expression );
                 - 该`wait`等价于：`while(!pred()) { wait(lock);}`
             * 调用该函数前，需要获得锁
         + `wait_for` 阻塞当前线程，直到条件变量被唤醒，或到指定时限时长后结束阻塞
+            * `std::cv_status wait_for( std::unique_lock<std::mutex>& lock, const std::chrono::duration<Rep, Period>& rel_time);` (其中Rep和Period都是模板的类型参数)
+                - 若超出时限，则返回值为`std::cv_status::timeout`，否则为`std::cv_status::no_timeout`
+            * `bool wait_for( std::unique_lock<std::mutex>& lock, const std::chrono::duration<Rep, Period>& rel_time, Predicate pred);` 相对上面的重载多了一个判定函数模板参数，且返回值为bool
+                - 若超出时限后，判定函数pred仍然为false，则返回false，否则为true
+            * [wait_for](https://zh.cppreference.com/w/cpp/thread/condition_variable/wait_for)
     - 利用线程间共享的全局变量进行同步，主要包括两个动作
         + 一个线程因等待"条件变量的条件成立"而挂起；
             * 等待条件成立使用的是`condition_variable类`成员`wait`、`wait_for` 或 `wait_until`
@@ -2357,6 +2362,183 @@ int main()
     return 0;
 }
 ```
+
+* spdlog里实现的一个多生产者多消费者阻塞队列(multi producer-multi consumer blocking queue)
+    - [mpmc_blocking_q](https://github.com/gabime/spdlog/blob/v1.x/include/spdlog/details/mpmc_blocking_q.h)
+    - 源码如下(截取删除了mingw下的代码块，不同之处是加锁的范围不同，在mingw中过早释放貌似会有死锁)：
+        + `circular_q`类实现了一个基于vector的循环队列，[circular_q.h源码](https://github.com/gabime/spdlog/blob/v1.x/include/spdlog/details/circular_q.h)
+        + 另外spdlog中[details](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog/details)目录下，还有不少值得分析学习的实现
+            * 新建线程通过条件变量定期执行回调函数的功能类：[periodic_worker.h](https://github.com/gabime/spdlog/blob/v1.x/include/spdlog/details/periodic_worker.h)
+
+* mpmc_blocking_q.h源码
+
+```cpp
+#include "spdlog/details/circular_q.h"
+
+#include <condition_variable>
+#include <mutex>
+
+namespace spdlog {
+namespace details {
+
+template<typename T>
+class mpmc_blocking_queue
+{
+public:
+    using item_type = T;
+    explicit mpmc_blocking_queue(size_t max_items)
+        : q_(max_items)
+    {
+    }
+
+#ifndef __MINGW32__
+    // try to enqueue and block if no room left
+    void enqueue(T &&item)
+    {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+            // 为队列full时等待，直到不为full
+            pop_cv_.wait(lock, [this] { return !this->q_.full(); });
+            // 传入的是右值引用
+            q_.push_back(std::move(item));
+        }
+        push_cv_.notify_one();
+    }
+
+    // enqueue immediately. overrun oldest message in the queue if no room left.
+    void enqueue_nowait(T &&item)
+    {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+            q_.push_back(std::move(item));
+        }
+        push_cv_.notify_one();
+    }
+
+    // try to dequeue item. if no item found. wait upto timeout and try again
+    // Return true, if succeeded dequeue item, false otherwise
+    bool dequeue_for(T &popped_item, std::chrono::milliseconds wait_duration)
+    {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+            if (!push_cv_.wait_for(lock, wait_duration, [this] { return !this->q_.empty(); }))
+            {
+                return false;
+            }
+            q_.pop_front(popped_item);
+        }
+        pop_cv_.notify_one();
+        return true;
+    }
+
+#else
+    // apparently mingw deadlocks if the mutex is released before cv.notify_one(),
+    // so release the mutex at the very end each function.
+#endif
+
+    size_t overrun_counter()
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        return q_.overrun_counter();
+    }
+
+private:
+    std::mutex queue_mutex_;
+    std::condition_variable push_cv_;
+    std::condition_variable pop_cv_;
+    spdlog::details::circular_q<T> q_;
+};
+} // namespace details
+} // namespace spdlog
+```
+
+* periodic_worker.h源码
+    - [periodic_worker.h](https://github.com/gabime/spdlog/blob/v1.x/include/spdlog/details/periodic_worker.h)
+
+```cpp
+#include <chrono>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <thread>
+namespace spdlog {
+namespace details {
+
+class periodic_worker
+{
+public:
+    // 定期要执行的工作
+    // 调用该函数后，类成员active_为true，此后每隔一定间隔interval执行一次回调函数callback_fun，
+    // 若类成员active_变为false，则退出线程(不过类中只有析构的时候才会置为false)
+    // 该类不允许拷贝构造和赋值，所以一直会定期执行，直到类的生命周期结束
+    periodic_worker(const std::function<void()> &callback_fun, std::chrono::seconds interval)
+    {
+        // 传入定期间隔要>0秒，否则退出函数，不继续下面的创建线程
+        // 此处会改变成员变量active_，感觉加个锁比较合适
+        active_ = (interval > std::chrono::seconds::zero());
+        if (!active_)
+        {
+            return;
+        }
+
+        // 创建线程
+        // 使用lambda表达式定义一个匿名函数，捕获this并按值捕获函数传入的两个参数
+        worker_thread_ = std::thread([this, callback_fun, interval]() {
+            // 使用for形式的死循环，便于后续扩展
+            for (;;)
+            {
+                std::unique_lock<std::mutex> lock(this->mutex_);
+                // std::condition_variable::wait_for和wait的差别是：wait_for多了一个超时触发条件，达到超时也会结束等待，并需根据返回值区分处理
+                // 判定函数返回true就退出等待
+                // 分情况处理：
+                    // 未达到超时的情况下：判定函数pred返回true (即active_为false)，则退出等待且wait_for返回值为true，
+                        // 进入if语句块执行return，退出线程
+                        // (这是由于wait_for到达时限时若pred仍然是false才返回false，其他情况都返回true，所以此处未到超时情况判定为true)
+                    // 达到超时的情况下，则要再分支判断：
+                        // 若pred判定为false(此处即active为true)，则wait_for返回false，不进入if语句块，往下执行callback_fun()回调
+                        // 若pred判定为true(此处即active为false)，则执行return退出线程
+                if (this->cv_.wait_for(lock, interval, [this] { return !this->active_; }))
+                {
+                    return; // active_ == false, so exit this thread
+                }
+                // 执行回调函数
+                callback_fun();
+            }
+        });
+    }
+
+    periodic_worker(const periodic_worker &) = delete;
+    periodic_worker &operator=(const periodic_worker &) = delete;
+
+    // stop the worker thread and join it
+    ~periodic_worker()
+    {
+        if (worker_thread_.joinable())
+        {
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                active_ = false;
+            }
+            // 会解阻塞一个等待线程
+            cv_.notify_one();
+            worker_thread_.join();
+        }
+    }
+
+private:
+    bool active_;
+    std::thread worker_thread_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+};
+} // namespace details
+} // namespace spdlog
+```
+
+
+* 一个多生产者-多消费者的、无锁的 并发队列 (基于C++11)
+    - star:4.4k fork:934 (20200509)
+    - [cameron314/concurrentqueue](https://github.com/cameron314/concurrentqueue)
 
 ## lambda表达式
 
