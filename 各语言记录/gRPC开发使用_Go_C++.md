@@ -222,6 +222,18 @@ for {
         * 类似本地方法一样调用方法：`Status status = stub_->GetFeature(&context, point, feature);`
         * service定义：`rpc GetFeature(Point) returns (Feature) {}`
         * 调用：`Status status = stub_->GetFeature(&context, point, feature);`
+        * 注意：服务端实现时，生成的代码入参为指针，而客户端调用时，送的是引用
+        * 注意：`grpc::Status` 是一个类，而不是一个枚举值
+            - `bool ok() const { return code_ == StatusCode::OK; }`
+                + 判断是否调用正常
+            - `StatusCode error_code() const { return code_; }`
+                + 调用返回的错误码
+            - `grpc::string error_message() const { return error_message_; }`
+                + 调用返回的错误信息
+            - `grpc::string error_details() const { return binary_error_details_; }`
+                + 返回的详细信息(通常是`google.rpc.Status`序列化后的信息)
+            - [Status定义](https://grpc.github.io/grpc/cpp/grpcpp_2impl_2codegen_2status_8h_source.html)
+            - `StatusCode::OK`才是枚举，[StatusCode枚举值](https://grpc.github.io/grpc/cpp/namespacegrpc.html#aff1730578c90160528f6a8d67ef5c43baf6f3078af147d683afc70e09695c7a65)
     + 流式的RPC
         * [这几种类型的service示例](https://grpc.io/docs/tutorials/basic/cpp/)
         * rpc service 定义：[server](https://grpc.io/docs/tutorials/basic/cpp/#server)

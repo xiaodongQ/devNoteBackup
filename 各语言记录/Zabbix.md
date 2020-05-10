@@ -157,6 +157,7 @@
     + 安装 Agent
         * 安装：`yum install zabbix-agent -y`
         * 启动：`service zabbix-agent start`
+        * 设置开机启动：`systemctl enable zabbix-agent`
         * Ubuntu 18.04 (bionic)(监测ubuntu的主机，需要安装agent):
             - `apt install zabbix-agent`
             - `service zabbix-agent start` (`systemctl list-unit-files`查看zabbix-agent.service是自动开机启动的)

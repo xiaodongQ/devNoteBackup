@@ -11,6 +11,12 @@
     - 下载并解压到/usr/local，`tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz`
     - 添加环境变量(~/.bashrc或用zsh时：~/.zshrc)，`export PATH=$PATH:/usr/local/go/bin`
     - 测试`go version` 查看版本得到 `go version go1.13.5 linux/amd64`
+    - CentOS使用yum安装
+        + [使用yum安装Go(Golang)](https://cloud.tencent.com/developer/article/1478660)
+        + 直接`yum install golang`，发现找不到包，则配置下源
+            * `rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO`
+            * `curl -s https://mirror.go-repo.io/centos/go-repo.repo | tee /etc/yum.repos.d/go-repo.repo`
+        + `yum install golang`
 * `GOPATH`环境变量
     - [The GOPATH environment variable](https://golang.org/doc/code.html#Workspaces)
     - `go help gopath` 查看说明信息
@@ -1254,13 +1260,73 @@ type Student struct {
 
 ### go testing
 
-1. 文件名必须以xx_test.go命名
-2. 方法必须是Test[^a-z]开头
-3. 方法参数必须 `t *testing.T`
+* `go test`
+    - [go test命令（Go语言测试命令）完全攻略](http://c.biancheng.net/view/124.html)
+    - Go语言拥有一套单元测试和性能测试系统，仅需要添加很少的代码就可以快速测试一段需求代码
+        + 单元测试（unit testing），是指对软件中的最小可测试单元进行检查和验证
+    - **单元测试**
+        + `func TestXxx (t *testing.T)`
+        + 要求：
+            * 1. 文件名必须以`xxx_test.go`形式命名(`_test.go`结尾)
+            * 2. 方法必须是`Test`开头(`Test[^a-z]`，即Test后面接的首字母不能是小写)
+            * 3. 方法参数必须 `t *testing.T`
+        + 参数
+            * 默认的情况下，go test命令不需要任何的参数，它会自动把你源码包下面所有 test 文件测试完毕，当然也可以带上参数，列出几个常用参数：
+            * `-bench regexp` 执行相应的 benchmarks，例如 `-bench=.`；
+            * `-cover` 开启测试覆盖率；
+            * `-run regexp` 只运行 regexp 匹配的函数，例如 -run=Array 那么就执行包含有 Array 开头的函数；
+            * `-v` 显示测试的详细命令
+        + 测试用例文件不会参与正常源码编译，不会被包含到可执行文件中
+        + 测试用例文件使用`go test`指令来执行，没有也不需要 main() 作为函数入口
+            * `go test helloworld_test.go`
+            * `go test -run=TestPrintInfo`
+            * `go test -run TestA`
+                - 注意此处会匹配`TestA`开头的所有单元测试用例，支持正则表达式，`TestA$`则只测试`TestA`
+                - 也可以同时指定哪个文件：`go test -run TestA func_test.go`，
+                    + 如果`_test.go`文件会调用别的文件则需要一并带上，放`_test.go`文件后面
+            * 所有在以_test结尾的源码内以Test开头的函数会自动被执行
+        + 每个测试用例可能*并发执行*，使用 `testing.T` 提供的日志输出可以保证日志跟随这个测试上下文一起打印输出
+            * `t.Log/t.Logf/t.Error/t.Errorf/t.Fatal/t.Fatalf`
+        + 测试用例时，可以不传入 *testing.T 参数(不是指定义时不传)
+    - **基准测试**
+        + 可以测试一段程序的运行性能及耗费 CPU 的程度
+        + Go语言中提供了基准测试框架，使用方法类似于单元测试，使用者无须准备高精度的计时器和各种分析工具，基准测试本身即可以打印出非常标准的测试报告
+        + `func BenchmarkXXX(b *testing.B)`
+        + 要求：
+            * 文件名以 `_test.go`结尾
+            * 方法名以 `Benchmark` 开头，后面的首字母不能小写(和单元测试类似)
+            * 方法参数为 `b *testing.B`
+        + `go test -v -bench=. benchmark_test.go` 开启基准测试
+            * `-bench=.` 表示文件里的所有基准测试，类似单元测试的`-run`参数
+                - `go test`不会默认执行基准/压力测试的函数，如要要执行，加上`-bench`参数
+                - **注意**：Windows下使用时，写为`-bench="."`，否则测试不到用例
+                - 和`-run`类似，`-bench 正则表达式`可进行方法名匹配
+            * 结果示例：`BenchmarkAdd-12         20000000               130 ns/op`
+                - 各列分别为：
+                - `BenchmarkAdd-12` 表示基准测试名称、
+                - `20000000` 表示测试的次数(即testing.B 结构中提供给程序使用的 N)、
+                - `130 ns/op` 表示每一个操作耗费多少时间（纳秒）
+            * 测试代码需要保证函数可重入性及无状态，也就是说，测试代码不使用全局变量等带有记忆性质的数据结构。
+                - 避免多次运行同一段代码时的环境不一致，不能假设`b.N`(框架提供，`b *testing.B`为入参)值范围
+        + 测试时间
+            * 基准测试框架对一个测试用例的默认测试时间是 1 秒，开始测试时，当以 Benchmark 开头的基准测试用例函数返回时还不到 1 秒，那么 testing.B 中的 N 值将按 1、2、5、10、20、50……递增，同时以递增后的值重新调用基准测试用例函数
+            * 可以用`-benchtime`参数自定义指定基准测试的时间
+        + 内存分配情况
+            * 加上`-benchmem`参数
+            * `go test -v -bench=Alloc -benchmem benchmark_test.go`
+                - `-bench`后添加了 Alloc，指定只测试`Benchmark_Alloc()`函数(也可以跟上面一样不指定函数和文件)
+            * 结果示例：`BenchmarkAdd-12    10000000    111 ns/op   126 B/op  1 allocs/op`
+                - `126 B/op` 表示一次分配126个字节
+                - `1 allocs/op` 表示每次调用有一次内存分配
+            * 开发者根据这些信息可以迅速找到可能的分配点，进行优化和调整
+        + 控制计时开始和结束
+            * 如果从 `Benchmark()` 函数开始计时会很大程度上影响测试结果的精准性。testing.B 提供了一系列的方法可以方便地控制计时器，从而让计时器只在需要的区间进行测试
+                - `b.ResetTimer()` 重置计时器
+                - `b.StopTimer()` 停止计时器
+                - `b.StartTimer()` 开始计时器
+            * 没搞清楚作用，执行前reset然后开始，测出的时间比不调用这些设置还长 *TODO*
 
-加-v 可打印testing.T.Log()内容
-
-`go test -v -run=TestGetSpotOrders`
+* go test单元测试用例及执行 示例：`go test -v -run=TestOKWSAgent_Login`
 
 ```go
 func TestOKWSAgent_Login(t *testing.T){
@@ -1577,12 +1643,18 @@ and their dependencies
 ## Go性能工具
 
 * pprof
-    - [Go pprof性能调优](https://my.oschina.net/u/4270922/blog/4262889)
+    - [google/pprof](https://github.com/google/pprof)
+    - [Golang 大杀器之性能剖析 PProf](https://www.jianshu.com/p/4e4ff6be6af9)
+        + pprof 是用于可视化和分析性能分析数据的工具
+        + pprof以 [profile.proto](https://github.com/google/pprof/blob/master/proto/profile.proto) 中定义的协议读取分析样本的集合，并生成报告以可视化并帮助分析数据（支持文本和图形报告）
+    - [Go pprof性能调优](https://www.cnblogs.com/Dr-wei/p/11742414.html)
     - Go自带profiling的库
         + 在计算机性能调试领域里，profiling 是指对应用程序的画像，画像就是应用程序使用 CPU 和内存的情况
         + Go语言内置了获取程序的运行数据的工具，包括以下两个标准库：
             * `runtime/pprof`  采集工具型应用运行数据进行分析
             * `net/http/pprof` 采集服务型应用运行时数据进行分析
+                - 文件路径在: Go\src\net\http\pprof.go
+                - 用的时候只要`import _ "net/http/pprof"`就会附带一个可视化的web统计，HTTP 服务会多出`/debug/pprof`的endpoint(即`ip:port/debug/pprof`形式的url)，可观察应用程序的情况(可以查看`Golang 大杀器之性能剖析 PProf`链接中的示例)
         + pprof开启后，每隔一段时间（10ms）就会收集下当前的堆栈信息，获取各个函数占用的CPU以及内存资源；最后通过对这些采样数据进行分析，形成一个性能分析报告。
             * 只应该在性能测试的时候才在代码中引入pprof
     - Go语言项目中的性能优化主要有以下几个方面
@@ -1602,7 +1674,13 @@ and their dependencies
         + Mem性能：`func WriteHeapProfile(w io.Writer) error`
             * 写入前进行垃圾回收来获取最新统计 `runtime.GC()`
     - 分析profile文件(使用`go tool pprof`)
-        + `go tool pprof profile文件`
+        + `go tool pprof profile文件(可以是本地文件，也可以是http地址)`
+            * http地址(配合net/http/pprof)
+                - `go tool pprof http://localhost:6060/debug/pprof/profile?seconds=60` 可以查看上面net/http/pprof参考链接中的示例
+                    + 上面的url会指定CPU Profiling的时间段，结束后将默认进入 pprof 的交互式命令模式
+                - 也可以分析内存：`go tool pprof http://localhost:6060/debug/pprof/heap` (也可`/block`对阻塞同步的堆栈跟踪；`/mutex`对互斥锁持有情况堆栈跟踪)
+                    + -inuse_space：分析应用程序的常驻内存占用情况，可用`list -inuse_space`方式查看
+                    + -alloc_objects：分析应用程序的内存临时分配情况
             * 会进入一个交互式界面，输入各命令来查看相关统计信息
             * `top`
                 - 查看程序中占用CPU前n位(默认10)的函数，也可指定数量(`top3`/`top 3`)
@@ -1614,8 +1692,31 @@ and their dependencies
                     + cum%：当前函数加上调用当前函数的函数占用CPU的总耗时百分比
             * `list 函数名` 查看函数详情，可查看函数各部分的消耗
                 - 可以直接查看自己代码里的函数
+    - pprof与性能测试结合(`go test -bench`)
+        + 关于`go test`使用，可查看`### go testing`章节
+        + `go test`命令有两个参数和 pprof 相关，它们分别指定生成的 CPU 和 Memory profiling 保存的文件
+            * `-cpuprofile`：cpu profiling 数据要保存的文件地址
+            * `-memprofile`：memory profiling 数据要保存的文件地址
+        + 性能测试时结合pprof：
+            * `go test -bench="." -cpuprofile=./cpu.prof` 执行 CPU profiling并保存结果到cpu.prof
+                - `-bench=.`表示所有方法，Windows下要加引号`"."`
+            * `go test -bench="." -memprofile=./mem.prof` 执行 Mem profiling并保存结果到mem.prof
+            * 分析结果(可视化)：
+                - 方法1：`go tool pprof -http=:8080 cpu.prof` 会在浏览器里显示调用图
+                    + 除了调用关系图外，还有很丰富的选项来查看各种报表及统计
+                    + 选项查看包含：top/调用图/火焰图/源码分析(包含汇编和底层调用的耗时分析)
+                    + 通过 PProf 的可视化界面，我们能够更方便、更直观的看到 Go 应用程序的调用链、使用情况等，并且在 View 菜单栏中，还支持如上多种方式的切换
+                - 方法2：`go tool pprof cpu.prof`，进入交互界面后，执行`web`，就会在浏览器展示调用图
+                    + 没有第一种方法牛逼，只展示调用图
+            * 提前装了`graphviz`、`go-torch`、`火焰图`，如果提示缺少组件，则安装一下并加好路径(如图形化展示里所述)
+        + Profiling 一般和性能测试一起使用，因为一般只有应用在负载高的情况下 Profiling 才有意义
     - 图形化展示
         + 安装`graphviz`
-            * 若windows下，将graphviz安装目录下的bin文件夹添加到Path环境变量中
-    
+            * 想要查看图形化的界面首先需要安装graphviz图形化工具
+            * 若windows下，将graphviz安装目录下的bin文件夹添加到Path环境变量中，`dot -version`验证是否安装ok
+        + 火焰图和`go-torch`
+            * go-torch是 uber 开源的一个工具，可以直接读取 golang profiling 数据，并生成一个火焰图的 svg 文件
+                - go-torch安装：`go get -v github.com/uber/go-torch`
+            * 火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容
+                - `git clone https://github.com/brendangregg/FlameGraph.git`下载，并把目录加到PATH
 

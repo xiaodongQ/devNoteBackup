@@ -93,6 +93,8 @@
             * 卸载老版本 `sudo yum remove docker docker-client docker-client-latest docker-common docker-latestdocker-latest-logrotate docker-logrotate docker-engine`
             * 安装社区版Docker引擎，使用仓库方式安装(也可rpm包和脚本方式安装)
                 - 设置仓库
+                    + `sudo yum install -y yum-utils`
+                    + `sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo`
                 - 安装DOCKER ENGINE - COMMUNITY，最新版本：`sudo yum install docker-ce docker-ce-cli containerd.io -y`
     - 验证安装是否成功
         + `docker version`, ubuntu 16.04-xenial中，`Version: 17.09.1-ce`、`Go version:   go1.8.3`
