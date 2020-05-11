@@ -1325,6 +1325,11 @@ type Student struct {
                 - `b.StopTimer()` 停止计时器
                 - `b.StartTimer()` 开始计时器
             * 没搞清楚作用，执行前reset然后开始，测出的时间比不调用这些设置还长 *TODO*
+    - gin里面集成pprof
+        + `go get github.com/DeanThompson/ginpprof`，集成时直接`ginpprof.Wrap(router)`即可
+            * 方法签名为：`func Wrap(router *gin.Engine)`
+            * 打开链接即可看到pprof相关信息：`http://localhost:port/debug/pprof/`
+        + [使用google的pprof工具以及在gin中集成pprof](https://www.cnblogs.com/TimLiuDream/p/10038239.html)
 
 * go test单元测试用例及执行 示例：`go test -v -run=TestOKWSAgent_Login`
 
@@ -1345,6 +1350,17 @@ func TestOKWSAgent_Login(t *testing.T){
             }
         })
     }
+}
+```
+
+```golang
+// net/http/pprof包的init已经定义了几个http endpoint页面
+func init() {
+    http.HandleFunc("/debug/pprof/", Index)
+    http.HandleFunc("/debug/pprof/cmdline", Cmdline)
+    http.HandleFunc("/debug/pprof/profile", Profile)
+    http.HandleFunc("/debug/pprof/symbol", Symbol)
+    http.HandleFunc("/debug/pprof/trace", Trace)
 }
 ```
 
@@ -1719,4 +1735,42 @@ and their dependencies
                 - go-torch安装：`go get -v github.com/uber/go-torch`
             * 火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容
                 - `git clone https://github.com/brendangregg/FlameGraph.git`下载，并把目录加到PATH
+* 使用示例
 
+```golang
+package main
+
+import (
+    "log"
+    "math"
+    "os"
+    "runtime/pprof"
+    "time"
+)
+
+func main() {
+    log.Println("start profiling...")
+    file, err := os.Create("./cpu.profile")
+    if err != nil {
+        log.Printf("create file err![%v]\n", err)
+        return
+    }
+    defer file.Close()
+
+    pprof.StartCPUProfile(file)
+    defer pprof.StopCPUProfile()
+
+    for i := 0; i < 1000; i++ {
+        log.Printf("test:%v\n", FuncTestA())
+        log.Print("=============")
+    }
+
+    heapfile, err := os.Create("./mem.profile")
+    if err != nil {
+        log.Fatal("create error!\n")
+    }
+    defer heapfile.Close()
+    pprof.WriteHeapProfile(heapfile)
+
+}
+```
