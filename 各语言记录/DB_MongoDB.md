@@ -775,3 +775,25 @@ estimated_document_count 使用该接口快速返回近似值
 ## 服务状态
 
 * `db.serverStatus()`
+
+## 聚合
+
+* `db.getCollection("PlateAndStock").aggregate([{$group:{_id:"$PlateCode", num:{$sum:1}}}, {$sort:{_id:1}}])`
+    - 相当于`select PlateCode,count(1) from PlateAndStock group by PlateCode order by PlateCode`
+* [Aggregation](https://docs.mongodb.com/manual/aggregation/)
+    - MongoDB提供三种方式执行聚合
+        + 聚合管道(aggregation pipeline)
+        + map-reduce函数
+        + 单一目的聚集方法(single purpose aggregation methods)，提供下面几个方法
+            * `db.collection.distinct("PlateCode")`
+            * `db.collection.count()`
+            * `db.collection.estimatedDocumentCount()`
+    - 下例中演示的是聚合管道方式，$match过滤status字段为"A"的记录，
+
+```sql
+db.orders.aggregate([
+   { $match: { status: "A" } },
+   { $group: { _id: "$cust_id", total: { $sum: "$amount" } } }
+])
+```
+

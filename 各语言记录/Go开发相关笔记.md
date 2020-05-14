@@ -1482,6 +1482,11 @@ const (
 )
 ```
 
+* 计时统计
+    - `start := time.Now()`
+    - `cost := time.Since(start)`
+        + 签名：`func Since(t Time) Duration`
+
 ## string
 
 * 是一个不可变的byte切片，初始化后不能修改成员

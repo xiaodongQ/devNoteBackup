@@ -78,14 +78,45 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
 
 * Go `protoc --go_out=plugins=gRPC:./ *.proto`
     - [gRPC Basics - Go](https://grpc.io/docs/tutorials/basic/go/)
+        + [routeguide示例](https://github.com/grpc/grpc-go/tree/master/examples/route_guide/routeguide)
     - 生成服务端和客户端代码
         + `protoc -I routeguide/ routeguide/route_guide.proto --go_out=plugins=grpc:routeguide`
-            * 会生成 route_guide.pb.go 文件，其中包含
-                - 用于填充、序列化和检索 请求和响应 消息类型的所有协议缓冲区代码
-                - 一个接口类型interface(或存根stub)(`type RouteGuideClient interface`)，供 客户端 使用RouteGuide服务中定义的方法进行调用
+            * `--go_out=plugins=grpc:路径` 指定grpc插件，并指定生成文件的存放路径
+            * 会生成 route_guide.pb.go 文件，其中包含：
+                - 用于填充、序列化和检索 请求和响应 消息类型的所有protocol buffer代码
+                - 一个interface类型(或存根stub)(`type RouteGuideClient interface`)，供 客户端 使用RouteGuide服务中定义的方法进行调用
                 - 服务器要实现的接口类型(`type RouteGuideServer interface`)，包含RouteGuide服务中定义的方法
     - 创建服务端
-        + 
+        + 可以看到生成的route_guide.pb.go文件，定义了一个interface：`type RouteGuideServer interface {...}`，其中包含了需要实现的方法
+        + 实现：
+            * 定义一个struct，要实现的方法绑定到该struct上，`type routeGuideServer struct {...}`
+            * 而后依次实现proto中定义的方法：`func (s *routeGuideServer) GetFeature(ctx context.Context, point *pb.Point) (*pb.Feature, error) {...}`
+                - routeGuideServer类型实现了所有服务方法，其中
+                - 简单rpc
+                    + `rpc GetFeature(Point) returns (Feature) {}`
+                        * 生成的代码接口参数中有一个context上下文：`GetFeature(context.Context, *Point) (*Feature, error)`
+                - 服务端流
+                    + `rpc ListFeatures(Rectangle) returns (stream Feature) {}`
+                        * `ListFeatures(*Rectangle, RouteGuide_ListFeaturesServer) error`
+                        * RouteGuide_ListFeaturesServer是一个interface，其中成员有：
+                            - `Send(*Feature) error`
+                                + 服务端通过`Send`把结果按流的方式发送给客户端(类似先注册一个函数)
+                            - `grpc.ServerStream`(也是一个interface)
+                - 客户端流
+                    + `rpc RecordRoute(stream Point) returns (RouteSummary) {}`
+                        * `RecordRoute(RouteGuide_RecordRouteServer) error`
+                        * RouteGuide_RecordRouteServer是一个interface，其中成员：
+                            - `SendAndClose(*RouteSummary) error` 发送完结果即结束
+                            - `Recv() (*Point, error)` 接收客户端流，需要检查错误返回，接收报错`err == io.EOF`则表示接收结束，可SendAndClose发送结果；接收错误为nil则表示正常且未接收完
+                            - `grpc.ServerStream`
+                - 双向流
+                    + `rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}`
+                        * `RouteChat(RouteGuide_RouteChatServer) error`
+                        * RouteGuide_RouteChatServer interface成员：
+                            - `Send(*RouteNote) error` 向客户端发送信息
+                            - `Recv() (*RouteNote, error)` 从客户端接收信息
+                            - `grpc.ServerStream`
+                        * 发送和读取可以是任何顺序
     - 设置超时
         + 客户端
             * `ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))`
