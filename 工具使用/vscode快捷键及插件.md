@@ -115,7 +115,8 @@ file->perferences->settings->搜 renderWhitespace->选all
     - 在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
 * 不自动提示代码片段或补全，若要开启自动提示(可指定某个工作空间单独生效，有时每次都自动提示也挺烦的)，在设置里搜`prevent`
     - 出来的 `Editor › Suggest: Snippets Prevent Quick Suggestions`，取消勾选即可
-    - 代码补全/代码片段提示的触发快捷键，容易和其他键冲突，自己改成了ctrl+shift+space (下面也有说明)
+    - 代码补全/代码片段提示的触发快捷键，容易和其他键冲突，自己改成了`ctrl+shift+space` (下面也有说明) ctrl+shift+空格
+    - 用`ctrl+j`进行向下选择
 
 ### 实用快捷键修改：
 
@@ -229,9 +230,15 @@ file->perferences->settings->搜 renderWhitespace->选all
             * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
 * vscode开发Go，提示太慢了
     - 开启 Use Language Server，需要安装gopls，go get安装被墙
-    - `mkdir -p $GOPATH/github.com/Go-zh/`
-    - 到新建目录clone，`git clone https://github.com/Go-zh/tools.git`，clone比较慢的话，到该链接下载zip包，放到上面的路径里
-    - `go install github.com/Go-zh/tools/cmd/gopls`
+    - `git clone https://github.com/golang/tools.git`
+        + 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建
+    - `go list -e -compiled -json golang.org/x/tools/gopls` 可以查看build依赖的环境和包，若提示没有包，则单独clone对应的包
+        + 提示少下面几个包(golang.org/x/xerrors、mod、xerrors)，到`go_path\src\golang.org\x\tools`目录git clone
+            * `git clone https://github.com/golang/mod.git`
+            * `git clone https://github.com/golang/sync.git`
+            * `git clone https://github.com/golang/xerrors.git`
+    - `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
+    - 安装后，函数跳转、代码提示都是飞速
 
 ### 配置云端同步
 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)

@@ -68,6 +68,8 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
         + `-I PATH` 或者 `--proto_path=PATH` 指定查找import的路径，可以指定多次，会按顺序搜索
         + `-o FILE` 指定生成的文件名
         + `--plugin=EXECUTABLE` 指定一个可执行插件
+* 启动服务
+    - `net.Listen`
             * 一般来说`protoc`会查找PATH目录来获取插件，但是也可以使用这个标志来指定额外的可执行插件。
             * 此外，`EXECUTABLE`可能是`NAME=PATH`的形式， 在这种情况下，给定的插件名被映射到给定的可执行文件，即使可执行文件本身的名称不同
             * e.g. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin`
@@ -117,6 +119,26 @@ $ protoc --go_out=plugins=gRPC:./ *.proto #添加gRPC插件  **使用**
                             - `Recv() (*RouteNote, error)` 从客户端接收信息
                             - `grpc.ServerStream`
                         * 发送和读取可以是任何顺序
+        + 启动服务
+            * 指定要监听的端口：`lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))`
+            * 创建一个 gRPC server：`grpcServer := grpc.NewServer()`
+            * 把服务的实现注册到gRPC server上
+                - `pb.RegisterRouteGuideServer(grpcServer, &routeGuideServer{})`
+            * 调用gRPC server的`Serve()`函数，阻塞等待，直到服务被kill或者调用`Stop()`
+                - 调用之后，客户端就可以进行请求了
+    - 创建客户端
+        + 要调用服务端接口，首先要创建一个gRPC通道
+            * 通过`grpc.Dial`来创建通信通道： `conn, err := grpc.Dial(*serverAddr)`，最后conn需要释放 `defer conn.Close()`
+                - 签名为：`func Dial(target string, opts ...DialOption) (*ClientConn, error)`
+                - 创建的conn是`ClientConn`类型的struct，里面定义了一系列信息，上下文、认证、选项、锁 等等信息
+            * 也可通过`DialOptions`来设置认证选项
+        + gRPC通道创建好后，需要一个客户端存根`stub`
+            * `client := pb.NewRouteGuideClient(conn)`，
+                - 传入的是上面创建的conn结构
+                - 返回一个结构体指针，结构体中包含成员：`cc *grpc.ClientConn`，相当于将conn包装了一层，包装成各自proto对应的client
+        + 然后就可以用上面创建的存根/客户端 来调用服务端接口了
+            * `feature, err := client.GetFeature(context.Background(), &pb.Point{409146138, -746188906})`
+            * 传入一个上下文`context.Context`，可用来改变RPC的行为，像超时等行为
     - 设置超时
         + 客户端
             * `ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))`

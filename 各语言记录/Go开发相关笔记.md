@@ -1609,6 +1609,91 @@ string:=strconv.FormatInt(int64,10)
 and their dependencies
     - Go modules 是Go1.11开始引入的(本机安装版本为go1.13.1)，并在Go1.11.2中修复提升，在Go1.12中有更好的表现
     - Go modules作为发布和构建工具，已经准备就绪可以立即使用。推荐在小项目和个人项目中使用Go modules
+* Go modules
+    - [Go Modules 终极入门](https://mp.weixin.qq.com/s/fNMXfpBhBC3UWTbYCnwIMg)
+    - Go modules 是 Go 语言中正式官宣的项目依赖解决方案
+        + Go modules（前身为vgo）于 Go1.11 正式发布，在 Go1.14 已经准备好，并且可以用在生产上（ready for production）了，Go 官方也鼓励所有用户从其他依赖项管理工具迁移到 Go modules
+    - Go1.11 后就开始逐步建议使用 Go modules，不再推荐 GOPATH 的模式
+        + GOPATH 模式下没有版本控制的概念，具有致命的缺陷，至少会造成以下问题
+            * 在执行go get的时候，你无法传达任何的版本信息的期望，也就是说你也无法知道自己当前更新的是哪一个版本，也无法通过指定来拉取自己所期望的具体版本
+            * 在运行 Go 应用程序的时候，你无法保证其它人与你所期望依赖的第三方库是相同的版本，也就是说在项目依赖库的管理上，你无法保证所有人的依赖版本都一致
+            * 你没办法处理 v1、v2、v3 等等不同版本的引用问题，因为 GOPATH 模式下的导入路径都是一样的，都是github.com/foo/bar
+        + Go 语言官方从 Go1.11 起开始推进 Go modules（前身vgo），Go1.13 起不再推荐使用 GOPATH 的使用模式，Go modules 也渐趋稳定，因此新项目也没有必要继续使用GOPATH模式
+    - Go Modules基本使用
+        + 命令
+            * `go mod init` 生成 go.mod 文件
+            * `go mod download` 下载 go.mod 文件中指明的所有依赖
+            * `go mod graph` 查看现有的依赖结构
+            * `go mod edit` 编辑 go.mod 文件
+            * `go mod tidy` `go mod vendor` `go mod verify` `go mod why`
+        + 所提供的环境变量
+            * `GO111MODULE` 作为 Go modules 的开关
+                - `auto` 只要项目包含go.mod就启用Go modules，目前在 Go1.11 至 Go1.14 中仍然是默认值
+                - `on` 启用 Go modules，推荐设置，将会是未来版本中的默认值
+                - `off` 禁用 Go modules
+            * `GOPROXY` `GOSUMDB` `GONOPROXY`/`GONOSUMDB`/`GOPRIVATE`
+        + 参考链接中从头开始创建一个 Go modules 的项目，原则上所创建的目录应该不要放在 GOPATH 之中
+    - 示例(在一个非`$GOPATH/src`路径进行)
+        + github上随便找的一个string工具包，[github.com/ozgio/strutil](https://github.com/ozgio/strutil)
+            * `Words (Docs)`函数，返回文本中的单词
+            * e.g. `strutil.Words("Lorem ipsum, dolor sit amet") //-> []string{"Lorem", "ipsum", "dolor", "sit", "amet"}`
+        + a. 初始化项目 `go mod init xddemo/strutil` (注意这个路径不是要导入的package路径，下面的模块即指package)
+            * 会生成一个go.mod文件，内容为(两行)："module xddemo/strutil", "go 1.14"
+            * 指定了模块导入路径为 `xddemo/strutil`，若要import的包包含本项目的模块，则import的时候要带上该路径，e.g.`import "xddemo/strutil/utils"`
+        + b. 在该项目根目录下创建 main.go，import之前导入的模块
+            * `import ("github.com/ozgio/strutil")`
+        + c. 获取要import的包，查看go.mod及go.sum文件
+            * 项目根目录执行命令拉取模块：`go get github.com/ozgio/strutil`
+                - 拉取的结果缓存在：`$GOPATH/pkg/mod`和`$GOPATH/pkg/sumdb`
+                - 在mod目录下会以 github.com/foo/bar 的格式进行存放
+                    + 目录名为 `模块名@版本`的形式，本示例中路径为`$GOPATH\pkg\mod\github.com\ozgio\strutil@v0.3.0`
+                    + 需要注意的是同一个模块版本的数据只缓存一份，所有其它模块共享使用
+                    + 若希望清理所有已缓存的模块版本数据，可以执行 `go clean -modcache` 命令
+                    + `go get`没有指定任何的版本信息，则由 Go modules 自行按照内部规则进行选择
+                        * 规则
+                            - 所拉取的模块有发布 tags，如果只有单个模块，那么就取主版本号最大的那个tag；如果有多个模块，则推算相应的模块路径，取主版本号最大的那个tag
+                            - 所拉取的模块没有发布过 tags，默认取主分支最新一次 commit 的 commithash
+                        * 所拉取的模块有发布 tags，此处获取到最新的版本tag: v0.3.0
+                        * `go get` 拉取依赖，会进行指定性拉取（更新），并不会更新所依赖的其它模块
+                        * `go get -u` 更新现有的依赖，会强制更新它所依赖的其它全部模块，不包括自身
+                        * `go get -u -t ./...` 更新所有直接依赖和间接依赖的模块版本，包括单元测试中用到的
+                    + 选择具体版本
+                        * `go get golang.org/x/text@latest` 拉取最新的版本，若存在tag，则优先使用
+                        * `go get golang.org/x/text@master` 拉取 master 分支的最新 commit
+                        * `go get golang.org/x/text@v0.3.2` 拉取 tag 为 v0.3.2 的 commit
+                        * `go get golang.org/x/text@342b2e` 拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2
+            * 查看go.mod文件，多了一行：`require github.com/ozgio/strutil v0.3.0 // indirect`
+                - 其详细罗列了当前项目直接或间接依赖的所有模块版本，并写明了那些模块版本的 SHA-256 哈希值以备 Go 在今后的操作中保证项目所依赖的那些模块版本不会被篡改
+            * 并且生成了一个 go.sum 文件(两行内容如下)
+                - `github.com/ozgio/strutil v0.3.0 h1:60gAF16tu4v0jv8lG++6BSRjtEAUZHWCUdBVnP9sPV8=`
+                    + h1+hash形式
+                - `github.com/ozgio/strutil v0.3.0/go.mod h1:KwdrJYF4j4XOlgE0RGzXCa5wRvbuYXpfy3379Yl3Ric=`
+                    + gomod+hash形式
+                - h1+hash 和 go.mod+hash 两者，要不就是同时存在，要不就是只存在 go.mod+hash
+                    + 当 Go 认为肯定用不到某个模块版本的时候就会省略它的 h1+hash
+            * Go modules的版本规则，参考链接中的说明
+        + 这就实现了一个不需要在$GOPATH路径创建的项目，下载的包也不必在$GOPATH/src中，并提供模块多版本支持
+    - 理论上 go.mod 和 go.sum 文件都应该提交到你的 Git 仓库中去
+
+* main.go demo内容
+
+```golang
+package main
+
+import (
+    "log"
+
+    "github.com/ozgio/strutil"
+)
+
+func main() {
+    log.SetFlags(log.Lshortfile)
+    // strutil.Words("Lorem ipsum, dolor sit amet") //-> []string{"Lorem", "ipsum", "dolor", "sit", "amet"}`
+
+    res := strutil.Words("Lorem ipsum, dolor sit amet")
+    log.Printf("get res:%v\n", res)
+}
+```
 
 ## 项目demo
 
