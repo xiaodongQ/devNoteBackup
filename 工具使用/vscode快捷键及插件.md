@@ -229,6 +229,9 @@ file->perferences->settings->搜 renderWhitespace->选all
             * clippy，回形针效果
             * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
 * vscode开发Go，提示太慢了
+    - [在 VS Code 中使用 gopls](https://segmentfault.com/a/1190000020276833)
+        + `go get golang.org/x/tools/gopls`
+        + `go get`没科学上网访问不了golang.org，开启go module后，设置GOPROXY可直接用该命令
     - 开启 Use Language Server，需要安装gopls，go get安装被墙
     - `git clone https://github.com/golang/tools.git`
         + 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建

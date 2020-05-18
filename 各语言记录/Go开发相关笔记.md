@@ -1609,7 +1609,7 @@ string:=strconv.FormatInt(int64,10)
 and their dependencies
     - Go modules 是Go1.11开始引入的(本机安装版本为go1.13.1)，并在Go1.11.2中修复提升，在Go1.12中有更好的表现
     - Go modules作为发布和构建工具，已经准备就绪可以立即使用。推荐在小项目和个人项目中使用Go modules
-* Go modules
+* Go Modules
     - [Go Modules 终极入门](https://mp.weixin.qq.com/s/fNMXfpBhBC3UWTbYCnwIMg)
     - Go modules 是 Go 语言中正式官宣的项目依赖解决方案
         + Go modules（前身为vgo）于 Go1.11 正式发布，在 Go1.14 已经准备好，并且可以用在生产上（ready for production）了，Go 官方也鼓励所有用户从其他依赖项管理工具迁移到 Go modules
@@ -1619,6 +1619,24 @@ and their dependencies
             * 在运行 Go 应用程序的时候，你无法保证其它人与你所期望依赖的第三方库是相同的版本，也就是说在项目依赖库的管理上，你无法保证所有人的依赖版本都一致
             * 你没办法处理 v1、v2、v3 等等不同版本的引用问题，因为 GOPATH 模式下的导入路径都是一样的，都是github.com/foo/bar
         + Go 语言官方从 Go1.11 起开始推进 Go modules（前身vgo），Go1.13 起不再推荐使用 GOPATH 的使用模式，Go modules 也渐趋稳定，因此新项目也没有必要继续使用GOPATH模式
+    - go get下载不了包问题的解决方式
+        + GOPROXY 的默认值是：https://proxy.golang.org,direct，
+        + 这有一个很严重的问题，就是 proxy.golang.org 在国内是无法访问的，因此这会直接卡住你的第一步，所以你必须在开启 Go modules 的时，同时设置国内的 Go 模块代理，执行如下命令：
+            * `go env -w GOPROXY=https://goproxy.cn,direct`
+                - `https://goproxy.io`代理也可以
+            * `GOSUMDB`
+                - `GOSUMDB`用于在拉取模块版本时（无论是从源站拉取还是通过 Go module proxy 拉取）保证拉取到的模块版本数据未经过篡改，若发现不一致，也就是可能存在篡改，将会立即中止
+                - 官方默认是GOSUMDB="sum.golang.org"，goproxy.cn 支持代理 sum.golang.org
+                - 所以在设置 `GOPROXY` 后，可以不用关心该值
+            * go 1.13中建议Go相关的环境变量由`go env -w`(Go1.13新增)来管理，设置后，会在`$HOME/.config/go/env`文件中新增指定的配置项
+                - `go env -w`不会覆盖系统环境变量，如果环境变量中设置了某个选项(e.g. GOPATH)，则执行`go env -w GOPATH=xxx`时会报错：warning: go env -w GOPATH=... does not override conflicting OS environment variable
+                - 建议将环境变量中关于GO的设置去掉，统一调整为`go env -w`来设置
+            * 下载的包会在GOPATH路径(不过和原来的目录组织方式差别很大，只是包存放在该路径)，所以可以按需设置一下GOPATH
+        + 了解goproxy.cn，可参考：[Go Modules 和 goproxy.cn](https://blog.csdn.net/EDDYCJY/article/details/102426277)
+            * 迁移项目至Go Modules
+                - 在项目路径初始化Modules，`go mod init xxx`，然后`go get -u`更新现有依赖即可(如果要加单元测试则加`-t`选项)
+                    + 可参考下面章节里的选项说明： 搜 "* `go get` 拉取依赖"
+                - 其他命令见下面的说明
     - Go Modules基本使用
         + 命令
             * `go mod init` 生成 go.mod 文件
