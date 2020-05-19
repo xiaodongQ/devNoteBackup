@@ -1280,6 +1280,7 @@ type Student struct {
         + 测试用例文件使用`go test`指令来执行，没有也不需要 main() 作为函数入口
             * `go test helloworld_test.go`
             * `go test -run=TestPrintInfo`
+                - `-run=Array` 也会执行包含有 Array 开头的函数，若要完全匹配，则用`-run=Array$`
             * `go test -run TestA`
                 - 注意此处会匹配`TestA`开头的所有单元测试用例，支持正则表达式，`TestA$`则只测试`TestA`
                 - 也可以同时指定哪个文件：`go test -run TestA func_test.go`，
@@ -1882,3 +1883,5 @@ func main() {
 
 }
 ```
+
+## NSQ
