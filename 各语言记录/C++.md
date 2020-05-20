@@ -2236,6 +2236,7 @@ void assert( int expression );
 ## 条件变量
 
 * `std::condition_variable`
+    - linux下的 `pthread_cond_t`，参考：[笔记](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.md)，(搜`## 条件变量(condition variable)`章节)
     - `#include <condition_variable>`
     - [C++11条件变量使用详解](https://blog.csdn.net/c_base_jin/article/details/89741247)
         + 注意里面的例子，在linux下编译时，添加`-std=c++11 -lpthread`

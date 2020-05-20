@@ -205,7 +205,7 @@ ORM只是一种帮助我们解决一些重复的、简单的劳动，我们不�
         + `mgo`就是使用最多的一种，mgo（音mango）是MongoDB的Go语言驱动，它用基于Go语法的简单API实现了丰富的特性，并经过良好测试。
         + [golang中使用mongodb的操作类以及如何封装](https://www.cnblogs.com/spnt/p/4686128.html)
             * `c.Find(query).Sort(sort).Select(fields).Skip(skip).Limit(limit).All(&results)`
-        + [mgo官网文档](https://gopkg.in/mgo.v2)
+        + [mgo官网文档](https://godoc.org/gopkg.in/mgo.v2)
             * `go get gopkg.in/mgo.v2`
             * `import "gopkg.in/mgo.v2"`
                 - `Find()`方法来根据条件查询collect(对应sql中的表)
