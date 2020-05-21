@@ -207,3 +207,47 @@
 ## Go使用Redis
 
 * [package redis](https://pkg.go.dev/github.com/garyburd/redigo/redis?tab=doc)
+
+## 使用问题
+
+* OOM
+    - CentOS 共8G，redis使用 6G，存数据时发现redis的docker重新启动了，查看系统日志，发生了OOM，自动kill了进程
+    - 关于redis启动时access.log日志的警告：`WARNING overcommit_memory is set to 0`
+        + 内核参数overcommit_memory
+            * [有关linux下redis overcommit_memory的问题](https://blog.csdn.net/whycold/article/details/21388455)
+        + 内存分配策略，可选值：0、1、2
+            * 0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程
+            * 1， 表示内核允许分配所有的物理内存，而不管当前的内存状态如何
+            * 2， 表示内核允许分配超过所有物理内存和交换空间总和的内存
+        + Overcommit
+            * Linux对大部分申请内存的请求都回复"yes"，以便能跑更多更大的程序。因为申请内存后，并不会马上使用内存。这种技术叫做Overcommit
+            * 当linux发现内存不足时，会发生OOM killer(OOM=out-of-memory)。它会选择杀死一些进程(用户态进程，不是内核线程)，以便释放内存
+            * 当oom-killer发生时，linux会选择杀死哪些进程？选择进程的函数是`oom_badness`函数(在mm/oom_kill.c中)，该函数会计算每个进程的点数(0~1000)。点数越高，这个进程越有可能被杀死。每个进程的点数跟`oom_score_adj`有关，而且`oom_score_adj`可以被设置(-1000最低，1000最高)
+        + 如要设置该值
+            * `/etc/sysctl.conf` ，改`vm.overcommit_memory=1`，然后`sysctl -p` 使配置文件生效
+    - [解决redis启动时的三个警告](https://www.jianshu.com/p/a86e0248af58)
+        + 按日志提示操作即可
+        + 关于 `WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128`
+            * 将`net.core.somaxconn=1024`添加到`/etc/sysctl.conf`中，然后执行`sysctl -p`生效配置
+            * 关于somaxconn参数:
+                - 定义了系统中每一个端口最大的监听队列的长度,这是个全局的参数,默认值为128.限制了每个端口接收新tcp连接侦听队列的大小
+                - 对于一个经常处理新连接的高负载 web服务环境来说，默认的 128 太小了。大多数环境这个值建议增加到 1024 或者更多
+            * 对于容器部署，貌似需要`docker run`时添加选项 `--sysctl net.core.somaxconn=1024`，/etc/sysctl.conf中添加未生效
+        + 关于`# WARNING you have Transparent Huge Pages (THP) support enabled in your kernel`
+            * echo never > /sys/kernel/mm/transparent_hugepage/enabled添加到/etc/rc.local中，然后执行source /etc/rc.local生效配置
+
+```go
+// /var/log/messages
+May 21 16:26:30 localhost kernel: Out of memory: Kill process 16850 (redis-server) score 530 or sacrifice child
+May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9900792kB, anon-rss:4390988kB, file-rss:0kB, shmem-rss:0kB
+```
+
+```go
+// redis/data/access.log
+1:M 21 May 2020 08:26:36.233 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
+1868 1:M 21 May 2020 08:26:36.233 # Server initialized
+1869 1:M 21 May 2020 08:26:36.233 # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+1870 1:M 21 May 2020 08:26:36.233 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
+1871 1:M 21 May 2020 08:26:46.283 * DB loaded from disk: 10.042 seconds
+1872 1:M 21 May 2020 08:26:46.283 * Ready to accept connections
+```
