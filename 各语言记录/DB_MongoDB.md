@@ -82,7 +82,8 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
     - docker安装：
         + `docker pull mongo`
         + 启动：`docker run -p 27017:27017 --restart=always --name mymongodb -d mongo`
-            * -v <LocalDirectoryPath>:/data/db 可选，指定数据存储位置
+            * `-v <LocalDirectoryPath>:/data/db` 可选，指定数据存储位置
+            * 指定路径：`docker run -p 27017:27017 --restart=always -v /home/data/mongo:/data/db --name mymongodb -d mongo`
 
 
 * 通过下载tar包安装(非官方文档)：[Linux平台安装MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
@@ -97,6 +98,8 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
     - `mkdir -p /data/db`
 * 命令行中运行 MongoDB 服务
     - `$ ./mongod`
+* 创建用户，并设置密码
+    - `db.createUser({user:'admin',pwd:'123qwe',roles:[{role:'userAdminAnyDatabase',db:'admin'}]})`
 * MongoDB后台管理 Shell
     - 如果你需要进入MongoDB后台管理，你需要先打开mongodb装目录的下的bin目录，然后执行mongo命令文件。
     - MongoDB Shell是MongoDB自带的交互式Javascript shell,用来对MongoDB进行操作和管理的交互式环境。

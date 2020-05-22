@@ -329,6 +329,7 @@ li.remove(99);   // 除去所有等于99的元素：
 * vector assign()
     - 用法1: `void assign(const_iterator first,const_iterator last);` 把first到last的成员都赋值给调用者，[first, last)
         + e.g. `v2.assign(v1.begin(),v1.begin()+9);` 下标[0, 8]的成员, (即[0,9))
+        + 或用`std::advance`来偏移迭代器
     - 用法2: `void assign(size_type n,const T& x = T());` n个成员都赋值为x
         + e.g. `v2.assign(10,7);` 10个成员，都赋值为7
 
@@ -1943,7 +1944,7 @@ std::distance(v.end(), v.begin())  // -3
 
 std::advance用来对迭代器做偏移操作
 
-// std::advance用来对迭代器做偏移操作, 相当于splitIter=splitIter+splitPos
+// std::advance用来对迭代器做偏移操作, 类似于splitIter=splitIter+splitPos
 std::advance(splitIter,splitPos);
 
 ### 输入输出流 iostream

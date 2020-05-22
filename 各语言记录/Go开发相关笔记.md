@@ -4,6 +4,7 @@
 
 ### 如何使用 Go 编程
 
+* 官网FAQ：[Frequently Asked Questions (FAQ)](https://golang.org/doc/faq#closures_and_goroutines)
 * 官网入门文档 [How to Write Go Code](https://golang.org/doc/code.html)
     - 中文版：[如何使用 Go 编程](https://go-zh.org/doc/code.html)
 * 安装
@@ -593,6 +594,15 @@ type Block interface {
                 - 遍历打印切片，会打印5个成员(默认零值)
                 - `arr = append(arr, 1)`之后，`len(arr)`变为6了
                 - 超出容量后，会自动扩展成一个新的更大的空间(2倍)，成员拷贝到新空间(比较耗费时间)
+            * 易错场景：
+                - 错误方式演示(伪代码)：
+                    + `var sList [][]*InfoList`，然后在一个循环中每次执行(总次数N)：
+                        * 用append填充slice：`sList = append(sList, mem)`
+                        * 起一个goroutine，传入地址 `go func(mem *[]*InfoList) { 对传入slice进行操作xxx }(&sList[i])`
+                    + 对于原来的`sList`，append之后可能重新分配内存，成员地址可能变化了，导致最后sList中每个成员内容和预期并不一致
+                - 正确方式：
+                    + `make`的方式指定长度，`var sList = make([][]*InfoList, N)`，然后循环起goroutine
+                    + 或者在循环外，先append N次，再循环内起goroutine
         + `var sl []int`
             * `cap`和`len`都是0
         + 对于slice的自动扩容

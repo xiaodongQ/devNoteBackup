@@ -243,8 +243,17 @@ done
 lftp -u $FTPU,$FTPP -e "mkdir /mysql/$NOW;cd /mysql/$NOW; mput /backup/mysql/*; quit" $FTPS
 ```
 
+* MySQL 中使用浮点数和定点数来表示小数
+    - [MySQL FLOAT、DOUBLE、DECIMAL（小数类型）](http://c.biancheng.net/view/2424.html)
+    - 浮点类型有两种，分别是单精度浮点数（`FLOAT`）和双精度浮点数（`DOUBLE`）；定点类型只有一种，就是 `DECIMAL`
+    - 浮点类型和定点类型都可以用`(M, D)`来表示，其中`M`称为精度，表示总共的位数；`D`称为标度，表示小数的位数
+        + `M` 和 `D` 在 FLOAT 和DOUBLE 中是可选的，`FLOAT` 和 `DOUBLE` 类型将被保存为硬件所支持的最大精度。`DECIMAL` 的默认 D 值为 0、M 值为 10
+    - 浮点数相对于定点数的优点是在长度一定的情况下，浮点数能够表示更大的范围；缺点是会引起精度问题
+    - 小结：在 MySQL 中，定点数以字符串形式存储，在对精度要求比较高的时候（如货币、科学数据），使用 `DECIMAL` 的类型比较好，另外两个浮点数进行减法和比较运算时也容易出问题，所以在使用浮点数时需要注意，并尽量避免做浮点数比较
 * double精度问题(存金额)
     - 使用 `DECIMAL(M,D)`
+        + 注意：如果用这种形式，`DECIMAL(20,5)`，整数为只有20-5位，即M表示该值的总共长度，D表示小数点后面的长度
+            * DECIMAL在不指定精度时，默认整数为10，小数为0，即`DECIMAL`默认为`DECIMAL(10,0)`
         + M is the maximum number of digits (the precision). It has a range of 1 to 65
         + D is the number of digits to the right of the decimal point (the scale). It has a range of 0 to 30 and must be no larger than M.
         + If D is omitted, the default is 0. If M is omitted, the default is 10
