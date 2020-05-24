@@ -260,7 +260,8 @@ finderr := collect.Find(query).Limit(10).All(&dbresult)
 //直接按字段读取dbresult的值即可
 log.Println(dbresult[0].ID)
 ```
-* mgo示例结束
+
+* mgo 写入
 
 ### gorm操作
 
