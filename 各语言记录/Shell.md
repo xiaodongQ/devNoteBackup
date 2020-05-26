@@ -411,3 +411,12 @@ do
     done
 done
 ```
+
+## dirname
+
+* 用 `dirname` 替换shell脚本中的`cd 绝对路径`
+    - `dirname NAME` 从文件名剥离非目录的后缀
+    - 打印去除了`/`后面部分的NAME;如果NAME没有包含`/`,则输出`.`(表示当前目录)
+    - 添加 `cd $(dirname $0)` 即可保证进入到脚本所在的路径
+        + `sh ./test.sh` 会 `cd .`
+        + `sh /home/xd/workspace/test.sh` 会 `cd /home/xd/workspace`
