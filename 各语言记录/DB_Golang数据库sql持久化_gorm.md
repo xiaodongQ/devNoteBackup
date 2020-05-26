@@ -262,6 +262,18 @@ log.Println(dbresult[0].ID)
 ```
 
 * mgo 写入
+    - [func (*Collection) Insert](https://godoc.org/gopkg.in/mgo.v2#Collection.Insert)
+
+```golang
+c := session.DB(database).C("Provinces")
+var provinces []Province
+var docs []interface{}
+...
+for _,v := range provinces{
+    docs = append(docs,v)
+}
+c.Insert(docs...)
+```
 
 ### gorm操作
 
