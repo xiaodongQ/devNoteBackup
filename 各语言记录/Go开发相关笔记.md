@@ -238,6 +238,14 @@ func init() {
             * `req := req` 它的写法看起来有点奇怪，但在 Go 中这样做是合法且惯用的。用相同的名字获得了该变量的一个新的版本， 以此来局部地刻意屏蔽循环变量，使它对每个 goroutine 保持唯一
     - 可参考`* 并发编程`章节的笔记
 
+* mutex
+    - [Go语言互斥锁（sync.Mutex）和读写互斥锁（sync.RWMutex）](http://c.biancheng.net/view/107.html)
+    - `sync.Mutex` 互斥锁
+        + `countGuard.Lock()`
+        + `countGuard.Unlock()`
+    - `sync.RWMutex` 读写互斥锁
+        + 读`RLock()` 和 `RUnlock()` 注意配套
+        + 写`Lock()` 和 `Unlock()`
 
 ### [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
@@ -1900,3 +1908,15 @@ func main() {
 ```
 
 ## NSQ
+
+## 优雅关闭
+
+* 捕捉信号
+    - 场景：后台起一个grpc服务，同时会初始化一些数据库连接
+        + `main()`里面`defer`关闭数据库连接
+        + 但是每次`ctrl+c`打断程序时，程序是直接关闭的，不会执行到`defer`
+        + 因此需要捕获`ctrl+c`(SIGINT)和`kill`(SIGTERM)的信号
+    - [[Go] 捕捉信号以优雅地关闭服务器进程](https://blog.twofei.com/782/)
+        + 改造：grpc服务启动放到goroutine中
+        + `func Notify(c chan<- os.Signal, sig ...os.Signal)` 捕获信号(让信号中转给`c`)
+        + 

@@ -478,15 +478,20 @@ MongoDB 使用 insert() 或 save() 方法向集合中插入文档，语法如下
         + `> var res = db.collection.insertMany([{"b": 3}, {'c': 4}])`
 
 #### MongoDB 查询文档
-`db.collection.find(query, projection)`
-    query ：可选，使用查询操作符指定查询条件
-    projection ：可选，使用投影操作符指定返回的键。查询时返回文档中所有键值， 只需省略该参数即可（默认省略）。
 
-如果你需要以易读的方式来读取数据，可以使用 pretty() 方法，语法格式如下：
-    `>db.col1.find().pretty()`
-    pretty() 方法以格式化的方式来显示所有文档。
+* `db.collection.find(query, projection)`
+    - query：可选，使用查询操作符指定查询条件
+    - projection：可选，返回指定字段(键值)。查询时若返回文档中所有键值，只需省略该参数即可（默认省略）
+    - e.g. `db.collection.find({}, {Name:1})`，
+        + 查询所有记录(条件为空)，并只返回Name字段 和 `_id`字段 (`_id`字段默认返回)
+        + 若要查询除某字段外所有字段，则`{Name:0}`形式即可
+        + `db.collection.find({Class:5}, {Name:1, _id:0})` 只返回班级为5的所有记录中的Name字段(_id字段不返回)
 
-除了 `find()` 方法之外，还有一个 `findOne()` 方法(注意：大小写敏感)，它只返回一个文档。
+* 如果你需要以易读的方式来读取数据，可以使用 pretty() 方法，语法格式如下：
+    - `>db.col1.find().pretty()`
+    - pretty() 方法以格式化的方式来显示所有文档。
+
+* 除了 `find()` 方法之外，还有一个 `findOne()` 方法(注意：大小写敏感)，它只返回一个文档。
 
 * [查询条件](https://docs.mongodb.com/manual/tutorial/query-documents/)
     - `db.inventory.find( { status: "A", qty: { $lt: 30 } } )`
@@ -780,7 +785,8 @@ estimated_document_count 使用该接口快速返回近似值
 
 ## 服务状态
 
-* `db.serverStatus()`
+* `db.serverStatus()` 返回服务状态的概览
+    - [db.serverStatus()](https://docs.mongodb.com/manual/reference/method/db.serverStatus/index.html#db-serverstatus)
 
 ## 聚合
 

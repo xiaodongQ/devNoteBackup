@@ -262,6 +262,7 @@ log.Println(dbresult[0].ID)
 ```
 
 * mgo 写入
+    - `func (*Collection) Insert`
     - [func (*Collection) Insert](https://godoc.org/gopkg.in/mgo.v2#Collection.Insert)
 
 ```golang
@@ -274,6 +275,32 @@ for _,v := range provinces{
 }
 c.Insert(docs...)
 ```
+
+* mgo删除
+    - `func (c *Collection) Remove(selector interface{}) error`
+        + 删除匹配的单个文档
+    - `func (c *Collection) RemoveAll(selector interface{}) (info *ChangeInfo, err error)`
+        + 删除匹配的所有文档，返回类型`type ChangeInfo struct`中包含匹配、更新、删除的文档数量
+* 创建索引
+    - `func (c *Collection) EnsureIndex(index Index) error`
+        + `EnsureIndex`不会修改原先已经存在的索引，若要替换，则要先删除
+        + 如果返回成功，则后续用相同的索引请求时不会有影响，除非`Collection.DropIndex`或`Session.ResetIndexCache`重置相同索引
+        + 索引默认是升序，若要用降序，则在字段名前面加`-`
+        + 入参`Index`类型里，还定义了一些其他属性，如 是否Unique、索引名、是否DropDups
+            * 可参考：[EnsureIndex ](https://godoc.org/gopkg.in/mgo.v2#Collection.EnsureIndex)
+    - `func (c *Collection) EnsureIndexKey(key ...string) error`
+        + e.g. `err := collection.EnsureIndexKey("a", "b")` 相当于 `err := collection.EnsureIndex(mgo.Index{Key: []string{"a", "b"}})`
+* 设置会话的一致性模式
+    - `func (*Session) SetMode`
+        + mgo文档：[func (*Session) SetMode](https://godoc.org/gopkg.in/mgo.v2#Session.SetMode)
+        + `mgo.Strong` 默认
+            * 在强一致性模式下，对主服务器的读和写将始终使用唯一的连接，以便读和写完全一致、有序并能观察到最新的数据
+        + `Monotonic`
+            * session 的读操作开始是向其他服务器发起（且通过一个唯一的连接），只要出现了一次写操作，session 的连接就会切换至主服务器。由此可见此模式下，能够分散一些读操作到其他服务器，但是读操作不一定能够获得最新的数据
+        + `Eventual`
+            * session 的读操作会向任意的其他服务器发起，多次读操作并不一定使用相同的连接，也就是读操作不一定有序。session 的写操作总是向主服务器发起，但是可能使用不同的连接，也就是写操作也不一定有序
+            * 若只是读取操作，数据又不怎么变化的场景，可以使用该模式，并发多连接获取数据
+        + 模式中文说明参考：[Go语言mgo（mongo场景应用）](https://www.jianshu.com/p/13b7f4630670)
 
 ### gorm操作
 
