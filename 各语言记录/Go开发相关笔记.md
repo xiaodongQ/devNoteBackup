@@ -1823,6 +1823,8 @@ func main() {
             * 写入前进行垃圾回收来获取最新统计 `runtime.GC()`
     - 分析profile文件(使用`go tool pprof`)
         + `go tool pprof profile文件(可以是本地文件，也可以是http地址)`
+            * 查看下面的`分析结果(可视化)`章节：
+                - `go tool pprof -http=:8080 cpu.prof` 会在浏览器里显示调用图
             * http地址(配合net/http/pprof)
                 - `go tool pprof http://localhost:6060/debug/pprof/profile?seconds=60` 可以查看上面net/http/pprof参考链接中的示例
                     + 上面的url会指定CPU Profiling的时间段，结束后将默认进入 pprof 的交互式命令模式
