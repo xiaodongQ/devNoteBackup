@@ -792,6 +792,7 @@ estimated_document_count 使用该接口快速返回近似值
 
 * `db.getCollection("PlateAndStock").aggregate([{$group:{_id:"$PlateCode", num:{$sum:1}}}, {$sort:{_id:1}}])`
     - 相当于`select PlateCode,count(1) from PlateAndStock group by PlateCode order by PlateCode`
+    - 若还要进行过滤，则用`$match`，e.g. `aggregate([{$group:{}}, {$sort:{}}, {$match:{num:{$gt:10}}}])`
 * [Aggregation](https://docs.mongodb.com/manual/aggregation/)
     - MongoDB提供三种方式执行聚合
         + 聚合管道(aggregation pipeline)
