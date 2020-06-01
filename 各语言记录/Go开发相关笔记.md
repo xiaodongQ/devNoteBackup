@@ -1126,9 +1126,43 @@ log.WithFields(log.Fields{
             * `func (p *Process) Signal(sig Signal) error` 发送一个信号给进程p
             * `func (p *Process) Wait() (*ProcessState, error)` 等待进程退出，并返回进程状态和错误
 
+### bytes包
 
-### bytes.NewReader
+* `bytes.Buffer`
+    - [Golang bytes.Buffer 用法](https://blog.csdn.net/k346k346/article/details/94456479)
+    - `bytes.Buffer` 是 Golang 标准库中的缓冲区，具有读写方法和可变大小的字节存储功能。
+    - 常用方法
+        + 声明
+            * `var b bytes.Buffer`
+            * `b := new(bytes.Buffer)`
+            * `b := bytes.NewBuffer(s []byte)` 从一个`[]byte`切片，构造一个Buffer
+            * `b := bytes.NewBufferString(s string)` 从一个string变量，构造一个Buffer
+        + 往 Buffer 中写入数据
+            * `b.Write(d []byte) (n int, err error)` 将切片写入buffer，返回d切片长度，err总是nil，若buffer过长则会产生panic
+            * `b.WriteString(s string) (n int, err error)` 返回string长度，err总是nil
+            * `b.WriteByte(c byte) error` 将字符c写入Buffer尾部
+            * `b.WriteRune(r rune) (n int, err error)` 将一个rune类型的数据放到缓冲区的尾部
+            * `b.ReadFrom(r io.Reader) (n int64, err error)` 从`r`里面读取数据放到buffer尾部
+        + 从 Buffer 中读取数据
+            * `b.Next(n int) []byte` 读取 n 个字节数据并返回，如果 buffer 不足 n 字节，则读取全部
+            * `b.Read(p []byte) (n int, err error)`
+                - 一次读取 len(p) 个 byte 到 p 中，每次读取新的内容将覆盖p中原来的内容。
+                - 成功则返回实际读取的字节数，off 向后偏移 n，buffer 没有数据返回错误 io.EOF
+            * `b.ReadByte() (byte, error)` 读取第一个byte并返回，off 向后偏移 n
+            * `b.ReadRune() (r rune, size int, err error)` 读取第一个 UTF8 编码的字符并返回该字符和该字符的字节数
+            * `b.ReadBytes(delimiter byte) (line []byte, err error)` 读取缓冲区第一个分隔符前面的内容以及分隔符并返回
+            * `b.ReadString(delimiter byte) (line string, err error)` 读取缓冲区第一个分隔符前面的内容以及分隔符
+            * `b.WriteTo(w io.Writer) (n int64, err error)` 将 Buffer 中的内容输出到`w`可写对象
+        + `b.Bytes() []byte` 返回字节切片，`b.Len() int` 等于len(b.Bytes())
+        + `b.Cap() int` 返回 buffer 内部字节切片的容量
+        + `b.Grow(n int)` 为 buffer 内部字节切片的容量增加 n 字节
+        + `b.Reset()` 清空数据
+        + `b.String() string` 字符串化
+        + `b.Truncate(n int)` 丢弃缓冲区中除前n个未读字节以外的所有字节，n为负或超出缓冲区长度，则panic
+        + `b.UnreadByte() error` 将最后一次读取操作中被成功读取的字节设为未被读取的状态，即将已读取的偏移 off 减 1
+        + `b.UnreadRune() error` 将最后一次ReadRune()读取操作返回的 UTF8 字符 rune设为未被读取的状态，off减去字符 rune 的字节数
 
+* `bytes.NewReader`
 
 
 ### sync.WaitGroup
@@ -1922,3 +1956,9 @@ func main() {
         + 改造：grpc服务启动放到goroutine中
         + `func Notify(c chan<- os.Signal, sig ...os.Signal)` 捕获信号(让信号中转给`c`)
         + 
+
+## CodeReviewComments 官方列出的常见错误清单
+
+* [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
+    - 可看做是《Effective Go》的补充，可查看前面`《Effective Go》`章节
+* 
