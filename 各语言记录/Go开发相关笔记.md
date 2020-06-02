@@ -1962,37 +1962,37 @@ func main() {
 
 * [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
     - 可看做是《Effective Go》的补充，可查看前面`《Effective Go》`章节
-    - `context.Context`
-        + 里面包含安全认证信息、跟踪信息、截止时间、API的取消信号、进程边界
-        + 绝大多数使用`Context`的函数，应该将其作为第一个参数
-            * `func F(ctx context.Context, /* other arguments */) {}`
-            * 不指定请求参数，则可用`context.Background()`
-        + 不要将`Context`作为struct的成员，取而代之的是给每个方法添加一个`Context`的参数
-    - 复制
-        + 一般来说，若类型`T`的方法和`*T`关联则不要对该类型进行复制，可能引起非预期的结果
-    - `rand`
-        + 不要使用`math/rand`来生成秘钥，即便是一次性秘钥，没有初始化种子则其结果是可预测的，
-        + 使用`crypto/rand`的`Read`来生成随机串，`rand.Read(buf)`
-    - 定义空的slice
-        + 推荐使用`var t []string`，而不是`t := []string{}`，前者为nil，而后者非nil，只是两者的len、cap都是0
-        + 有限的场景下，推荐使用非nil形式(`[]string{}`)。如编码JSON对象时，`[]string{}`被编码成`[]`，而nil形式slice编码为`null`
-    - `Example` 测试
-        + 添加一个新的package时，在里面包含一个预期要如何使用的示例：一个可运行的Example 或 测试简单的成功调用流程
-        + `Example`会作为包的测试套件的一部分进行编译
-        + `Example`函数要求
-            * `Example`用例和典型测试一样，存在于`_test.go`文件中
-            * 和典型测试不同，`Example`没有任何参数，并且以`Example`开头，而不是`Test`
-            * `// Output: olleh` 注释，标明预期输出
-                - `Output:`后面的内容若和`Example`用例执行返回的信息一致，则PASS；否则会打印预期结果和实际结果，且结果为FAIL
-                - `:`后有无空格没关系，该行注释后面若有其他注释行，则会依次匹配前面每次`fmt.Println`的结果
-                - 若移除整个`// Output:`注释，则`go test -v`只会编译而不执行该用例
-                - 没有`Output`注释的`Example`对于演示不能作为单元测试用例执行的代码非常有用，如访问网络
-        + 若要`godoc`显示`Example (SortMultiKeys)`形式，则可以用下划线加小写开头的函数名称形式，如：`func Example_sortMultiKeys()`
-        + 多个`Example`用例的场景：整个文件example
-            * 同一份数据，想用不同的函数实现来测试比较，则可以写一个example文件，其中`Example_`形式的用例函数只有一个，里面可以调用多个实现
-            * godoc会从文件内容读取并生成格式化的文档，如sort包：[sort package](https://golang.org/pkg/sort/)
-        + `godoc示例`是编写和维护代码文档的非常好的方法
-        + 参考：[Testable Examples in Go](https://blog.golang.org/examples)
+* `context.Context`
+    - 里面包含安全认证信息、跟踪信息、截止时间、API的取消信号、进程边界
+    - 绝大多数使用`Context`的函数，应该将其作为第一个参数
+        + `func F(ctx context.Context, /* other arguments */) {}`
+        + 不指定请求参数，则可用`context.Background()`
+    - 不要将`Context`作为struct的成员，取而代之的是给每个方法添加一个`Context`的参数
+* 复制
+    - 一般来说，若类型`T`的方法和`*T`关联则不要对该类型进行复制，可能引起非预期的结果
+* `rand`
+    - 不要使用`math/rand`来生成秘钥，即便是一次性秘钥，没有初始化种子则其结果是可预测的，
+    - 使用`crypto/rand`的`Read`来生成随机串，`rand.Read(buf)`
+* 定义空的slice
+    - 推荐使用`var t []string`，而不是`t := []string{}`，前者为nil，而后者非nil，只是两者的len、cap都是0
+    - 有限的场景下，推荐使用非nil形式(`[]string{}`)。如编码JSON对象时，`[]string{}`被编码成`[]`，而nil形式slice编码为`null`
+* `Example` 测试
+    - 添加一个新的package时，在里面包含一个预期要如何使用的示例：一个可运行的Example 或 测试简单的成功调用流程
+    - `Example`会作为包的测试套件的一部分进行编译
+    - `Example`函数要求
+        + `Example`用例和典型测试一样，存在于`_test.go`文件中
+        + 和典型测试不同，`Example`没有任何参数，并且以`Example`开头，而不是`Test`
+        + `// Output: olleh` 注释，标明预期输出
+            * `Output:`后面的内容若和`Example`用例执行返回的信息一致，则PASS；否则会打印预期结果和实际结果，且结果为FAIL
+            * `:`后有无空格没关系，该行注释后面若有其他注释行，则会依次匹配前面每次`fmt.Println`的结果
+            * 若移除整个`// Output:`注释，则`go test -v`只会编译而不执行该用例
+            * 没有`Output`注释的`Example`对于演示不能作为单元测试用例执行的代码非常有用，如访问网络
+    - 若要`godoc`显示`Example (SortMultiKeys)`形式，则可以用下划线加小写开头的函数名称形式，如：`func Example_sortMultiKeys()`
+    - 多个`Example`用例的场景：整个文件example
+        + 同一份数据，想用不同的函数实现来测试比较，则可以写一个example文件，其中`Example_`形式的用例函数只有一个，里面可以调用多个实现
+        + godoc会从文件内容读取并生成格式化的文档，如sort包：[sort package](https://golang.org/pkg/sort/)
+    - `godoc示例`是编写和维护代码文档的非常好的方法
+    - 参考：[Testable Examples in Go](https://blog.golang.org/examples)
 
 ```golang
 func ExampleReverse() {
@@ -2000,3 +2000,26 @@ func ExampleReverse() {
     // Output: olleh
 }
 ```
+
+* goroutine生命周期
+    - 当生成goroutine时，弄清楚它什么时候存在或者是否存在
+    - goroutine可能通过channel阻塞发送或者接收而泄露，即使阻塞它的通道不可用，gc也不会终止goroutine
+* `import`
+    - 避免对import的包重命名来避免冲突，好的包名不需要重命名。若冲突了则尽量选择最本地或项目特定的导入
+    - `import`时，对包进行组织，用空行区分不同的组，把标准库的包放到最前面一组
+    - `import _` 仅应该在`package main`或者测试程序中使用
+    - `import .` 测试文件(要测试的包为foo)里(测试代码的package为foo_test)，把要测试的包当做一部分，则可以用`.`
+* 接收类型(Receiver Type)
+    - 选择方法的接收类型为值还是指针并不容易，如果不确定，则传指针，但是有一些情况用值更清晰且高效
+    - 一些有用的指导
+        + 如果接收者是`map`、`func`、`map`，则不要使用指针；若接收者是`slice`且方法并不用reslice或重新分配slice，则不要使用指针
+        + 若方法要改变接收者，则必须要用指针
+        + 若接收者是一个包含`sync.Mutex`或者类似用于同步的域，则必须使用指针来避免拷贝
+        + 若接收者是一个很大的`struct`或数组，则指针更高效
+* 变量名称
+    - 变量名称应该简短，尤其是范围有限的局部变量，使用`c`而不是`lineCount`，使用`i`而不是`sliceIndex`
+    - 基本准则是：
+        + 使用的名称离声明越远，名称的描述性就越强
+        + 对于方法的接收者，一个或两个字母就足够了
+
+* [如何写出优雅的 Go 语言代码](https://draveness.me/golang-101/)
