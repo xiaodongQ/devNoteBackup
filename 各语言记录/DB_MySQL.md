@@ -274,6 +274,8 @@ lftp -u $FTPU,$FTPP -e "mkdir /mysql/$NOW;cd /mysql/$NOW; mput /backup/mysql/*; 
         + `--cxxflags`, 返回为： "-I/usr/include/mysql -m64 "
 * 若Linux无 MySQL C/C++驱动，则需安装mysql-devel包(会提供`mysql_config`和客户程序需要的相关.so库)
     - `yum install mysql-devel`
+    - `unsigned int mysql_errno(MYSQL *mysql)` 获取错误码，系统`errno`并不会设置
+    - `const char *mysql_error(MYSQL *mysql)` 获取错误信息
 
 [27.8.6 C API Function Overview](https://dev.mysql.com/doc/refman/5.7/en/c-api-function-overview.html)
 
