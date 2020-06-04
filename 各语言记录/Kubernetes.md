@@ -84,3 +84,11 @@
     - Zookeeper 和 Etcd 都是非常优秀的分布式协调系统，zookeeper 起源于 Hadoop 生态系统，etcd 的流行是因为它是 kubernetes 的后台支撑
     - zookeeper 起源于 Hadoop，后来进化为 Apache 的顶级项目。现在已经被广泛使用在 Apache 的项目中，例如 Hadoop，kafka，solr 等等
     - etcd 是用 go 开发的，出现的时间并不长，不像 zookeeper 那么悠久和有名，但是前景非常好
+
+## Kubernetes源码学习
+
+* [Kubernetes源码之旅：从kubectl到API Server](https://www.kubernetes.org.cn/2324.html)
+* `kubectl`
+    - Kubernetes里的命令行接口叫做kubectl。它用来控制Kubernetes集群。阅读这部分源码实现是一个好的开始。我们要追踪的命令是kubectl create -f——它会从文件创建K8s资源
+
+

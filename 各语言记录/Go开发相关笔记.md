@@ -2060,3 +2060,29 @@ func ExampleReverse() {
 
 * `-race` 竞争
     - 
+
+## go分布式框架
+
+### Sentinel
+
+* [Sentinel](https://github.com/alibaba/sentinel-golang/wiki/%E4%BB%8B%E7%BB%8D)
+    - 阿里开源
+    - Sentinel 是面向分布式服务架构的流量控制组件，主要以流量为切入点，从限流、流量整形、熔断降级、系统负载保护等多个维度来帮助您保障微服务的稳定性
+    - [Sentinel 与 Hystrix 的对比](https://yq.aliyun.com/articles/623424)
+        + Hystrix 的关注点在于以 隔离 和 熔断 为主的容错机制，超时或被熔断的调用将会快速失败，并可以提供 fallback 机制
+        + Sentinel 的侧重点在于：多样化的流量控制；熔断降级；系统负载保护；实时监控和控制台
+
+* web框架
+    - Gin
+    - Revel
+    - Echo
+    - Beego
+    - Buffao
+    - Martini
+    - Goji
+    - go-rest
+    - Circuit
+    - macaron
+    - g0-iris
+    - [golang十大主流web框架](https://www.bilibili.com/read/cv5680879/)
+
