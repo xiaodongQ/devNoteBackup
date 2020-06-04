@@ -2054,24 +2054,101 @@ func ExampleReverse() {
         + 使用的名称离声明越远，名称的描述性就越强
         + 对于方法的接收者，一个或两个字母就足够了
 
+
 * [如何写出优雅的 Go 语言代码](https://draveness.me/golang-101/)
+    - 面向接口：面向接口是Go语言鼓励的开发方式，也能够为我们写单元测试提供方便，我们应该遵循固定的模式对外提供功能；
+        + 使用大写的 Service 对外暴露方法；
+        + 使用小写的 service 实现接口中定义的方法；
+        + 通过 func NewService(...) (Service, error) 函数初始化 Service 接口；
+    - 下述代码其实就不是一个设计良好的代码，
+        + 它不仅在 init 函数中隐式地初始化了 grpc 连接这种全局变量，
+        + 而且没有将 ListPosts 通过接口的方式暴露出去，这会让依赖 ListPosts 的上层模块难以测试
+
+```golang
+package post
+
+var client *grpc.ClientConn
+
+func init() {
+    var err error
+    client, err = grpc.Dial(...)
+    if err != nil {
+        panic(err)
+    }
+}
+
+func ListPosts() ([]*Post, error) {
+    posts, err := client.ListPosts(...)
+    if err != nil {
+        return []*Post{}, err
+    }
+
+    return posts, nil
+}
+```
+
+* 重构：
+
+```golang
+package post
+
+type Service interface {
+    ListPosts() ([]*Post, error)
+}
+
+type service struct {
+    conn *grpc.ClientConn
+}
+
+func NewService(conn *grpc.ClientConn) Service {
+    return &service{
+        conn: conn,
+    }
+}
+
+func (s *service) ListPosts() ([]*Post, error) {
+    posts, err := s.conn.ListPosts(...)
+    if err != nil {
+        return []*Post{}, err
+    }
+
+    return posts, nil
+}
+```
+
+* 当我们使用这种方式重构代码之后，就可以在 `main` 函数中显式的初始化 grpc 连接、创建 Service 接口的实现并调用 `ListPosts` 方法
+
+```golang
+func main() {
+    conn, err = grpc.Dial(...)
+    if err != nil {
+        panic(err)
+    }
+
+    svc := post.NewService(conn)
+    posts, err := svc.ListPosts()
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(posts)
+}
+```
 
 ## go run -race
 
 * `-race` 竞争
     - 
 
-## go分布式框架
+## go框架
 
-### Sentinel
-
-* [Sentinel](https://github.com/alibaba/sentinel-golang/wiki/%E4%BB%8B%E7%BB%8D)
-    - 阿里开源
-    - Sentinel 是面向分布式服务架构的流量控制组件，主要以流量为切入点，从限流、流量整形、熔断降级、系统负载保护等多个维度来帮助您保障微服务的稳定性
-    - [Sentinel 与 Hystrix 的对比](https://yq.aliyun.com/articles/623424)
-        + Hystrix 的关注点在于以 隔离 和 熔断 为主的容错机制，超时或被熔断的调用将会快速失败，并可以提供 fallback 机制
-        + Sentinel 的侧重点在于：多样化的流量控制；熔断降级；系统负载保护；实时监控和控制台
-
+* 分布式框架
+    - [Sentinel](https://github.com/alibaba/sentinel-golang/wiki/%E4%BB%8B%E7%BB%8D)
+        + 阿里开源
+        + Sentinel 是面向分布式服务架构的流量控制组件，主要以流量为切入点，从限流、流量整形、熔断降级、系统负载保护等多个维度来帮助您保障微服务的稳定性
+        + [Sentinel 与 Hystrix 的对比](https://yq.aliyun.com/articles/623424)
+            * Hystrix 的关注点在于以 隔离 和 熔断 为主的容错机制，超时或被熔断的调用将会快速失败，并可以提供 fallback 机制
+            * Sentinel 的侧重点在于：多样化的流量控制；熔断降级；系统负载保护；实时监控和控制台
 * web框架
     - Gin
     - Revel
@@ -2085,4 +2162,12 @@ func ExampleReverse() {
     - macaron
     - g0-iris
     - [golang十大主流web框架](https://www.bilibili.com/read/cv5680879/)
+* 存储服务器(Storage Server)
+    - [有哪些值得学习的 Go 语言开源项目？](https://www.zhihu.com/question/20801814)
+    - Minio 是一个与 Amazon S3 APIs 兼容的开源对象存储服务器，分布式存储方案
+    - rclone 用于云存储的 Rsync
+    - Camlistore 是你的个人存储系统：一种存储、同步、共享、建模和备份内容的方式
+    - torus CoreOS 的现代分布式存储系统
 
+* nsq
+* skynet

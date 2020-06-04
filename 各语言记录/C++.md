@@ -471,7 +471,7 @@ void func(int n)
 }
 std::for_each(arr.begin(), arr.end(), func);
 
-// auto 只读
+// auto 只读 (注意若遍历map要修改内容，也需要用`auto &`)
 std::vector<int> arr = {0,1,2,3,4};
 for (auto n : arr)    //n类型是int
 {
@@ -491,6 +491,13 @@ for (auto &n : arr)   //n类型是int&，引用，循环内对成员做修改操
 
 ## string
 
+* `std::string`类型的定义为：`std::basic_string<char>`，模板类，模板形参为`char`
+    - [std::basic_string](https://zh.cppreference.com/w/cpp/string/basic_string)
+    - `string`构造函数：
+        + 通过`char`构造string：`string (size_t n, char c);`
+            * e.g. 通过'0'定义"0"：`string(1, '0')`
+            * 也可以先定义再push_back：`string s1; s1.push_back('0')`，`char`的容器
+    - `std::basic_string` 满足 具分配器容器 (AllocatorAwareContainer) 、序列容器 (SequenceContainer) 及连续容器 (ContiguousContainer) (C++17 起)的要求
 * stod, stoi, to_string
     - `#include <string>`
     - `std::stod`
