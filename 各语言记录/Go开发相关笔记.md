@@ -441,7 +441,7 @@ const (
     - 所有类型实现了空接口 `interface{}`
     - 接口`interface`的实现
 
-```
+```golang
 自定义类型(type)实现接口，需要实现接口中声明的所有方法
 
 1）接口不能实例化（类似于C++中的抽象类），可以指向一个实现了该接口的自定义类型的变量。
@@ -552,7 +552,7 @@ func TestMapWithFuncValue(t *testing.T) {
         + `type NewMutex Mutex`，NewMutex和Mutex有相同的结构，但是NewMutex的方法集是空的
         + `type PtrMutex *Mutex`，PtrMutex的方法集是空的
     - 但是一个接口类型的方法集，和组合类型的成员是保持不变的，如下示例
-        + `type PrintableMutex struct { Mutex }`，新的PrintableMutex类型包含Lock()方法(Mutex绑定到其匿名域了)
+        + `type PrintableMutex struct { Mutex }`，新的PrintableMutex类型包含`Lock()`方法(Mutex绑定到其匿名域了)
         + `type MyBlockInter BlockInter`，(BlockInter是一个interface)新的MyBlockInter类型包含原接口中的方法集
     - type声明可以给基本类型其别名，然后向它绑定一些方法
         + `type TimeZone int`, `func (tz TimeZone) String() string {return fmt.Sprintf("GMT+%dh", tz)}`
