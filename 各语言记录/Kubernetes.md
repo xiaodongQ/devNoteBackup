@@ -9,6 +9,81 @@
 * kubelet
 * replication controller
 
+
+* [官网教程](https://kubernetes.io/zh/docs/tutorials/kubernetes-basics/)
+* 1. 创建集群
+    * 一个 Kubernetes 集群包含两种类型的资源:
+        + Master 调度整个集群
+            * Master 负责管理整个集群。 Master 协调集群中的所有活动，例如调度应用、维护应用的所需状态、应用扩容以及推出新的更新。
+        + Nodes 负责运行应用
+            * Node 是一个虚拟机或者物理机，它在 Kubernetes 集群中充当工作机器的角色
+            * 每个Node都有 Kubelet , 它管理 Node 而且是 Node 与 Master 通信的代理
+            * Node 还应该具有用于​​处理容器操作的工具，例如 Docker 或 rkt
+            * 处理生产级流量的 Kubernetes 集群至少应具有三个 Node
+            * Node 使用 Master 暴露的 Kubernetes API 与 Master 通信
+                - 终端用户也可以使用 Kubernetes API 与集群交互
+    - Kubernetes 既可以部署在物理机上也可以部署在虚拟机上
+        + 可以使用 Minikube 开始部署 Kubernetes 集群。 Minikube 是一种轻量级的 Kubernetes 实现
+            * Minikube 是一种轻量级的 Kubernetes 实现，可在本地计算机上创建 VM 并部署仅包含一个节点的简单集群
+            * Minikube 可用于 Linux ， macOS 和 Windows 系统
+            * Minikube CLI 提供了用于引导群集工作的多种操作，包括启动、停止、查看状态和删除
+            * 参考链接中，可以使用预装有 Minikube 的在线终端进行体验
+        + `minikube version`
+        + `minikube start` 执行后，Minikube会启动一个虚拟机，Kubernetes集群运行在虚拟机中
+        + `kubectl version` 可以看到客户端和服务端的板块，可以检查是否配置好和集群通信
+            * 客户端为`kubectl`的版本
+            * 服务端为Kubernetes的版本
+        + `kubectl cluster-info` 查看Kubernetes集群信息
+        + `kubectl get nodes` 查看所有节点，可以看到只有一个(上面创建的)节点
+            * NAME       STATUS   ROLES    AGE     VERSION
+            * minikube   Ready    master   3m27s   v1.17.3
+    * [使用 Minikube 创建集群](https://kubernetes.io/zh/docs/tutorials/kubernetes-basics/create-cluster/cluster-intro/)
+* 2. 部署应用
+    - [使用 kubectl 创建 Deployment](https://kubernetes.io/zh/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/)
+    - 一旦运行了 Kubernetes 集群，就可以在其上部署容器化应用程序。
+    - 为此需要创建 Kubernetes Deployment 配置
+        + Deployment 指挥 Kubernetes 如何创建和更新应用程序的实例
+        + 创建 Deployment 后，Kubernetes master 将应用程序实例调度到集群中的各个节点上
+        + 创建应用程序实例后，Kubernetes Deployment 控制器会持续监视这些实例。
+        + 如果托管实例的节点关闭或被删除，则 Deployment 控制器会将该实例替换为群集中另一个节点上的实例
+        + 这提供了一种自我修复机制来解决机器故障维护问题
+    - 在没有 Kubernetes 这种编排系统之前，安装脚本通常用于启动应用程序，但它们不允许从机器故障中恢复。
+        + 通过创建应用程序实例并使它们在节点之间运行， Kubernetes Deployments 提供了一种与众不同的应用程序管理方法。
+    - 创建 Deployment 时，需要指定应用程序的容器映像以及要运行的副本数
+        + 之后可通过更新 Deployment 来更改该信息;
+    - 操作
+        + `kubectl create deployment`命令，创建一个app
+            * 需要提供 deployment的名称 和 app镜像的地址(包括外部Docker hub中完整存储镜像的仓库url)
+            * e.g. `kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1`
+                - 执行之后结果显示："deployment.apps/kubernetes-bootcamp created"
+                - 这样就通过创建deployment创建好了一个应用
+            * 创建时会做如下事情：
+                - 搜索一个应用程序可运行的合适的节点
+                - 调度应用运行在该节点上
+                - 配置集群在有需要的情况下重调度实例到新节点上
+        + `kubectl get deployment` 列出deployment
+            * 执行结果如下：
+                - NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+                - kubernetes-bootcamp   1/1     1            1           6m16s
+        + Kubernetes中运行的Pods运行在私有、隔离的网络，默认情况下只对同集群的其他节点可见
+* 3. 查看应用信息
+    - 查看 pod 和工作节点
+        + pod
+            * 上面2中创建 Deployment 时，Kubernetes 添加了一个 Pod 来托管你的应用实例
+            * Pod 是 Kubernetes 抽象出来的，表示一组一个或多个应用程序容器（如 Docker 或 rkt ），以及这些容器的一些共享资源
+                - 共享存储，作为卷
+                - 网络，作为唯一的集群 IP 地址
+                - 有关每个容器如何运行的信息，例如容器映像版本或要使用的特定端口
+            * 如果它们紧耦合并且需要共享磁盘等资源，这些容器应在一个 Pod 中编排。
+            * Pod是 Kubernetes 平台上的原子单元。 当我们在 Kubernetes 上创建 Deployment 时，该 Deployment 会在其中创建包含容器的 Pod （而不是直接创建容器）
+        + 工作节点
+            * 一个 pod 总是运行在 工作节点
+            * 工作节点是 Kubernetes 中的参与计算的机器，可以是虚拟机或物理计算机，具体取决于集群
+            * 每个工作节点由主节点管理。工作节点可以有多个 pod ，Kubernetes 主节点会自动处理在集群中的工作节点上调度 pod
+            * 每个 Kubernetes 工作节点至少运行:
+                - Kubelet，负责 Kubernetes 主节点和工作节点之间通信的过程; 它管理 Pod 和机器上运行的容器
+                - 容器运行时（如Docker，rkt）负责从仓库中提取容器镜像，解压缩容器及运行应用程序
+
 # etcd
 
 * [etcd.io](https://etcd.io/)
