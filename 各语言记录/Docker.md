@@ -301,6 +301,7 @@
             * 删除容器
                 - `docker rm --force bb`
                     + `--force`会移除容器(`docker ps -a`就看不到了)
+                    + 若要删除镜像，则使用：`docker rmi`，注意`docker rm`删除容器，`rmi`删除镜像
                 - 如果只是停止容器(而不删除)，则用 `docker stop bb`(`docker ps -a`还能看到)
             * 下一步是分享镜像到Docker Hub，便于任何机器来下载和运行
     - 在Docker Hub上分享镜像
@@ -314,3 +315,10 @@
 * [Develop with Docker](https://docs.docker.com/develop/)
     - 减小编译出来的镜像大小是最常见的一个挑战，常见一个方式是使用一个Dockerfile用于开发(包括编译应用需要的所有环境和组件)，另一个瘦身的Dockerfile用于产品发布(只包括需要运行的程序和运行需要的组件)
         + 不过维护两个Dockerfile不是最理想的，链接中的示例展示了两个Dockerfile，Dockerfile.build和Dockerfile
+
+## Docker镜像操作
+
+* 把 docker 镜像导出到文件
+    - `docker save -o kube-proxy_1.17.3.tar k8s.gcr.io/kube-proxy:v1.17.3`
+* 导入 docker 镜像文件
+    - `docker load -i kube-proxy_1.17.3.tar`

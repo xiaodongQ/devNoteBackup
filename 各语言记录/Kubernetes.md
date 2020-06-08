@@ -1,5 +1,102 @@
 # Kubernetes
 
+* 部署
+    - master、node节点**都需要**安装`kubelet` `kubeadm` `kubectl`
+        + [Installing kubeadm, kubelet and kubectl](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
+        + `kubeadm`并不会为你安装或管理`kubelet` 或 `kubectl`，需要你保证二者和`kubeadm`版本匹配
+    - 步骤
+        + [k8s集群搭建教程 (centos k8s 搭建)](https://juejin.im/post/5cb7dde9f265da034d2a0dba)
+        + 采用国内阿里云镜像源(连不上官方链接的google源)，安装kubelet、kubeadm、kubectl:
+            * 排版原因离得比较远，搜索：`kubernetes镜像源`
+        + 配置下面列出的源后，`yum list | grep kubeadm`
+            * 结果显示可用的包为：kubeadm.x86_64  1.18.3-0  @kubernetes
+        + `yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes`
+        + `systemctl enable --now kubelet` 开机启动kubelet
+            * `--now`参数会在设置的同时启动服务
+        + centos7用户还需要设置路由：
+            * `lsmod|grep br_netfilter`查看是否加载了模块
+        + k8s要求关闭swap(不关闭则下面的`kubeadm init`初始化时会出现报错提示)
+            * 使用 kubeadm 部署集群必须关闭 Swap分区，各节点均需要执行本操作
+            * `swapoff -a && sysctl -w vm.swappiness=0` 关闭swap
+            * 取消开机挂载swap：`/etc/fstab`配置文件，注释`swap`那行
+                - 或通过sed替换 `sed -ri '/^[^#]*swap/s@^@#@' /etc/fstab`
+        + 创建Kubernetes集群的镜像准备(Master端，Node端有所不同)
+            * `kubeadm config images list` 查看集群使用的容器镜像都有哪些
+                - 结果如：k8s.gcr.io/kube-apiserver:v1.18.3
+                - 但是有个WARNING: kubeadm cannot validate，由于网络连接原因验证不了
+            * 如果镜像连接正常，则执行：`kubeadm config images pull` 即可
+            * 由于国内网络环境，无法下载到 k8s.gcr.io 的镜像，通过拉取docker容器后改tag来绕过该问题
+                - [Kubernetes：如何解决从k8s.gcr.io拉取镜像失败问题](https://blog.csdn.net/u010096900/article/details/82792617)
+                    + 上面链接的镜像源貌似也连不上，用阿里云镜像仓库，参考：[国内拉取google kubernetes镜像](https://blog.csdn.net/networken/article/details/84571373)
+                - docker.io仓库对google的容器做了镜像，可以通过下列命令下拉取相关镜像：
+                    + (版本号设置成跟上面`kubeadm config images list`列出的一致)
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:v1.18.3
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:v1.18.3
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:v1.18.3
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
+                    + docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0
+                    + docker pull coredns/coredns:1.6.7
+                - 修改镜像tag(改成和上面`kubeadm config images list`列出的包名和版本一致)
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:v1.18.3 k8s.gcr.io/kube-apiserver:v1.18.3
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:v1.18.3 k8s.gcr.io/kube-controller-manager:v1.18.3
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:v1.18.3 k8s.gcr.io/kube-scheduler:v1.18.3
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3 k8s.gcr.io/kube-proxy:v1.18.3
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2
+                    + docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0 k8s.gcr.io/etcd:3.4.3-0
+                    + docker tag coredns/coredns:1.6.7 k8s.gcr.io/coredns:1.6.7
+                - 删除修改tag前的镜像(可以用`docker images`查看已有镜像，修改tag后会生成一个新的镜像)
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:v1.18.3
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:v1.18.3
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:v1.18.3
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
+                    + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0
+                    + docker rmi coredns/coredns:1.6.7
+        + Node端镜像准备
+            * 比Master端需要的包要少
+            * 同上面一样配置阿里镜像源，拉取镜像
+                - docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3
+                - docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
+            * 修改镜像tag
+                - docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3 k8s.gcr.io/kube-proxy:v1.18.3
+                - docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2
+            * 删除修改tag前的镜像
+                - docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3
+                - docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
+        + 初始化Master：
+            * `kubeadm init --apiserver-advertise-address 192.168.50.207 --pod-network-cidr 192.168.50.0/24`
+                - `--apiserver-advertise-address` 指定与其它节点通信的接口
+                - `--pod-network-cidr` 指定pod网络子网，使用fannel网络必须使用这个CIDR
+            * 其他选项可以查看help：`kubeadm init -h|less`
+            * 执行结果报错:
+                - [ERROR Swap]: running with swap on is not supported. Please disable swap
+                    + 需要关闭swap，参考前面的操作，搜索：`k8s要求关闭swap`
+                - [ERROR DirAvailable--var-lib-etcd]: /var/lib/etcd is not empty
+                    + 手动安装过etcd，`yum remove etcd`卸载后，删除`/var/lib/etcd`
+            * `/var/log/messages`中报错：
+                - ubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message
+    - etcd
+        + `yum install etcd -y`
+        + yum安装的etcd默认配置文件在/etc/etcd/etcd.conf
+
+```sh
+# kubernetes镜像源
+# 上面链接中配置的源是google，采用国内阿里云镜像源(exclude=kube*)：
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+```
+
+
 * [Kubernetes中文文档](https://www.kubernetes.org.cn/docs)
 * 概述
     - Kubernetes单词起源于希腊语, 是“舵手”或者“领航员”的意思，是“管理者”和“控制论”的根源。
@@ -83,6 +180,11 @@
             * 每个 Kubernetes 工作节点至少运行:
                 - Kubelet，负责 Kubernetes 主节点和工作节点之间通信的过程; 它管理 Pod 和机器上运行的容器
                 - 容器运行时（如Docker，rkt）负责从仓库中提取容器镜像，解压缩容器及运行应用程序
+    - 获取有关已部署的应用程序及其环境的信息。 最常见的操作可以使用以下 `kubectl` 命令完成：
+        + `kubectl get` - 列出资源
+        + `kubectl describe` - 显示有关资源的详细信息
+        + `kubectl logs` - 打印 pod 和其中容器的日志
+        + `kubectl exec` - 在 pod 中的容器上执行命令
 
 # etcd
 
@@ -165,5 +267,4 @@
 * [Kubernetes源码之旅：从kubectl到API Server](https://www.kubernetes.org.cn/2324.html)
 * `kubectl`
     - Kubernetes里的命令行接口叫做kubectl。它用来控制Kubernetes集群。阅读这部分源码实现是一个好的开始。我们要追踪的命令是kubectl create -f——它会从文件创建K8s资源
-
 
