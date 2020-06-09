@@ -19,13 +19,16 @@
         + `create user root identified by 'xxxx';`，可以看到host为`%`，且有两个`root`用户
         + `grant all on *.* to root;`
 
+* mysql配置文件
+    - 网上有各种版本的名称，`my.ini`，`my.cnf`，`mysqld.cnf`
+    - 自己docker安装的mysql，配置文件是 `/etc/my.cnf`，`/etc/my.cnf.d/`目录中是空的
 * Linux下通过容器部署
     - [ Basic Steps for MySQL Server Deployment with Docker](https://dev.mysql.com/doc/refman/8.0/en/docker-mysql-getting-started.html)
         + 下载docker镜像(不是必要的，操作该步可保证本地包是对应版本最新的)
             * `docker pull mysql/mysql-server:tag`，tag是镜像版本(例如5.5, 5.6, 5.7, 8.0, or latest)
             * 此处我选择latest，直接省略:tag即可，默认也是latest，最新版本
         + 运行实例
-            * `docker run --name=mysql1 -p 3306:3306 --restart=always -v /etc/localtime:/etc/localtime -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
+            * `docker run --name=mysql1 -p 3306:3306 --restart=always -v /home/data/mysql/conf/my.cnf:/etc/my.cnf -v /home/data/mysql/data:/var/lib/mysql -d mysql/mysql-server`，若为其他版本则 mysql/mysql-server:对应tag
                 - 如果docker镜像没有通过之前的`docker pull` or `docker run`命令下载，则会自动下载，并运行
                 - `-d`表示后台运行容器(container)
                 - `-p 8080:80`可以将容器中的端口(80)映射到服务器上的端口(8080)，这样外部就可以通过该端口8080访问容器中的服务
@@ -37,7 +40,7 @@
                     + 可在`docker inspect xxxid`结果中的Binds中看到映射关系
                     + 启动时可能要`--privileged`(自己没做映射，没尝试)，使用该参数，container内的root拥有真正的root权限，否则，container内的root只是外部的一个普通用户权限
                         * 若要映射可参考：[Docker安装MySql-挂载外部数据和配置](https://www.cnblogs.com/0oliumino0/p/10538207.html)
-                    + 指定时区：`-v /etc/localtime:/etc/localtime`
+                    + 指定时区：`-v /etc/localtime:/etc/localtime` (貌似没用，还是进入容器复制文件修改了`cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime`)
             * `docker logs mysql1` 查看容器的输出
         + mysql启动后，会给root生成一个随机密码，从日志中查找密码：
             * `docker logs mysql1 2>&1 | grep GENERATED`
@@ -356,7 +359,22 @@ mysql_errno()
     - binlog是一个二进制格式的文件，用于记录用户对数据库更新的SQL语句信息，例如更改数据库表和更改内容的SQL语句都会记录到binlog里，但是对库表等内容的查询不会记录(`binlog.000035`形式命名)
     - 默认情况下，binlog日志是二进制格式的，不能使用查看文本工具的命令（比如，cat，vi等）查看，而使用`mysqlbinlog`解析查看。
     - 主要作用是用于数据库的主从复制及数据的增量恢复
-    - `show variables like 'log_bin';` 查看数据库是否开启binlog
+    - `show variables like 'log_bin%';` 查看数据库是否开启binlog(`log_bin`变量为`ON`则是开启状态)
+        + `show binary logs;` 查看现有的binlog文件
+    - 清理和关闭binlog
+        + `PURGE`指令删除binlog
+            * `purge binary logs before '2019-11-25 13:09:51';` 将指定时间之前的binlog清掉
+            * `purge binary logs to 'bin.000055'` 将bin.000055之前的binlog清掉
+            * `purge master logs before date_sub(current_date, interval 1 day);` 删除1天前的binlog
+        + 可设置binlog过期时间
+            * `show variables like '%expire%';` 查看时间
+            * `binlog_expire_logs_seconds`，默认2592000（30天）过期
+            * e.g. 可设置2天，`set global binlog_expire_logs_seconds=60*60*24*2;`
+        + `binlog_expire_logs_seconds`设置之后不会立即清除过期的，触发条件是
+            * binlog大小超过`max_binlog_size` (`show variables like 'max_binlog_size';`查看大小)
+            * 手动执行flush logs
+            * 重新启动时(MySQL将会new一个新文件用于记录binlog)
+        + [mysql清理和关闭binlog日志](https://www.jianshu.com/p/e4cfbcdb5fc1)
     - 可以在配置文件`my.cnf`中开启：
         + `log-bin = 目录如/data/3306/mysql-bin`
     - [MySQL Binlog详解](https://www.cnblogs.com/xhyan/p/6530861.html)

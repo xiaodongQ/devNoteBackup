@@ -8,19 +8,24 @@
         + [k8s集群搭建教程 (centos k8s 搭建)](https://juejin.im/post/5cb7dde9f265da034d2a0dba)
         + 采用国内阿里云镜像源(连不上官方链接的google源)，安装kubelet、kubeadm、kubectl:
             * 排版原因离得比较远，搜索：`kubernetes镜像源`
-        + 配置下面列出的源后，`yum list | grep kubeadm`
+        + 上一步配置镜像源后，`yum list | grep kubeadm`
             * 结果显示可用的包为：kubeadm.x86_64  1.18.3-0  @kubernetes
         + `yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes`
         + `systemctl enable --now kubelet` 开机启动kubelet
             * `--now`参数会在设置的同时启动服务
         + centos7用户还需要设置路由：
-            * `lsmod|grep br_netfilter`查看是否加载了模块
+            * `lsmod|grep br_netfilter` 查看是否加载了模块(默认貌似已经加载了)
+            * 未加载则进行如下设置：
+                - `yum install -y bridge-utils.x86_64`
+                - `modprobe  br_netfilter`  加载br_netfilter模块，使用lsmod查看开启的模块
+                - 设置路由，搜索查看下面的：`设置路由`
+                - `sysctl --system` 重新加载所有配置文件
         + k8s要求关闭swap(不关闭则下面的`kubeadm init`初始化时会出现报错提示)
             * 使用 kubeadm 部署集群必须关闭 Swap分区，各节点均需要执行本操作
             * `swapoff -a && sysctl -w vm.swappiness=0` 关闭swap
             * 取消开机挂载swap：`/etc/fstab`配置文件，注释`swap`那行
                 - 或通过sed替换 `sed -ri '/^[^#]*swap/s@^@#@' /etc/fstab`
-        + 创建Kubernetes集群的镜像准备(Master端，Node端有所不同)
+        + 创建Kubernetes集群的镜像准备(Master端； Node端有所不同，只要kube-proxy和pause镜像)
             * `kubeadm config images list` 查看集群使用的容器镜像都有哪些
                 - 结果如：k8s.gcr.io/kube-apiserver:v1.18.3
                 - 但是有个WARNING: kubeadm cannot validate，由于网络连接原因验证不了
@@ -53,6 +58,58 @@
                     + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
                     + docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0
                     + docker rmi coredns/coredns:1.6.7
+        + 初始化Master：
+            * `kubeadm init --apiserver-advertise-address 192.168.50.207 --pod-network-cidr 10.10.0.0/16 --kubernetes-version v1.18.3`
+                - `--apiserver-advertise-address` 指定与其它节点通信的接口
+                - `--pod-network-cidr` 指定pod网络子网，使用fannel网络必须使用这个CIDR
+                    + **注意**：此处子网网络是POD内部的网络，不要和当前在同一个网段，会影响正常网络的使用
+                - 最后的参数是版本，建议将版本参数带上，因为k8s版本变化频繁
+            * 其他选项可以查看help：`kubeadm init -h|less`
+            * 执行结果报错:
+                - `[ERROR Swap]: running with swap on is not supported. Please disable swap`
+                    + 需要关闭swap，参考前面的操作，搜索：`k8s要求关闭swap`
+                - `[ERROR DirAvailable--var-lib-etcd]: /var/lib/etcd is not empty`
+                    + 手动安装过etcd，`yum remove etcd`卸载后，删除`/var/lib/etcd`
+            * `/var/log/messages`中报错：
+                - 报错1：`localhost kubelet: E0609 13:34:42.806397   31999 kubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized`
+                - 报错2：`localhost kubelet: W0609 13:34:55.528958   31999 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d`
+            * 执行`kubectl get pods --all-namespaces`报错
+                - 报错：`The connection to the server localhost:8080 was refused - did you specify the right host or port?`
+                - 解决：`export KUBECONFIG=/etc/kubernetes/admin.conf` 加到.bashrc或.zshrc中，然后`./`重新加载
+            * 应用flannel网络
+                - `kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml`
+                    + 执行报错了：Connecting to raw.githubusercontent.com failed: Connection refused
+                    + 解决：
+                        * 在/etc/hosts/中绑定查到的host，添加内容：`199.232.68.133 raw.githubusercontent.com`，再执行就可以了
+                        * 其中的ip地址，是根据 https://www.ipaddress.com/ 进行地址解析得到的真实ip
+                        * 参考：[Connecting to raw.githubusercontent.com failed: Connection refused. 解决办法](https://www.jianshu.com/p/5c1a352ba242)
+                    + 若要删除flannel网络：
+                        * 步骤1，在master节点删除flannel: `kubectl delete -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml`
+                        * 步骤2，在node节点清理flannel网络留下的文件
+                            - `ifconfig cni0 down`，`ip link delete cni0`
+                            - `ifconfig flannel.1 down`，`ip link delete flannel.1`
+                            - `rm -rf /var/lib/cni/`
+                            - `rm -f /etc/cni/net.d/*`
+                        * 执行完上面的操作，重启kubelet
+                        * 参考：[k8s卸载flannel网络](https://blog.csdn.net/I_will_try/article/details/92767031)
+                - [Flannel介绍](https://blog.csdn.net/xuguokun1986/article/details/53119330)
+                    + Flannel是CoreOS团队针对Kubernetes设计的一个网络规划服务，简单来说，它的功能是让集群中的不同节点主机创建的Docker容器都具有全集群唯一的虚拟IP地址
+                    + Flannel的设计目的就是为集群中的所有节点重新规划IP地址的使用规则，从而使得不同节点上的容器能够获得“同属一个内网”且”不重复的”IP地址，并让属于不同节点上的容器能够直接通过内网IP通信
+                    + Flannel实质上是一种“覆盖网络(overlay network)”，也就是将TCP数据包装在另一种网络包里面进行路由转发和通信
+                        * 数据从源容器中发出后，经由所在主机的docker0虚拟网卡转发到flannel0虚拟网卡，这是个P2P的虚拟网卡，flanneld服务监听在网卡的另外一端
+                        * Flannel通过Etcd服务维护了一张节点间的路由表
+            * cgroup驱动问题
+                - 报错：`"cgroupfs" is different from docker cgroup driver: "systemd"`
+                - 本来`kube-apiserver`、`kube-scheduler`等起容器运行正常，因为前面的报错一通瞎操作，把Docker cgroup驱动改成了`systemd`，导致重启kubelet后这些需要的组件都起不来，修改回`cgroupfs`后，重启docker和kubelet后正常，搜索查看配置：`修改Docker cgroup驱动`
+            * *还原操作：* 若要清理`kubeadm init`执行后的环境，使用`kubeadm reset`
+                - 执行后，`docker ps`即可看到k8s集群相关的docker已经清理掉了
+                - 另外有些需要手动清理的，按照`kubeadm reset`后的提示进行操作
+                    + 如：删除`/etc/cni/net.d` (The reset process does not clean CNI configuration. To do so, you must remove /etc/cni/net.d)
+                    + 删除`$HOME/.kube/config`
+            * 到此Master就部署完成了
+                - `kubectl get nodes`可以看到当前有一个master节点，状态是Ready
+                    + NAME                    STATUS   ROLES    AGE     VERSION
+                    + localhost.localdomain   Ready    master   3m47s   v1.18.3
         + Node端镜像准备
             * 比Master端需要的包要少
             * 同上面一样配置阿里镜像源，拉取镜像
@@ -64,21 +121,28 @@
             * 删除修改tag前的镜像
                 - docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.18.3
                 - docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
-        + 初始化Master：
-            * `kubeadm init --apiserver-advertise-address 192.168.50.207 --pod-network-cidr 192.168.50.0/24`
-                - `--apiserver-advertise-address` 指定与其它节点通信的接口
-                - `--pod-network-cidr` 指定pod网络子网，使用fannel网络必须使用这个CIDR
-            * 其他选项可以查看help：`kubeadm init -h|less`
-            * 执行结果报错:
-                - [ERROR Swap]: running with swap on is not supported. Please disable swap
-                    + 需要关闭swap，参考前面的操作，搜索：`k8s要求关闭swap`
-                - [ERROR DirAvailable--var-lib-etcd]: /var/lib/etcd is not empty
-                    + 手动安装过etcd，`yum remove etcd`卸载后，删除`/var/lib/etcd`
-            * `/var/log/messages`中报错：
-                - ubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message
-    - etcd
-        + `yum install etcd -y`
-        + yum安装的etcd默认配置文件在/etc/etcd/etcd.conf
+        + Node节点部署
+            * 跟前面一样部署：`kubelet` `kubeadm` `kubectl`
+            * 设置host
+                - 编辑/etc/hostname，将hostname修改为k8s-node1
+                - 编辑/etc/hosts，追加内容： 本节点IP k8s-node1
+            * 生成token(在master节点执行)：`kubeadm token create`
+                - 得到：`2myo4m.941ykoz9pt9hs237`
+                - `kubeadm token list` 也可以查看
+            * 获取ca证书sha256编码的hash值(在master节点执行)
+                - `openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'`
+                - 得到：`ef86c535e49c0a2cf033bbcf206e1e672a89dd4361931adb1b3c4bb0d23be0ce`
+            * 加入前清理一下环境：`kubeadm reset`
+            * 加入集群(若还提示某配置已存在，则再试一次`kubeadm reset`)：`kubeadm join 192.168.50.207:6443 --token 2myo4m.941ykoz9pt9hs237 --discovery-token-ca-cert-hash sha256:ef86c535e49c0a2cf033bbcf206e1e672a89dd4361931adb1b3c4bb0d23be0ce`
+            * 报错：error execution phase kubelet-start: a Node with name "localhost.localdomain" and status "Ready" already exists in the cluster. You must delete the existing Node or change the name of this new joining Node
+                - 集群主节点192.168.50.207因为我没做配置，默认host是"localhost.localdomain" (`cat /etc/hostname`)，需要修改当前节点的host
+            * 加入完成后，在master节点执行`kubectl get nodes`就可以看到该节点了
+                - NAME                    STATUS   ROLES    AGE     VERSION
+                - k8s-node1               Ready    <none>   4m31s   v1.18.3
+                - localhost.localdomain   Ready    master   77m     v1.18.3
+            * node节点默认执行kubectl报错
+                - The connection to the server localhost:8080 was refused - did you specify the right host or port?
+                - 可从master节点拷贝一份配置
 
 ```sh
 # kubernetes镜像源
@@ -95,6 +159,32 @@ gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
        http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 EOF
 ```
+
+```sh
+# 修改Docker cgroup驱动，与k8s一致
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=cgroupfs"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+```
+
+```sh
+# 设置路由
+cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+```
+
 
 
 * [Kubernetes中文文档](https://www.kubernetes.org.cn/docs)

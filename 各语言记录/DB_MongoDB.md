@@ -84,6 +84,7 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
         + 启动：`docker run -p 27017:27017 --restart=always --name mymongodb -d mongo`
             * `-v <LocalDirectoryPath>:/data/db` 可选，指定数据存储位置
             * 指定路径：`docker run -p 27017:27017 --restart=always -v /home/data/mongo:/data/db --name mymongodb -d mongo`
+            * 指定配置文件：`-v /home/data/mongo_conf:/data/configdb`
 
 
 * 通过下载tar包安装(非官方文档)：[Linux平台安装MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
@@ -781,6 +782,7 @@ estimated_document_count 使用该接口快速返回近似值
         + `50% of (RAM - 1 GB)` 和`256 MB`。
     - 通过文件系统缓存，MongoDB的自动使用未被wiredtiger缓存或由其他进程使用所有可用内存。
     - 调整WiredTiger内部缓存的方法：`storage.wiredTiger.engineConfig.cacheSizeGB` 和 `--wiredTigerCacheSizeGB`
+        + 容器部署时配置cacheSizeGB选项，YAML格式的配置文件，绑定配置文件查看章节：`指定配置文件`
     - [Memory Use](https://docs.mongodb.com/v3.4/core/wiredtiger/index.html#memory-use)
 
 ## 服务状态
