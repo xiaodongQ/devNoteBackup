@@ -28,6 +28,9 @@
             * 为集成开发环境（IDE）提供了强大的代码补全和内联错误信息功能
             * go: gopls
     - 学习 Rust 的过程中一个重要的部分是学习如何阅读编译器提供的错误信息：它们会指导你编写出能工作的代码
+
+### 入门指南
+
 * 安装
     - 通过 `rustup` 下载 Rust，这是一个管理 Rust 版本和相关工具的命令行工具
     - Linux/Mac：`curl https://sh.rustup.rs -sSf | sh`
@@ -87,17 +90,40 @@ fn main() {
         + `cargo --version` 查看是否安装
             * Windows: cargo 1.44.0 (05d080faa 2020-05-06)
     - 使用Cargo创建项目
-        + `cargo new hello_cargo`
-            * 会创建一个hello_cargo目录，包含：
+        + 执行 `cargo new hello_cargo`，会创建一个hello_cargo目录，包含：
             * 1. 一个src目录，其中有一个main.rs文件(只执行一句`println!("Hello World!")`)
-            * 2. .gitignore文件
+            * 2. .gitignore文件(在有git的目录中new则不会生成git相关文件)
             * 3. Cargo.toml文件
                 - 这个文件使用 TOML (Tom's Obvious, Minimal Language) 格式，这是 Cargo 配置文件的格式
+                - `[package]` 是一个片段（section）标题，表明下面的语句用来配置一个包
+                    + 下面四行设置了 Cargo 编译程序所需的配置：项目的名称、版本、作者以及要使用的 Rust 版本
+                    + Cargo 从环境中获取你的名字和 email 信息，若不正确可进行修改
+                - `[dependencies]` 罗列项目依赖的片段的开始
+                    + 在 Rust 中，代码包被称为 `crates`
+                    + 这个项目并不需要其他的 crate
+        + Cargo 期望源文件存放在 src 目录中。
+            * 项目根目录只存放 README、license 信息、配置文件和其他跟代码无关的文件
+    - 构建
+        + 在 hello_cargo 目录下(而不是src)，执行`cargo build`
+            * 这个命令会创建一个可执行文件 `target/debug/hello_cargo`，可以cd到目录中`./`执行
+            * 也可以使用 `cargo run` 在一个命令中*同时编译并运行*生成的可执行文件
+                - 若本次未修改源文件则直接执行二进制文件，
+                - 如果修改了源文件的话，Cargo 会在运行之前重新构建项目
+        + 首次运行 `cargo build` 时，也会使 Cargo 在项目根目录创建一个新文件：`Cargo.lock`
+            * 这个文件记录项目依赖的实际版本
+        + `cargo check` 快速检查代码确保其可以编译，但并不产生可执行文件
+            * 通常 `cargo check` 要比 `cargo build` 快得多，因为它省略了生成可执行文件的步骤
+            * 如果你在编写代码时持续的进行检查，`cargo check` 会加速开发，当准备好使用可执行文件时才运行 `cargo build`
+    - 发布(release)构建
+        + 当项目最终准备好发布时，可以使用 `cargo build --release` 来优化编译项目
+            * 这会在 `target/release` 而不是 `target/debug` 下生成可执行文件
+            * 这些优化可以让 Rust 代码运行的更快，不过启用这些优化也需要消耗更长的编译时间
+        + 如果你在测试代码的运行时间，请确保运行 `cargo build --release` 并使用 `target/release` 下的可执行文件进行测试
+            * `cargo run --release` 运行release版本
 
-* TOML格式
-    - `[package]` 是一个片段（section）标题，表明下面的语句用来配置一个包
+* 生成的TOML格式文件：Cargo.toml
 
-```
+```sh
 # 生成的Cargo.toml文件
 
 [package]
@@ -110,3 +136,31 @@ edition = "2018"
 
 [dependencies]
 ```
+
+### 常见编程概念
+
+* 变量与可变性
+    - 变量默认是不可改变的（immutable），当变量不可变时，一旦值被绑定一个名称上，你就不能改变这个值
+        + e.g. `let x=5; x=6`，编译会报错：error[E0384]: cannot assign twice to immutable variable `x`
+        + `rustc --explain E0384` 可以查看该报错类型的说明
+    - Rust 编译器保证，如果声明一个值不会变，它就真的不会变。这意味着当阅读和编写代码时，不需要追踪一个值如何和在哪可能会被改变，从而使得代码易于推导。
+    - 可以在变量名之前加 `mut` 来使其可变
+        + `let mut x=5;`
+        + 除了允许改变值外，也表明了其他代码将会改变这个变量值的意图
+* 常量
+    - 声明常量：`const MAX_POINTS: u32 = 100_000;`
+        + Rust 常量的命名规范是使用下划线分隔的大写字母单词，并且可以在数字字面值中插入下划线来提升可读性
+    - 在声明它的作用域之中，常量在整个程序生命周期中都有效，这使得常量可以作为多处代码使用的全局范围的值
+    - 常量和变量的区别
+        + 首先，不允许对常量使用 `mut`。常量不光默认不能变，它总是不能变
+            * 声明常量使用 `const` 关键字而不是 `let`，并且**必须**注明值的类型
+        + 常量可以在任何作用域中声明，包括全局作用域，这在一个值需要被很多部分的代码用到时很有用
+        + 最后一个区别是，常量只能被设置为常量表达式，而不能是函数调用的结果，或任何其他只能在运行时计算出的值。
+* 隐藏
+    - 定义一个与之前变量同名的新变量，而新变量会 隐藏 之前的变量
+    - 这意味着使用这个变量时会看到第二个值。可以用相同变量名称来隐藏一个变量，以及重复使用 let 关键字来多次隐藏
+        + `let x = 5; let x = x + 1; let x = x * 2;`
+        + 首先将 x 绑定到值 5 上；接着通过 let x = 隐藏 x，获取初始值并加 1，这样 x 的值就变成 6 了；第三个 let 语句也隐藏了 x，将之前的值乘以 2，x 最终的值是 12。
+    - 隐藏与将变量标记为 `mut` 是有区别的
+        + 对非`mut`变量重新赋值时，如果没有使用 `let` 关键字，就会导致编译时错误
+        + 当再次使用 `let` 时，实际上创建了一个新变量，我们可以改变值的类型，但复用这个名字
