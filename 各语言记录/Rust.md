@@ -162,15 +162,17 @@ edition = "2018"
         + 如果 io::Result 实例的值是 Err，expect 会导致程序崩溃，并显示当做参数传递给 expect 的信息
         + 如果不调用 `expect`，程序也能编译，不过会出现一个警告：警告我们没有使用 read_line 的返回值 Result，说明有一个可能的错误没有处理
             * 消除警告的正确做法是实际编写错误处理代码
-* 使用crate
-    - Rust 标准库中尚未包含随机数功能，然而，Rust 团队还是提供了一个 rand crate
+* 使用crate来增加更多功能
     - crate 是一个 Rust 代码包
+    - Rust 标准库中尚未包含随机数功能，然而，Rust 团队还是提供了一个 rand crate
     - 在我们使用 `rand` 编写代码之前，需要修改 Cargo.toml 文件，引入一个 rand 依赖
         + 在底部的 [dependencies] 片段标题之下添加：`rand = "0.5.5"`
         + Cargo 理解语义化版本（Semantic Versioning）（有时也称为 SemVer），这是一种定义版本号的标准。
         + `0.5.5` 事实上是 `^0.5.5` 的简写，它表示 “任何与 0.5.5 版本公有 API 相兼容的版本”
         + Cargo 从 registry 上获取所有包的最新版本信息，这是一份来自 `Crates.io` 的数据拷贝。[Crates.io](https://crates.io/) 是 Rust 生态环境中的开发者们向他人贡献 Rust 开源项目的地方
     - 不修改任何代码，构建项目`cargo build`
+        + 更新完 registry 后，Cargo 会检查 [dependencies] 片段并下载缺失的 crate 
+        + 本例虽然只声明了 rand 一个依赖，然而 Cargo 还是额外获取了 libc(libc v0.2.71) 和 rand_core(rand_core v0.4.2) 的拷贝，因为 rand 依赖 libc 来正常工作。下载完成后，Rust 编译依赖，然后使用这些依赖编译项目
 
 ```rust
 use std::io;
@@ -186,6 +188,19 @@ fn main() {
     println!("You guessed:{}", guess);
 }
 ```
+
+* Cargo.lock 文件
+    - Cargo 有一个机制来确保任何人在任何时候重新构建代码，都会产生相同的结果：
+        + Cargo 只会使用你指定的依赖版本，除非你又手动指定了别的
+    - 当第一次构建项目时，Cargo 计算出所有符合要求的依赖版本并写入 Cargo.lock 文件
+    - 当将来构建项目时，Cargo会发现Cargo.lock已存在并使用其中指定的版本，而不是再次计算所有的版本。这使得你拥有了一个自动化的可重现的构建。
+        + 例如，如果下周 rand crate 的 0.5.6版本出来了，它修复了一个重要的bug，同时也含有一个会破坏代码运行的缺陷，这时会发生什么呢？
+        + 答案是项目会持续使用 0.5.5 直到你显式升级(因为有Cargo.lock文件)
+    - 当你 确实 需要升级 crate 时，Cargo 提供了另一个命令，`update`，它会忽略 Cargo.lock 文件，并计算出所有符合 Cargo.toml 声明的最新版本。
+        + 如果成功了，Cargo 会把这些版本写入 Cargo.lock 文件
+        + 不过，Cargo 默认只会寻找大于 0.5.5 而小于 0.6.0 的版本。如果 rand crate 发布了两个新版本，0.5.6 和 0.6.0，在运行 cargo update 时会更新到0.5.6
+        + 如果想要使用 0.6.0 版本的 rand 或是任何 0.6.x 系列的版本，必须像这样更新 Cargo.toml 文件：`rand = "0.6.0"` ([dependencies]下面)
+            * 下一次运行 `cargo build` 时，Cargo 会从 registry 更新可用的 crate，并根据你指定的新版本重新计算。
 
 ### 常见编程概念
 
