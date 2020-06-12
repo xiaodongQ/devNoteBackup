@@ -11,6 +11,19 @@ Python的3.0版本，常被称为Python 3000，或简称Py3k。
     新的Python程式建议使用Python 3.0版本的语法。
     Python3 print语句没有了，取而代之的是print()函数
 
+* 升级Python3.x
+    - [CentOS7升级Python3](https://blog.csdn.net/weixin_41798704/article/details/88238222)
+    - https://www.python.org/ftp/python 下载3.x对应版本
+    - `./configure` `make` `make install`
+    - 修改链接
+        + `whereis python`
+        + 把`/usr/bin/python`链接文件备份，新建一个链接文件到python3
+            * `ln -s xxx/python3 /usr/bin/python`
+    - 将python升级为3.x后，yum不能正常使用，需要编辑 yum 的配置文件
+        + 为了使yum命令正常使用(yum是一个python脚本)，需要将其配置的python依然指向2.x版本，把`# /usr/bin/python`修改为`# /usr/bin/python2.7`
+        + `/usr/bin/yum`
+        + `/usr/libexec/urlgrabber-ext-down`
+
 ### 安装pip
 
 * [install pip](https://pip.pypa.io/en/stable/installing/)
@@ -317,6 +330,26 @@ else:
     statement_block_3
 ```
 
+e.g.
+
+```python
+#!/usr/bin/python3
+
+# 该实例演示了数字猜谜游戏
+number = 7
+guess = -1
+print("数字猜谜游戏!")
+while guess != number:
+    guess = int(input("请输入你猜的数字："))
+
+    if guess == number:
+        print("恭喜，你猜对了！")
+    elif guess < number:
+        print("猜的数字小了...")
+    elif guess > number:
+        print("猜的数字大了...")
+```
+
 ### 循环语句
 
 Python中的循环语句有 for 和 while
@@ -352,10 +385,10 @@ else:
     break 语句用于跳出当前循环体
 
 ```python
-    for <variable> in <sequence>:
-        <statements>
-    else:
-        <statements>
+for <variable> in <sequence>:
+    <statements>
+else:
+    <statements>
 ```
 
 e.g.
@@ -409,8 +442,8 @@ Python pass是空语句，是为了保持程序结构的完整性。
 
 ## Python3 迭代器与生成器
 
-迭代是Python最强大的功能之一，是访问集合元素的一种方式。
-迭代器有两个基本的方法：iter() 和 next()。
+* 迭代是Python最强大的功能之一，是访问集合元素的一种方式。
+* 迭代器有两个基本的方法：`iter()` 和 `next()`。
 
 ```python
 >>> list=[1,2,3,4]
@@ -421,9 +454,8 @@ Python pass是空语句，是为了保持程序结构的完整性。
 2
 ```
 
-遍历：
-
-常规for语句进行遍历: it创建后，for in it循环中不用再对it操作
+* 遍历：
+* 常规for语句进行遍历: it创建后，for in it循环中不用再对it操作
 
 ```python
 list=[1,2,3,4]
@@ -432,7 +464,7 @@ for x in it:
     print (x, end=" ")
 ```
 
-next函数遍历：
+* next函数遍历：
 
 ```python
 list=[1,2,3,4]
@@ -445,7 +477,40 @@ while True:
         sys.exit()
 ```
 
-把一个类作为一个迭代器使用需要在类中实现两个方法 __iter__() 与 __next__() 。
+把一个类作为一个迭代器使用需要在类中实现两个方法 `__iter__()` 与 `__next__()` 。
+
+## 函数
+
+* 规则
+    - 函数代码块以 `def` 关键词开头，后接函数标识符名称和圆括号 `()`
+    - 任何传入参数和自变量必须放在圆括号中间，圆括号之间可以用于定义参数
+    - 函数的第一行语句可以选择性地使用文档字符串，用于存放函数说明
+    - 函数内容以冒号`:`起始，并且缩进
+    - `return [表达式]` 结束函数，选择性地返回一个值给调用方。不带表达式的`return`相当于返回 `None`
+
+```python
+#!/usr/bin/python3
+
+# 计算面积函数
+def area(width, height):
+    return width * height
+
+def print_welcome(name):
+    print("Welcome", name)
+
+print_welcome("Runoob")
+w = 4
+h = 5
+print("width =", w, " height =", h, " area =", area(w, h))
+```
+
+* 可更改(mutable)与不可更改(immutable)对象
+    - 在 python 中，`strings`, `tuples`, 和 `numbers` 是不可更改的对象，而 `list`,`dict` 等则是可以修改的对象
+    - 不可变类型示例：
+        + 变量赋值 a=5 后再赋值 a=10，这里实际是新生成一个 int 值对象 10，再让 a 指向它，而 5 被丢弃，不是改变a的值，相当于新生成了a
+    - 可变类型示例：
+        + 变量赋值 la=[1,2,3,4] 后再赋值 la[2]=5 则是将 list la 的第三个元素值更改，本身la没有动，只是其内部的一部分值被修改了
+
 
 ## 安装包问题
 
@@ -453,3 +518,43 @@ while True:
     - "WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/pymongo/"
     - `pip install pymongo -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com`
     - [Pip 安装pymongo失败](https://blog.csdn.net/lwc5411117/article/details/79659794)
+
+
+## python 编译成C++
+
+* [nuitka](http://nuitka.net/doc/user-manual.html)
+  - Nuitka是一个用Python写的Python编译器，可以无缝替换或者扩展 CPython包含的所有解释和编译指令
+  - Nuitka把Python模块翻译成C语言级别的程序，使用 libpython库和它的静态C文件，和CPython以同样的方式执行
+  - 所有的优化都是为了避免不必要的开销
+* 使用
+  - Windows下安装
+      + 安装C编译器，MinGW
+      + 安装Python
+      + 按照Nuitka
+          * `pip install nuitka`
+          * 检查是否安装正常，`nuitka --version`
+  - 编写测试代码并用nuitka编译
+      + 测试运行：`python hello.py`
+      + 用nuitka编译：`python -m nuitka --standalone --mingw64 hello.py`
+          * `--show-progress --show-scons` 可以查看全部输出
+      + 执行`hello.dist`目录下的 `hello.exe`程序
+  - 若要分发副本，则拷贝`hello.dist`目录
+
+
+```python
+# hello.py
+
+def talk(message):
+    return "Talk " + message
+
+def main():
+    print(talk("Hello World"))
+
+if __name__ == "__main__":
+    main()
+```
+
+* 使用用例
+    - 1. 编译时嵌入所有模块
+        + 若想递归地编译整个程序，而不是单个包含main的程序，可：
+        + `python -m nuitka --follow-imports program.py`

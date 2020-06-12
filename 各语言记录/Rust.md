@@ -103,6 +103,9 @@ fn main() {
                     + 这个项目并不需要其他的 crate
         + Cargo 期望源文件存放在 src 目录中。
             * 项目根目录只存放 README、license 信息、配置文件和其他跟代码无关的文件
+        + 如果中间或者结果文件不用加到git中，可以在.gitignore中新增过滤：
+            * `**/target`
+            * `**/Cargo.lock`
     - 构建
         + 在 hello_cargo 目录下(而不是src)，执行`cargo build`
             * 这个命令会创建一个可执行文件 `target/debug/hello_cargo`，可以cd到目录中`./`执行
@@ -137,6 +140,53 @@ edition = "2018"
 [dependencies]
 ```
 
+### 练习demo 猜猜看
+
+* 默认情况下，Rust 将 prelude 模块中少量的类型引入到每个程序的作用域中。如果需要的类型不在 prelude 中，你必须使用 use 语句显式地将其引入作用域
+* `String` 是一个标准库提供的字符串类型，它是 UTF-8 编码的可增长文本块
+* 如果程序的开头没有 `use std::io` 这一行，可以把函数调用写成 `std::io::stdin`
+    - stdin 函数返回一个 `std::io::Stdin` 的实例，这代表终端标准输入句柄的类型
+* `.read_line(&mut guess)` 调用 read_line 方法从标准输入句柄获取用户输入
+    - `read_line`的工作是，无论用户在标准输入中键入什么内容，都将其存入一个字符串中，因此它需要字符串作为参数
+    - 这个字符串参数应该是可变的，以便 `read_line` 将用户输入附加上去
+    - `&` 表示这个参数是一个 引用（reference），它允许多处代码访问同一处数据，而无需在内存中多次拷贝
+* `.expect("Failed to read line");`
+    - 虽然这是单独一行代码，但它是一个逻辑行（虽然换行了但仍是一个语句）的第一部分
+    - 也可以写成一行：`io::stdin().read_line(&mut guess).expect("Failed to read line");`
+        + 通过换行加缩进来把长行拆开是明智的
+        + 过长的行难以阅读，所以最好拆开来写，两个方法调用占两行
+    - `read_line`有个返回值，类型为`io::Result`
+        + Result 类型是 枚举（enumerations），通常也写作 `enums`
+        + Result 的成员是 `Ok` 和 `Err`，Err 成员则意味着操作失败，并且包含失败的前因后果
+    - `io::Result` 的实例拥有 `expect` 方法
+        + 如果 io::Result 实例的值是 Err，expect 会导致程序崩溃，并显示当做参数传递给 expect 的信息
+        + 如果不调用 `expect`，程序也能编译，不过会出现一个警告：警告我们没有使用 read_line 的返回值 Result，说明有一个可能的错误没有处理
+            * 消除警告的正确做法是实际编写错误处理代码
+* 使用crate
+    - Rust 标准库中尚未包含随机数功能，然而，Rust 团队还是提供了一个 rand crate
+    - crate 是一个 Rust 代码包
+    - 在我们使用 `rand` 编写代码之前，需要修改 Cargo.toml 文件，引入一个 rand 依赖
+        + 在底部的 [dependencies] 片段标题之下添加：`rand = "0.5.5"`
+        + Cargo 理解语义化版本（Semantic Versioning）（有时也称为 SemVer），这是一种定义版本号的标准。
+        + `0.5.5` 事实上是 `^0.5.5` 的简写，它表示 “任何与 0.5.5 版本公有 API 相兼容的版本”
+        + Cargo 从 registry 上获取所有包的最新版本信息，这是一份来自 `Crates.io` 的数据拷贝。[Crates.io](https://crates.io/) 是 Rust 生态环境中的开发者们向他人贡献 Rust 开源项目的地方
+    - 不修改任何代码，构建项目`cargo build`
+
+```rust
+use std::io;
+
+fn main() {
+    println!("Guess the number!");
+    println!("Please input your guess.");
+
+    let mut guess = String::new();
+    io:stdin().read_line(&mut guess)
+        .expect("Failed to read line");
+    // {}是占位符
+    println!("You guessed:{}", guess);
+}
+```
+
 ### 常见编程概念
 
 * 变量与可变性
@@ -164,3 +214,5 @@ edition = "2018"
     - 隐藏与将变量标记为 `mut` 是有区别的
         + 对非`mut`变量重新赋值时，如果没有使用 `let` 关键字，就会导致编译时错误
         + 当再次使用 `let` 时，实际上创建了一个新变量，我们可以改变值的类型，但复用这个名字
+* 数据类型
+    - 两类数据类型子集：`标量`（scalar）和`复合`（compound）
