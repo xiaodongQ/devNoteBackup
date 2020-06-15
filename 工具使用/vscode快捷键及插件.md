@@ -265,7 +265,8 @@ ctrl+shift+p, 输入sync，
 参考VS Code官方文档：
 [Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
 
-安装mingw (Minimalist GNU for Windows)，(当前自己用的是安装QT时一并安装的mingw730_64)
+* 安装mingw (Minimalist GNU for Windows)，(当前自己用的是安装QT时一并安装的mingw730_64)
+    - [mingw官网下载链接](http://mingw-w64.org/doku.php/download/mingw-builds)
 
 1. 安装C/C++插件
 2. `c_cpp_properties.json`配置文件

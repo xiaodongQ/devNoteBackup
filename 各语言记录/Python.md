@@ -529,8 +529,11 @@ print("width =", w, " height =", h, " area =", area(w, h))
 * 使用
   - Windows下安装
       + 安装C编译器，MinGW
+          * 下载链接：http://mingw-w64.org/doku.php/download/mingw-builds
+          * MinGW的bin目录添加到Path环境变量
+          * `gcc --version` 查看是否安装正常
       + 安装Python
-      + 按照Nuitka
+      + 安装Nuitka
           * `pip install nuitka`
           * 检查是否安装正常，`nuitka --version`
   - 编写测试代码并用nuitka编译
@@ -539,7 +542,6 @@ print("width =", w, " height =", h, " area =", area(w, h))
           * `--show-progress --show-scons` 可以查看全部输出
       + 执行`hello.dist`目录下的 `hello.exe`程序
   - 若要分发副本，则拷贝`hello.dist`目录
-
 
 ```python
 # hello.py
@@ -558,3 +560,64 @@ if __name__ == "__main__":
     - 1. 编译时嵌入所有模块
         + 若想递归地编译整个程序，而不是单个包含main的程序，可：
         + `python -m nuitka --follow-imports program.py`
+            * 若有模块插件目录通过import找不到，则可以手动指定：`--include-plugin-directory=plugin_dir`，也可以设置`PYTHONPATH`(推荐)
+        + 执行完之后，在Windows上生成的二进制文件名是`program.exe`，其他系统上是`program.bin`
+            * 注意，二进制文件还是依赖于CPython并且会使用按照好的C扩展，若要支持能拷贝到任何机器，则使用`--standalone`并且复制生成的`program.dist`目录(其中包含对应平台的二进制执行文件)
+    - 2. 编译单独的扩展模块
+        + `python -m nuitka --module some_module.py`
+        + 生成的`some_module.so`使用时可以替换`some_module.py`
+    - 3. 编译整个package并嵌入所有模块
+        + `python -m nuitka --module some_package --include-package=some_package`
+
+* [Python打包exe的王炸-Nuitka](https://zhuanlan.zhihu.com/p/133303836)
+    - 参考链接中的完整命令：`nuitka --mingw64 --windows-disable-console --standalone --show-progress --show-memory --plugin-enable=qt-plugins --plugin-enable=pylint-warnings --recurse-all --recurse-not-to=numpy,jinja2 --output-dir=out index.py`
+    - 执行：`nuitka --mingw64 --standalone --show-progress --show-memory --plugin-enable=pylint-warnings --recurse-all --recurse-not-to=numpy,pandas --output-dir=out005_2 005Strategy.py`
+        + 编译耗时八九分钟； dist目录：143MB
+        + 下面几个也进行了编译(较慢)：pymongo,google,grpc
+        + 需要手动添加到dist目录的模块：numpy,pandas,(pytz,datautil 被依赖也需要复制),xlrd,(openpyxl, 又依赖：jdcal.py,et_xmlfile)
+            * 这些目录和文件在python的pip install安装包放的路径，一般在：python安装路径\Lib\site-packages
+        + PyQT,Numpy,Scipy,Pandas,Opencv,OpenpyXL等pyd的模块不编译，交给python3x.dll来调用，避免模块依赖失败
+    - 选项含义
+        + --nofollow-imports 所有的import全部不使用，交给python3x.dll执行
+        + --follow-import-to=need 需要编译成C/C++的import
+        + --mingw64 #默认为已经安装的vs2017去编译，否则就按指定的比如mingw
+        + --standalone 独立文件，这是必须的
+        + --windows-disable-console 没有CMD控制窗口
+        + --recurse-all 所有的资源文件 这个也选上
+        + -recurse-not-to=numpy,jinja2 不编译的模块，防止速度会更慢
+        + --output-dir=out 生成exe到out文件夹下面去
+        + --show-progress 显示编译的进度，很直观
+        + --show-memory 显示内存的占用
+        + --plugin-enable=pylint-warnings 报警信息
+        + --plugin-enable=qt-plugins 需要加载的PyQT插件
+        + 可以通过`nuitka --help`查看各命令说明
+
+Numpy等类似c程式和pyd的调用还是忽略编译好，编译后反而更慢
+
+* [python py、pyc、pyo、pyd文件区别](https://blog.csdn.net/willhuo/article/details/49886663)
+    - py是源文件，pyc是源文件编译后的文件，pyo是源文件优化编译后的文件，pyd是其他语言写的python库
+
+### 使用pyinstaller
+
+* [Python 程序打包成 exe 可执行文件](https://www.cnblogs.com/valorchang/p/11357358.html)
+    - 使用pyinstaller
+    - 发布方式：
+        + .py 文件：对于开源项目或者源码没那么重要的，直接提供源码，需要使用者自行安装 Python 并且安装依赖的各种库。（Python 官方的各种安装包就是这样做的）
+        + .pyc 文件：有些公司或个人因为机密或者各种原因，不愿意源码被运行者看到，可以使用 pyc 文件发布，pyc 文件是 Python 解释器可以识别的二进制码，故发布后也是跨平台的，需要使用者安装相应版本的 Python 和依赖库
+        + 可执行文件：对于非码农用户或者一些小白用户，你让他装个 Python 同时还要折腾一堆依赖库，那简直是个灾难。对于此类用户，最简单的方式就是提供一个可执行文件，只需要把用法告诉他即可。比较麻烦的是需要针对不同平台需要打包不同的可执行文件（Windows, Linux, Mac,…）。
+    - pyinstaller安装使用
+        + `pip install pyinstaller`，`pyinstaller --version`
+        + pyinstaller 的语法：`pyinstaller [options] script [script…] | specfile`
+        + 最简单的用法：在`myscript.py`同目录下执行命令，e.g. `pyinstaller mycript.py`
+            * 会看到新增加了两个目录 `build` 和 `dist`
+            * `dist` 下面的文件就是可以发布的可执行文件
+                - `dist`目录下面有一堆文件，各种动态库文件和myscript可执行文件
+                - 需要打包 dist 下面的所有东西才能发布，万一丢掉一个动态库就无法运行了
+            *  pyInstaller 支持单文件模式：`pyinstaller -F mycript.py`
+                - `dist`下面只有一个可执行文件，这个单文件就可以发布了
+                - 一个简单的helloworld程序，hello.exe前后大小对比：1.38MB，加`-F`:6.16MB
+        + 在执行 pyInstaller 命令的时候，会在和脚本相同目录下，生成一个.spec 文件，该文件会告诉 pyinstaller 如何处理你的所有脚本，同时包含了命令选项。
+            * 一般我们不用去理会这个文件，若需要打包数据文件，或者给打包的二进制增加一些 Python 的运行时选项时…一些高级打包选项时，需要手动编辑.spec 文件。
+    - PyInstaller 原理简介
+        + PyInstaller 其实就是把 python 解析器和你自己的脚本打包成一个可执行的文件，和编译成真正的机器码完全是两回事，所以千万不要指望成打包成一个可执行文件会提高运行效率，相反可能会降低运行效率，好处就是在运行者的机器上不用安装 python 和你的脚本依赖的库
+        + 需要注意的是，PyInstaller 打包的执行文件，只能在和打包机器系统同样的环境下。也就是说，不具备可移植性，若需要在不同系统上运行，就必须针对该平台进行打包
