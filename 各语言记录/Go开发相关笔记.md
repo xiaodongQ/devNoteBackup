@@ -2024,6 +2024,7 @@ func main() {
         + 同一份数据，想用不同的函数实现来测试比较，则可以写一个example文件，其中`Example_`形式的用例函数只有一个，里面可以调用多个实现
         + godoc会从文件内容读取并生成格式化的文档，如sort包：[sort package](https://golang.org/pkg/sort/)
     - `godoc示例`是编写和维护代码文档的非常好的方法
+        + `godoc -http=:6060`
     - 参考：[Testable Examples in Go](https://blog.golang.org/examples)
 
 ```golang

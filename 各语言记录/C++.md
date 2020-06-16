@@ -363,7 +363,7 @@ li.remove(99);   // 除去所有等于99的元素：
     - `clist.erase(iter)` 迭代器
     - `clist.erase(clist.begin(),clist.end());` 删除所有
     - `clist.clear()` 从容器擦除所有元素。此调用后 size() 返回零
- 
+
 ```cpp
 遍历，使用迭代器，不能使用下标
 iter = list1.begin(); != end(); iter++
