@@ -344,12 +344,12 @@ fn main() {
         + e.g. `fn another_function(x: i32) {}`
         + e.g. `fn another_function(x: i32, y: i32) {}`
     - 语句和表达式
-        + 语句（Statements）是执行一些操作但不返回值的指令
+        + `语句`（Statements）是执行一些操作但不返回值的指令
             * 语句不返回值，因此，不能把 let 语句赋值给另一个变量
                 - `let x = (let y = 6);` 是*错误*的
                 - 报错信息 error: expected expression, found statement (`let`)，期望一个表达式
                 - 这与其他语言不同，例如 C 和 Ruby，它们的赋值语句会返回所赋的值，如`x = y = 6`，Rust中不能这样写
-        + 表达式（Expressions）计算并产生一个值
+        + `表达式`（Expressions）计算并产生一个值
             * `let y = 6;`中，`6`是一个表达式，而`let y = 6;`并不是
             * 函数调用是一个表达式
             * 宏调用是一个表达式
@@ -407,7 +407,7 @@ fn main() {
 
 ### 所有权
 
-* 所有权（系统）是 Rust 最为与众不同的特性，它让 Rust 无需垃圾回收（garbage collector）即可保障内存安全
+* `所有权`（系统）是 Rust 最为与众不同的特性，它让 Rust 无需垃圾回收（garbage collector）即可保障内存安全
 * Rust 的核心功能（之一）是 所有权（ownership）
     - 一些语言中具有垃圾回收机制，在程序运行时不断地寻找不再使用的内存； Java、Go
     - 在另一些语言中，程序员必须亲自分配和释放内存 C/C++
@@ -417,3 +417,105 @@ fn main() {
     - Rust 中的每一个值都有一个被称为其 `所有者`（owner）的变量。
     - 值有且只有一个所有者。
     - 当所有者（变量）离开作用域，这个值将被丢弃。
+* `String`
+    - 这个类型被分配到堆上
+    - 可以使用`from`函数基于字符串字面值来创建`String`：
+        + `let s = String::from("hello");`
+    - `s.push_str(", world!");`
+        + `push_str()` 在字符串后追加字面值
+        + 将打印 `hello, world!`
+* 内存和分配
+    - 就字符串字面值来说，我们在编译时就知道其内容，所以文本被直接硬编码进最终的可执行文件中
+    - `String::from`向操作系统请求所需的内存，内存在拥有它的变量离开作用域后就被自动释放
+    - 当变量离开作用域，Rust 为我们调用一个特殊的函数。这个函数叫做 `drop` (类似于C++中的RAII)
+    - 移动
+        + `String`由三部分组成：一个指向存放字符串内容内存的指针，一个长度，和一个容量(类似于Go里的slice)
+        + `let s1 = String::from("hello");`， `let s2 = s1;`
+            * 将 s1 赋值给 s2，String 的数据被复制了，这意味着我们从栈上拷贝了它的指针、长度和容量
+            * 并没有复制指针指向的堆上数据
+        + 不同于其他语言(如C++)中的`浅拷贝`(shallow copy)和`深拷贝`(deep copy)， Rust 同时使第一个变量无效了，这个操作被称为 `移动`(move)，而不是浅拷贝
+            * 上面的例子可以解读为 s1 被 移动 到了 s2 中
+            * 这样就不会出现：当 s2 和 s1 都离开作用域时，二次释放（double free）的错误
+    - 克隆
+        + 如果确实需要深度复制String中堆上的数据，而不仅仅是栈上的数据，可以使用`clone`函数
+            * `let s1 = String::from("hello");`
+            * `let s2 = s1.clone();`
+    - 拷贝
+        + 只在栈上的数据
+        + Rust 有一个叫做 `Copy trait` 的特殊注解
+            * 可以用在类似整型这样的存储在栈上的类型上
+            * 如果一个类型拥有 Copy trait，一个旧的变量在将其赋值给其他变量后仍然可用
+                - e.g. `let x = 5;` `let y = x;`，x仍然可用，而不像String一样
+            * Rust 不允许自身或其任何部分实现了 `Drop trait` 的类型使用 `Copy trait`
+            * 什么类型是`Copy`的可以查看给定类型的文档来确认。不过作为一个通用的规则，任何简单标量值的组合可以是`Copy`的，不需要分配内存或某种形式资源的类型是`Copy`的
+                - 所有整数类型
+                - 布尔类型
+                - 所有浮点数类型
+                - 字符类型
+                - 元组，当且仅当其包含的类型也都是 Copy 的时候，如`(i32, i32)`，而`(i32, String)`就不是
+* 所有权和函数
+    - 对于函数调用：向函数传递值可能会移动或者复制，就像赋值语句一样
+        + `let s = String::from("hello");`  // s 进入作用域
+        + `takes_ownership(s);` // s 的值移动到函数里，在该函数之后访问s就不再有效(所有权转移)
+        + 在函数中，最后会移出作用域并调用`drop`释放内存
+    - 对于返回值：返回值也可以转移所有权
+        + `let s1 = gives_ownership();` gives_ownership 将返回值移给 s1
+    - 变量的所有权总是遵循相同的模式：将值赋给另一个变量时移动它
+        + 当持有堆中数据值的变量离开作用域时，其值将通过 drop 被清理掉，除非数据被移动为另一个变量所有
+    - 如果我们想要函数使用一个值但不获取所有权
+        + Rust 对此提供了一个功能，叫做 `引用`（references）
+* 引用和借用
+    - `&` 符号就是 `引用`，它们允许你使用值但不获取其所有权
+        + e.g. `let s1 = String::from("hello");`，`let len = calculate_length(&s1);`
+    - 将获取引用作为函数参数称为 `借用`（borrowing）
+        + **注意：**（默认）不允许修改引用的值
+    - 可变引用
+        + 创建一个可变引用 `&mut s` 和接受一个可变引用
+            * `let mut s = String::from("hello");`
+            * `change(&mut s);`
+            * 函数定义：`fn change(some_string: &mut String) {}`
+            * 注意定义String时也需要定义为`mut`，形参加`&mut`，实参也加`&mut`
+        + 不过可变引用有一个很大的限制：在特定作用域中的特定数据有且只有一个可变引用
+            * 这个限制的好处是 Rust 可以在编译时就避免数据竞争（data race）
+            * 数据竞争会导致未定义行为，难以在运行时追踪，并且难以诊断和修复；
+            * Rust 避免了这种情况的发生，因为它甚至不会编译存在数据竞争的代码
+    - 不能在拥有不可变引用的同时拥有可变引用(`&mut`)
+        + 场景
+            * `let mut s3 = String::from("xyz");`，`let r1 = &mut s3;`
+            * 下面的表达式只能同时用一个
+                - `println!("s3:{}", s3);` 非mut借用，^^ immutable borrow occurs here
+                - `println!("r1:{}", r1);` mut借用， -- mutable borrow later used here
+        + 同时拥有多个不可变引用是可以的
+        + 注意一个`引用的作用域`从声明的地方开始一直持续到最后一次使用为止
+    - 悬垂引用(dangling references)
+        + 在 Rust中编译器确保引用永远也不会变成悬垂状态：
+        + C/C++中悬垂指针（dangling pointer）：指向已经销毁的对象或已经回收的地址
+        + Rust中当你拥有一些数据的引用，编译器确保数据不会在其引用之前离开作用域
+        + 当尝试创建一个悬垂引用时，Rust 会通过一个编译时错误来避免
+        + e.g.
+            * `fn dangle() -> &String { let s = String::from("hello"); return &s}` 返回字符串 s 的引用
+                - `}`之后，s 离开作用域并被丢弃。其内存被释放。这意味着这个引用会指向一个无效的 String，这可不对！Rust 不会允许我们这么做
+            * 这里的解决方法是直接返回 String：
+                - `fn no_dangle() -> String { let s = String::from("hello"); s}`
+                - 这样就没有任何错误了。所有权被移动出去，所以没有值被释放
+    - 引用的规则
+        + 在任意给定时间，要么 只能有一个可变引用，要么 只能有多个不可变引用
+        + 引用必须总是有效的
+
+```rust
+// 可以使用大括号来创建一个新的作用域，以允许拥有多个可变引用，只是不能 同时 拥有
+let mut s = String::from("hello");
+
+{
+    let r1 = &mut s;
+
+} // r1 在这里离开了作用域，所以我们完全可以创建一个新的引用
+
+let r2 = &mut s;
+```
+
+* 字符串slice
+    - `字符串 slice`（string slice）是 String 中一部分值的引用
+        + `let s = String::from("hello world");`
+        + `let hello = &s[0..5];`
+        + `let world = &s[6..11];`
