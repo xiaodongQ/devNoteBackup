@@ -1,5 +1,7 @@
 ## C++
 
+* 设置vim语法支持C++11
+    - `let g:syntastic_cpp_compiler_options = ' -std=c++11 -stdlib=libc++'`
 
 ### const成员函数
 
@@ -1001,6 +1003,16 @@ C++是从14之后的版本才正式支持共享互斥量，也就是实现读写
         + 否则 ，假设e的类型是T，如果e是一个将亡值，那么decltype（e）为T&&
         + 否则，假设e的类型是T，如果e是一个左值，那么decltype（e）为T&
         + 否则，假设e的类型是T，则decltype（e）为T
+
+* 替代宏
+    - [宏在C++中的替代解决方案](https://blog.csdn.net/aheroofeast/article/details/7932762)
+    - `#define NUM 100`
+        + 由于宏是预编译程序来处理，所以NUM这个名字不会加入到符号表中，如果出现编译错误时，提示信息中就不会出现NUM，而是100，为排除错误增加了额外的障碍
+    - 替代方案就是使用const来定义常量，或者使用枚举enum
+        + `const int NUM = 100;`
+        + const常量放在头文件中，也不必担心存在多个实例的问题，对于const修饰的变量，编译器一般也会对其进行优化，不会出现多重定义的问题
+    - C语言中还有一个特殊的常量定义：`NULL`。其一般的定义为` #define NULL 0`，指针的内容却是一个整型，这不符合常理。
+        + 所以在C++11中使用`nullptr`代替了`NULL`
 
 ### C各版本
 
@@ -2643,3 +2655,179 @@ private:
             * thread 不可复制，没有两个`std::thread`对象可表示同一执行线程
         + 参考：[thread构造函数](https://zh.cppreference.com/w/cpp/thread/thread/thread)
     - `std::thread`对象可能处于不表示任何线程的状态，默认构造、被移动、 detach 或 join 后则不表示线程
+
+## 内联
+
+* [C++中的inline用法](https://www.cnblogs.com/fnlingnzb-learner/p/6423917.html)
+* 在C/C++中，为了解决一些频繁调用的小函数大量消耗栈空间（栈内存）的问题，特别的引入了`inline`修饰符，表示为内联函数
+* 在系统下，栈空间是有限的，假如频繁大量的使用就会造成因栈空间不足而导致程序出错的问题，如，函数的死循环递归调用的最终结果就是导致栈内存空间枯竭
+* 如下示例
+    - 在内部的工作就是在每个for循环的内部任何调用dbtest(i)的地方都换成了`(i%2>0)?”奇”:”偶”`，这样就避免了频繁调用函数对栈内存重复开辟所带来的消耗
+
+```cpp
+#include <stdio.h>
+//函数定义为inline即:内联函数
+inline char* dbtest(int a) {
+    return (i % 2 > 0) ? "奇" : "偶";
+}
+
+int main()
+{
+   int i = 0;
+   for (i=1; i < 100; i++) {
+       printf("i:%d    奇偶性:%s /n", i, dbtest(i));
+   }
+}
+```
+
+* inline使用限制
+    - inline只适合涵数体内代码简单的涵数使用，不能包含复杂的结构控制语句例如while、switch，并且不能内联函数本身不能是直接递归函数
+    - inline函数仅仅是一个对编译器的建议，所以最后能否真正内联，看编译器的意思，它如果认为函数不复杂，能在调用点展开，就会真正内联，并不是说声明了内联就会内联，声明内联只是一个建议而已
+* 类中的成员函数与`inline`
+    - **定义在类中的成员函数缺省都是内联的**
+
+```cpp
+// example.h
+class A
+{
+    public:void Foo(int x, int y) {  } // 自动地成为内联函数
+}
+```
+
+* 将成员函数的定义体放在类声明之中虽然能带来书写上的方便，但不是一种良好的编程风格，上例应该改成：
+
+```cpp
+// example.h
+class A
+{
+    public:
+    void Foo(int x, int y);
+}
+```
+
+```cpp
+// example.cpp
+inline void A::Foo(int x, int y)
+{
+
+}
+```
+
+* 关键字`inline`必须与函数定义体放在一起才能使函数成为内联
+    - 仅将`inline`放在函数声明前面不起任何作用
+    - 如上面例子中，需要在函数实现时用`inline`修饰
+    - 对于声明时使用：`inline void Foo(int x, int y);` 并不能成为内联函数
+    - 正确做法：
+        + 声明：`void Foo(int x, int y);`
+        + 实现：`inline void Foo(int x, int y) {}`
+    - 所以说，`inline` 是一种“用于实现的关键字”，而不是一种“用于声明的关键字”
+* 慎用`inline`
+    - 内联是以代码膨胀（复制）为代价，仅仅省去了函数调用的开销，从而提高函数的执行效率
+    - 如果执行函数体内代码的时间，相比于函数调用的开销较大，那么效率的收获会很少
+    - 另一方面，每一处内联函数的调用都要复制代码，将使程序的总代码量增大，消耗更多的内存空间
+    - 以下情况不宜使用内联
+        + 如果函数体内的代码比较长，使用内联将导致内存消耗代价较高
+        + 如果函数体内出现循环，那么执行函数体内代码的时间要比函数调用的开销大
+        + 类的构造函数和析构函数容易让人误解成使用内联更有效
+            * 要当心构造函数和析构函数可能会隐藏一些行为，如“偷偷地”执行了基类或成员对象的构造函数和析构函数
+            * 所以*不要随便地将构造函数和析构函数的定义体放在类声明中* (如前面所说的：定义在类中的成员函数缺省都是内联的)(此处定义指的是：定义类时同时定义函数体)
+            * 一个好的编译器将会根据函数的定义体，自动地取消不值得的内联（这进一步说明了 `inline` 不应该出现在函数的声明中）。
+
+## localtime
+
+* `struct tm *localtime(const time_t *timep);`
+    - `#include <time.h>`
+    - 把从1970-1-1零点零分到当前时间系统所偏移的秒数时间转换为本地时间
+        + 此函数获得的tm结构体的时间是日历时间
+        + `printf("%4d年%02d月%02d日 %02d:%02d:%02d\n",t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);`
+    - 而`gmtime`函数转换后的时间没有经过时区变换，是UTC时间
+    - 注意，`localtime`不是线程安全的，应该使用`localtime_r`(linux平台)
+        + *应使用*： `struct tm *localtime_r(const time_t *timep, struct tm *result);`
+        + `localtime`访问入参`timep`指向的对象指针，并且会访问和修改一个共享的内部对象，所以并发调用时可能会产生Data races，参考：[localtime](http://www.cplusplus.com/reference/ctime/localtime/)
+* `struct tm *gmtime(const time_t *timep);`
+    - `#include <time.h>`
+    - 把日期和时间转换为格林威治(GMT)时间的函数
+    - `localtime`函数获得的tm结构体的时间，是已经进行过时区转化为本地时间，而此函数功能类似获取当前系统时间，只是获取的时间未经过时区转换
+    - 同`localtime`一样，*应使用*：
+        + `struct tm *gmtime_r(const time_t *timep, struct tm *result);`
+
+```cpp
+// test_time.cpp 均使用线程安全的版本
+#include <ctime>
+#include <cstdio>
+
+void cur_localtime(void)
+{
+    const char *wday[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+    time_t timep;
+    struct tm t;
+    time(&timep);
+    if (NULL == localtime_r(&timep, &t)) /* 获取当前时间 */
+    {
+        printf("err");
+        return;
+    }
+    printf("%d年%02d月%02d日",(1900+t.tm_year),(1+t.tm_mon),t.tm_mday);
+    printf("%s %02d:%02d:%02d\n",wday[t.tm_wday],t.tm_hour,t.tm_min,t.tm_sec);
+}
+
+void cur_gmtime(void){
+    const char *wday[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+    time_t timep;
+    struct tm t;
+    time(&timep);
+    if (NULL == gmtime_r(&timep, &t)) /* 获取当前时间 */
+    {
+        printf("err");
+        return;
+    }
+    printf("%d年%02d月%02d日",(1900+t.tm_year),(1+t.tm_mon),t.tm_mday);
+    printf("%s %02d:%02d:%02d\n",wday[t.tm_wday],(t.tm_hour),t.tm_min,t.tm_sec);
+
+    printf("\nafter hour +8:\n");
+    printf("%s %02d:%02d:%02d\n",wday[t.tm_wday],(t.tm_hour+8),t.tm_min,t.tm_sec);
+}
+
+int main(int argc, const char *argv[])
+{
+    cur_localtime();
+
+    printf("===============\n");
+    cur_gmtime();
+    return 0;
+}
+
+/*
+    运行结果(当前北京时间2020.6.18 15:58:43)：
+
+    2020年06月18日Thursday 15:58:43
+    ===============
+    2020年06月18日Thursday 07:58:43
+
+    after hour +8:
+    Thursday 15:58:43
+*/
+```
+
+* 对于`localtime_r`比较常用，可定义一个内联函数供使用(参考spdlog内部命名空间中的实现)
+
+```cpp
+// localtime 封装线程安全的版本，定义在头文件中，内联
+inline struct tm util_localtime(const time_t *timep) noexcept
+{
+#ifdef _WIN32
+    struct tm _tm;
+    localtime_s(&_tm, timep);
+#else
+    struct tm _tm;
+    localtime_r(timep, &_tm);
+#endif
+    return _tm;
+}
+```
+
+## 无锁编程
+
+* [C++性能榨汁机之无锁编程](https://zhuanlan.zhihu.com/p/38664758)
+
+* [C++并发实战16: std::atomic原子操作](https://blog.csdn.net/liuxuejiang158/article/details/17413149)

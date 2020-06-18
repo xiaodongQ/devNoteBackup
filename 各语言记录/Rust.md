@@ -256,6 +256,9 @@ fn main() {
 
 ### 常见编程概念
 
+* [常见编程概念](https://kaisery.github.io/trpl-zh-cn/ch03-00-common-programming-concepts.html)
+    - 介绍一些几乎所有编程语言都有的概念，以及它们在 Rust 中是如何工作的
+    - 很多编程语言的核心概念都是共通的，本章中展示的概念都不是 Rust 所特有的，不过我们会在 Rust 上下文中讨论它们，并解释使用这些概念的惯例。
 * 变量与可变性
     - 变量默认是不可改变的（immutable），当变量不可变时，一旦值被绑定一个名称上，你就不能改变这个值
         + e.g. `let x=5; x=6`，编译会报错：error[E0384]: cannot assign twice to immutable variable `x`
@@ -407,7 +410,8 @@ fn main() {
 
 ### 所有权
 
-* `所有权`（系统）是 Rust 最为与众不同的特性，它让 Rust 无需垃圾回收（garbage collector）即可保障内存安全
+* [认识所有权](https://kaisery.github.io/trpl-zh-cn/ch04-00-understanding-ownership.html)
+    - `所有权`（系统）是 Rust 最为与众不同的特性，它让 Rust 无需垃圾回收（garbage collector）即可保障内存安全
 * Rust 的核心功能（之一）是 所有权（ownership）
     - 一些语言中具有垃圾回收机制，在程序运行时不断地寻找不再使用的内存； Java、Go
     - 在另一些语言中，程序员必须亲自分配和释放内存 C/C++

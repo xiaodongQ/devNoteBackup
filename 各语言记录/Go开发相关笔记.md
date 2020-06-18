@@ -128,6 +128,7 @@
         + 包名(Package names)
             * 当一个包被导入后，包名就会成了内容的访问器 e.g. `import "bytes"`
             * 按照惯例，包应当以小写的单个单词来命名，且不应使用下划线或驼峰记法。
+                - 不需要提前担心冲突，在所有源码中不必要保持唯一，少数情况有冲突可以在导入时换个不同的名字
             * 另一个约定就是包名应为其源码目录的基本名称
                 - 在 src/pkg/encoding/base64 中的包应作为 "encoding/base64" 导入，其包名应为 base64， 而非 encoding_base64 或 encodingBase64
             * 包的导入者可通过包名来引用其内容，因此包中的可导出名称可以此来避免冲突
@@ -278,6 +279,52 @@ func init() {
     - `sync.RWMutex` 读写互斥锁
         + 读`RLock()` 和 `RUnlock()` 注意配套
         + 写`Lock()` 和 `Unlock()`
+
+
+### go lint
+
+* [Golint代码规范检测](https://blog.csdn.net/chenguolinblog/article/details/90665161)
+* Golint 是一个源码检测工具用于检测代码规范
+    - Golint 不同于gofmt, Gofmt用于代码格式化
+* Golint会对代码做以下几个方面检查
+    - package注释 必须按照 `Package xxx` 开头
+    - package命名 不能有大写字母、下划线等特殊字符(上面的《Effective Go》中也做了该说明，搜`包名(Package names)`)
+    - 不能使用下划线命名法，使用驼峰命名法
+    - 外部可见程序结构体、变量、函数都需要注释
+    - 通用名词要求大写
+        + iD/Id -> ID
+        + Http -> HTTP
+        + Json -> JSON
+        + Url -> URL
+        + Ip -> IP
+        + Sql -> SQL
+    - 包命名统一小写不使用驼峰和下划线
+    - 注释第一个单词要求是注释程序主体的名称，注释可选不是必须的
+    - 外部可见程序实体不建议再加包名前缀
+    - if语句包含return时，后续代码不能包含在else里面
+    - `errors.New(fmt.Sprintf(…))` 建议写成 `fmt.Errorf(…)`
+    - receiver名称不能为this或self
+    - 错误变量命名需以 `Err/err` 开头
+    - a+=1应该改成`a++`，a-=1应该改成`a--`
+
+* [Go语言规范汇总](https://www.cnblogs.com/Survivalist/articles/10596152.html)
+* 目录名
+    - 规则：目录名必须为全小写单词，允许加中划线`-`组合方式，但是头尾不能为中划线
+        + 建议：虽然允许出现中划线，但是尽量避免或少加中划线
+* 文件名
+    - 规则：文件名必须为小写单词，允许加下划线`_`组合方式，但是头尾不能为下划线
+        + 建议：虽然允许出现下划线，但是尽量避免
+        + 建议：文件名以功能为指引，名字中不需再出现模块名或者组件名
+* 常量
+    - 规则：常量、枚举名采用大小写混排的驼峰模式（Golang官方要求），不允许出现下划线
+* 变量
+    - 规则：变量名称一般遵循驼峰法，并且不允许出现下划线，当遇到特有名词时，需要遵循以下规则
+        + 如果变量为私有，且特有名词为首个单词，则使用小写，如：`apiClient`
+        + 其它情况都应当使用该名词原有的写法，如 APIClient、repoID、UserID
+    - 在函数外部申明必须使用`var`,不要采用`:=`，容易踩到变量的作用域的问题
+* 返回值
+    - 规则：返回值如果是命名的，则必须大小写混排，首字母小写
+        + 函数的返回值应避免使用命名的参数
 
 ### [Go语言圣经（中文版）](https://books.studygolang.com/gopl-zh/index.html)
 
@@ -1454,37 +1501,6 @@ func init() {
 }
 ```
 
-
-### go lint
-
-golint校验常见的问题:
-
-[Golint代码规范检测](https://blog.csdn.net/chenguolinblog/article/details/90665161)
-
-
-不能使用下划线命名法，使用驼峰命名法
-外部可见程序结构体、变量、函数都需要注释
-
-通用名词要求大写
-iD/Id -> ID
-Http -> HTTP
-Json -> JSON
-Url -> URL
-Ip -> IP
-Sql -> SQL
-
-包命名统一小写不使用驼峰和下划线
-注释第一个单词要求是注释程序主体的名称，注释可选不是必须的
-外部可见程序实体不建议再加包名前缀
-if语句包含return时，后续代码不能包含在else里面
-errors.New(fmt.Sprintf(…)) 建议写成 fmt.Errorf(…)
-receiver名称不能为this或self
-错误变量命名需以 Err/err 开头
-a+=1应该改成a++，a-=1应该改成a–
-
-[Go语言规范-命名篇](https://www.cnblogs.com/Survivalist/articles/10596115.html)
-[Go语言规范汇总](https://www.cnblogs.com/Survivalist/articles/10596152.html)
-
 ### go 调试
 
 dlv
@@ -1990,9 +2006,9 @@ func main() {
         + `func Notify(c chan<- os.Signal, sig ...os.Signal)` 捕获信号(让信号中转给`c`)
         + 
 
-## CodeReviewComments 官方列出的常见错误清单
+## Go Code Review Comments 官方列出的常见错误清单
 
-* [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
+* [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
     - 可看做是《Effective Go》的补充，可查看前面`《Effective Go》`章节
 * `context.Context`
     - 里面包含安全认证信息、跟踪信息、截止时间、API的取消信号、进程边界
@@ -2139,7 +2155,66 @@ func main() {
 ## go run -race
 
 * `-race` 竞争
-    - 
+    - golang在1.1之后引入了竞争检测的概念
+    - 使用`go run -race` 或者 `go build -race` 来进行竞争检测(数据竞争)
+
+```golang
+// race1.go
+1 package main
+2
+3 import (
+4     "log"
+5     // "time"
+6 )
+7
+8 func main() {
+9     a := 1
+10     go func() {
+11         a = 2
+12     }()
+13     a = 3
+14     log.Printf("a:%v", a)
+15 }
+
+```
+
+* 运行`go run -race .\race1.go`，结果如下(可以看到运行的同时检测出了data race)：
+
+```sh
+==================
+WARNING: DATA RACE
+# 在goroutine 7中，代码行11行，对地址0x00c000122068有写入
+Write at 0x00c000122068 by goroutine 7:
+  main.main.func1()
+      F:/work/workspace/go_path/src/github.com/xiaodongQ/go_learning/nsq_learn/race1.go:11 +0x3f
+
+# 在13行对同一个地址也有写入
+Previous write at 0x00c000122068 by main goroutine:
+  main.main()
+      F:/work/workspace/go_path/src/github.com/xiaodongQ/go_learning/nsq_learn/race1.go:13 +0x8f
+
+# goroutine 7在代码中创建的位置
+Goroutine 7 (running) created at:
+  main.main()
+      F:/work/workspace/go_path/src/github.com/xiaodongQ/go_learning/nsq_learn/race1.go:10 +0x81
+==================
+2020/06/18 17:12:12 a:3
+# 找到一个data race
+Found 1 data race(s)
+exit status 66
+```
+
+* [Any race is a bug](https://ms2008.github.io/2019/05/12/golang-data-race/)
+    - 在 Go（甚至是大部分语言）中，一条普通的赋值语句其实并不是一个原子操作（语言规范同样没有定义 `i++` 是原子操作, 任何变量的赋值都不是原子操作）。
+        + 例如，在 32 位机器上写 int64 类型的变量是有中间状态的，它会被拆成两次写操作 MOV —— 写低 32 位和写高 32 位
+        + 如果一个线程刚写完低 32 位，还没来得及写高 32 位时，另一个线程读取了这个变量，那它得到的就是一个毫无逻辑的中间变量，这很有可能使我们的程序出现诡异的 Bug
+    - 在 Go 的内存模型中，有 race 的 Go 程序的行为是未定义行为，理论上出现什么情况都是正常的
+    - 解决 race 的问题
+        + 上锁，`sync.Mutex`
+        + 无锁队列，用`atomic`包(sync/atomic)
+    - mutex 由操作系统实现，而 atomic 包中的原子操作则由底层硬件直接提供支持
+        + 在 CPU 实现的指令集里，有一些指令被封装进了 atomic 包，这些指令在执行的过程中是不允许中断（interrupt）的，因此原子操作可以在 lock-free 的情况下保证并发安全，并且它的性能也能做到随 CPU 个数的增多而线性扩展
+        + 若实现相同的功能，后者通常会更有效率，并且更能利用计算机多核的优势。所以，以后当我们想并发安全的更新一些变量的时候，我们应该优先选择用 `atomic` 来实现
 
 ## go框架
 
