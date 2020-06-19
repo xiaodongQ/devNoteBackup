@@ -2830,4 +2830,95 @@ inline struct tm util_localtime(const time_t *timep) noexcept
 
 * [C++性能榨汁机之无锁编程](https://zhuanlan.zhihu.com/p/38664758)
 
+使用锁：
+
+```cpp
+// test_mutex.cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
+
+using namespace std;
+int  i = 0;
+mutex mut; //互斥锁
+
+void iplusplus() {
+    int c = 10000000;  //循环次数
+    while (c--) {
+        mut.lock();  //互斥锁加锁
+        i++;
+        mut.unlock(); //互斥锁解锁
+    }
+}
+int main()
+{
+    chrono::steady_clock::time_point start_time = chrono::steady_clock::now();//开始时间
+    thread thread1(iplusplus);
+    thread thread2(iplusplus);
+    thread1.join();  // 等待线程1运行完毕
+    thread2.join();  // 等待线程2运行完毕
+    cout << "i = " << i << endl;
+    chrono::steady_clock::time_point stop_time = chrono::steady_clock::now();//结束时间
+    chrono::duration<double> time_span = chrono::duration_cast<chrono::microseconds>(stop_time - start_time);
+    std::cout << "共耗时：" << time_span.count() << " ms" << endl; // 耗时
+    // system("pause");
+    return 0;
+}
+
+/*
+    g++ test_mutex.cpp -std=c++11 -lpthread
+    i = 20000000
+    共耗时：0.958147 ms
+*/
+```
+
+使用`atomic`：
+
+```cpp
+// test_atomic.cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
+
+using namespace std;
+atomic<int> i = 0;
+
+void iplusplus() {
+    int c = 10000000;  //循环次数
+    while (c--) {
+        i++;
+    }
+}
+int main()
+{
+    chrono::steady_clock::time_point start_time = chrono::steady_clock::now();//开始时间
+    thread thread1(iplusplus);
+    thread thread2(iplusplus);
+    thread1.join();  // 等待线程1运行完毕
+    thread2.join();  // 等待线程2运行完毕
+    cout << "i = " << i << endl;
+    chrono::steady_clock::time_point stop_time = chrono::steady_clock::now();//结束时间
+    chrono::duration<double> time_span = chrono::duration_cast<chrono::microseconds>(stop_time - start_time);
+    std::cout << "共耗时：" << time_span.count() << " ms" << endl; // 耗时
+    // system("pause");
+    return 0;
+}
+
+/*
+    g++ test_atomic.cpp -std=c++11 -lpthread 编译报错：
+    test_atomic.cpp:8:17: 错误：使用了被删除的函数‘std::atomic<int>::atomic(const std::atomic<int>&)’
+    atomic<int> i = 0;
+    In file included from test_atomic.cpp:4:0:
+    /usr/include/c++/4.8.2/atomic:601:7: 错误：在此声明
+       atomic(const atomic&) = delete;
+*/
+```
+
+
+* [C++性能榨汁机之CPU亲和性](https://zhuanlan.zhihu.com/p/57470627)
+
 * [C++并发实战16: std::atomic原子操作](https://blog.csdn.net/liuxuejiang158/article/details/17413149)
