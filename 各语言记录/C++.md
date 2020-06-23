@@ -2,6 +2,7 @@
 
 * 设置vim语法支持C++11
     - `let g:syntastic_cpp_compiler_options = ' -std=c++11 -stdlib=libc++'`
+* 迭代器循环中，谨记continue时对迭代器进行更新！
 
 ### const成员函数
 

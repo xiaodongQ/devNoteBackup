@@ -562,6 +562,13 @@ func TestMapWithFuncValue(t *testing.T) {
 }
 ```
 
+* [golang map源码详解](https://juejin.im/entry/5a1e4bcd6fb9a045090942d8)
+    - go1.14版本，map实现文件：`runtime/map.go`
+        + `runtime/map_fast64.go`/`runtime/map_fast32.go` 提供了一些快速操作map的函数
+    - map的底层结构是`hmap`（即hashmap的缩写），核心元素是一个由若干个桶（bucket，结构为`bmap`）组成的数组，每个bucket可以存放若干元素（通常是8个），
+        + key通过哈希算法被归入不同的bucket中
+        + 当超过8个元素需要存入某个bucket时，hmap会使用extra中的overflow来拓展该bucket
+
 * `chan`
     - 通道(channel)提供了并发执行函数来发送和读取的一种机制
     - 未初始化的通道值为nil
@@ -1117,6 +1124,7 @@ func Errorf(format string, a ...interface{}) error {
                         * 使用 `logrus.SetReportCaller(true)`开启
             * Field机制：logrus鼓励通过Field机制进行精细化的、结构化的日志记录，而不是通过冗长的消息来记录日志
             * logrus是一个可插拔的、结构化的日志框架
+            * [Go 每日一库之 logrus](https://darjun.github.io/2020/02/07/godailylib/logrus/)
             * [golang日志框架之logrus](https://blog.csdn.net/wslyk606/article/details/81670713)
             * [logrus Github](https://github.com/sirupsen/logrus)
                 - 对于文件名、函数名和行号，可选择第三方formatter: powerful-logrus-formatter
