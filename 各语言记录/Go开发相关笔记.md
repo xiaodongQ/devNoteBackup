@@ -1669,13 +1669,20 @@ func ConvertToByte(src string, srcCode string, targetCode string) []byte {
 * string、int、int64互相转换示例：
 
 ```golang
-int,err:=strconv.Atoi(string)
-#string到int64
-int64, err := strconv.ParseInt(string, 10, 64)
-#int到string
-string:=strconv.Itoa(int)
-#int64到string
-string:=strconv.FormatInt(int64,10)
+// string到int
+int,err:=strconv.Atoi(s)
+
+// string到int64
+int64, err := strconv.ParseInt(s, 10, 64)
+
+// int到string
+string:=strconv.Itoa(i)
+
+// int64到string
+string:=strconv.FormatInt(i, 10)
+
+// string到float
+v1, err := strconv.ParseFloat(f, 32)
 ```
 
 

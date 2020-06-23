@@ -2918,7 +2918,92 @@ int main()
 */
 ```
 
+* [C++并发实战16: std::atomic原子操作](https://blog.csdn.net/liuxuejiang158/article/details/17413149)
+
+
+## CPU亲和性 (绑定CPU)
 
 * [C++性能榨汁机之CPU亲和性](https://zhuanlan.zhihu.com/p/57470627)
+    - CPU亲和性就是绑定某一进程（或线程）到特定的CPU（或CPU集合），从而使得该进程（或线程）只能运行在绑定的CPU（或CPU集合）上
+    - CPU亲和性利用了这样一个事实：进程上一次运行后的残余信息会保留在CPU的状态中（也就是指CPU的缓存）。如果下一次仍然将该进程调度到同一个CPU上，就能避免缓存未命中等对CPU处理性能不利的情况，从而使得进程的运行更加高效。
+    - CPU亲和性分为两种：软亲和性和硬亲和性。
+        + 软亲和性主要由操作系统来实现，Linux操作系统的调度器会倾向于保持一个进程不会频繁的在多个CPU之间迁移，通常情况下调度器都会根据各个CPU的负载情况合理地调度运行中的进程，以减轻繁忙CPU的压力，提高所有进程的整体性能
+        + 除此以外，Linux系统还提供了硬亲和性功能，即用户可以通过调用系统API实现自定义进程运行在哪个CPU上，从而满足特定进程的特殊性能需求
+    - 如何将CPU亲和性应用到程序中？
+        + Linux系统中每个进程的`task_struct`结构(sched.h中定义)中有一个`cpus_allowed` 位掩码，该掩码的位数与系统CPU核数相同（若CPU启用了超线程则为核数乘以2），通过修改该位掩码可以控制进程可运行在哪些特定CPU上
+        + Linux系统为我们提供了CPU亲和性相关的调用函数和一些操作的宏定义，函数主要是下面两个：
+            * `sched_set_affinity()` （修改位掩码）
+            * `sched_get_affinity()` （查看当前的位掩码）
+        + 除此之外还提供了一些宏定义来修改掩码，如`CPU_ZERO()`(将位掩码全部设置为0)和`CPU_SET()`(设置特定掩码位为1)。
+    - CPU亲和性的应用场景
+        + 假如某些进程需要高密度的计算，不希望被频繁调度，则可以使用CPU亲和性将该进程绑定到一个CPU上；
+        + 在股票期货高频交易场景中，交易策略线程的运行时间关系到交易延迟的大小，而交易延迟1ms的差距可能就是赚钱与亏钱的差距，所以交易策略线程的优先级非常高，这时便可以为其分配一个专门用于策略计算的CPU，以避免线程被调度产生性能损失；
+        + 高性能的Nginx采用多线程模型，并且提供了worker进程绑定固定CPU的功能，降低worker进程被调度的损耗，提高了服务器工作性能；
+        + 一些文献中还提到了应用CPU亲和性优化KVM虚拟化技术的性能，在不减少吞吐量的情况下，可以将KVM的网络延迟性能降低20%；
+    - 一般情况下，Linux系统的进程调度器已经做得足够好，不需要我们干预进程的调度，但是系统的进程调度是面向所有应用程序的，势必会为了通用性而牺牲掉一部分性能，对于特定应用程序而言，我们可以通过CPU亲和性去优化程序的性能表现。
 
-* [C++并发实战16: std::atomic原子操作](https://blog.csdn.net/liuxuejiang158/article/details/17413149)
+```cpp
+// test_cpu_affinity.cpp
+// g++ test_cpu_affinity.cpp -std=c++11
+#include <iostream>
+#include <thread>
+#include<stdlib.h>
+#include<stdio.h>
+#include<sys/types.h>
+#include<sys/sysinfo.h>
+#include<unistd.h>
+
+#define __USE_GNU
+#include<sched.h>
+#include<ctype.h>
+#include<string.h>
+#include<pthread.h>
+
+using namespace std;
+
+/* This method will create processes, then bind each to its own cpu. */
+void do_cpu_stress(int num_of_process)
+{
+    int created_process = 0;
+    /* We need a process for each cpu we have... */
+    while ( created_process < num_of_process - 1 )
+    {
+        int mypid = fork();
+        if (mypid == 0) /* Child process */
+        {
+            break;
+        }
+        else /* Only parent executes this */
+        {
+            /* Continue looping until we spawned enough processes! */ ;
+            created_process++;
+        }
+    }
+    /* NOTE: All processes execute code from here down! */
+    cpu_set_t mask;
+    /* CPU_ZERO initializes all the bits in the mask to zero. */
+    CPU_ZERO( &mask );
+    /* CPU_SET sets only the bit corresponding to cpu. */
+    CPU_SET(created_process, &mask );
+    /* sched_setaffinity returns 0 in success */
+    if( sched_setaffinity( 0, sizeof(mask), &mask ) == -1 ){
+        cout << "WARNING: Could not set CPU Affinity, continuing..." << endl;
+    }
+    else{
+        cout << "Bind process #" << created_process << " to CPU #" << created_process << endl;
+    }
+    //do some cpu expensive operation
+    int cnt = 100000000;
+    while(cnt--){
+        int cnt2 = 10000000;
+        while(cnt2--){
+        }
+    }
+}
+
+int main(){
+    int num_of_cpu = thread::hardware_concurrency();
+    cout << "This PC has " << num_of_cpu << " cpu." << endl;
+    do_cpu_stress(num_of_cpu);
+}
+```
