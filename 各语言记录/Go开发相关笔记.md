@@ -1885,6 +1885,21 @@ func main() {
     - [高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)
         + Disruptor是一个高性能的线程间通信的框架，即在同一个JVM进程中的多线程间消息传递,由LMAX开发
     - [高性能的消息框架 go-disruptor](https://colobu.com/2016/07/22/using-go-disruptor/)
+    - [LMAX Disruptor简介](https://www.jianshu.com/p/a44b779c22cb)
+        + LMAX
+            * LMAX是一个英国外汇黄金交易所，它是第一家也是唯一一家采用多边交易设施Multilateral Trading Facility(MTF)，拥有交易所牌照和经纪商牌照的欧洲顶级金融公司。
+            * 而LMAX所用的Disruptor技术，在一个线程每秒处理6百万订单。
+        + Disruptor只是LMAX平台一部分，LMAX是一个新型零售金融交易平台，它能够达到低延迟、高吞吐量(大量交易)。
+            * 这个系统建立在JVM平台上，核心是一个逻辑处理器，每秒能够处理600百万订单
+            * 业务逻辑处理器完全运行在内存中(in-memory)，使用事件源驱动方式(event sourcing)
+            * 而业务逻辑处理器核心是Disruptor，这是一个并发组件，能够在无锁情况下实现网络并发查询操作。
+            * Disruptor实现了队列的功能，而且是一个有界的队列。应用场景是"生产者-消费者"模型
+        + Disruptor中的核心概念
+            * Ring Buffer
+                - 环形缓冲区，曾经是Disruptor中的核心对象，不过从3.0版本开始，只负责对通过Disruptor进行交换的数据(事件)进行存储和更新
+            * Sequence
+                - 通过递增的序号管理进行交换的数据(事件)，对数据(事件)的处理过程总是沿着序号逐个递增处理的。
+            * xxx
 
 ## Go性能工具
 
