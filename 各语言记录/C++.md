@@ -3008,3 +3008,81 @@ int main(){
     do_cpu_stress(num_of_cpu);
 }
 ```
+
+## jsoncpp
+
+* [C++中使用JsonCpp](https://www.jianshu.com/p/987e95cc79f4)
+    - 从github下载代码，`git clone https://github.com/open-source-parsers/jsoncpp.git`
+        + MIT license，宽松式许可证，对用户几乎没有限制。可以修改代码后闭源。必须保留原始的许可证声明。
+    - 取需要的文件合到自己的项目里(源码方式使用)：
+        + `include/json` 头文件
+        + `src/lib_json` 源文件
+    - 使用
+        + `#include "json/json.h"`
+        + 创建Json对象
+        + Json对象序列化为字符串
+
+```cpp
+// main.cpp
+#include <iostream>
+#include <string>
+#include <cstdio>
+#include "json/json.h"
+using namespace std;
+
+int main(int argc, const char *argv[])
+{
+    Json::Value root;
+    Json::Reader reader;
+    string info = "{\"sign_type\":14,\"dir_type\":1}";
+    if (reader.parse(info, root))
+    {
+        if (!root["sign_type"].isNull())
+        {
+            printf("sign_type:%s\n", root["sign_type"].asString().c_str());
+            printf("sign_type:%d\n", root["sign_type"].asInt64());
+        }
+        if (!root["dir_type"].isNull())
+        {
+            printf("dir_type:%s\n", root["dir_type"].asString().c_str());
+            printf("dir_type:%d\n", root["dir_type"].asInt64());
+        }
+
+        /*
+          // json数组解析
+          std::string strValue = "{\"key\":\"value1\",\
+            \"array\":[{\"arraykey\":1},{\"arraykey\":2}]}";
+          Json::Value arrayObj = root["array"];
+          for (int i=0; i<arrayObj.size(); i++)
+          {
+            int iarrayValue = arrayObj[i]["arraykey"].asInt();
+            std::cout << iarrayValue << std::endl;
+          }
+        */
+    }
+    return 0;
+}
+```
+
+* makefile
+    - 目录层次：`include(目录，里面包含头文件目录json) lib_json(目录)  main.cpp  Makefile`
+
+```makefile
+CC = g++
+
+SRC_DIR = $(shell find . -type d -print)
+$(warning SRC_DIR: [$(SRC_DIR)])
+
+SRC_CPP_FILES = $(foreach dir,$(SRC_DIR),$(wildcard $(dir)/*.cpp))
+$(warning SRC_CPP_FILES: [$(SRC_CPP_FILES)])
+
+SRC_OBJ = $(patsubst %.cpp, %.o, $(SRC_CPP_FILES))
+FLAGS = -I./include -std=c++11
+
+jsontest:$(SRC_OBJ)
+    $(CC) -o $@ $^ $(FLAGS)
+%.o:%.cpp
+    $(CC) -o $@ -c $< $(FLAGS)
+clean:
+    rm -rf *.o a.out
+```
