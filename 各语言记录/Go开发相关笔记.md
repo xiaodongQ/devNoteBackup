@@ -1915,7 +1915,6 @@ func main() {
                     + e.g. `arr[i][j]`两层循环遍历，同样用`[0,8)`，第二层循环`a[i][j]`(`j`做下标)，比第一层循环用`a[j][i]`(`i`做下标)要快很多(链接中的示例描述在2G Hz、2核、8G内存的运行环境中测试，速度差一倍)
             * 无法充分使用缓存行特性的现象，称为伪共享
                 - `ArrayBlockingQueue`中三个成员变量放到一个缓存行中，每次修改，都会使之前缓存的数据失效，从而不能完全达到共享的效果，这种现象即为伪共享
-    - [高性能的消息框架 go-disruptor](https://colobu.com/2016/07/22/using-go-disruptor/)
     - [LMAX Disruptor简介](https://www.jianshu.com/p/a44b779c22cb)
         + LMAX
             * LMAX是一个英国外汇黄金交易所，它是第一家也是唯一一家采用多边交易设施Multilateral Trading Facility(MTF)，拥有交易所牌照和经纪商牌照的欧洲顶级金融公司。
@@ -1931,6 +1930,7 @@ func main() {
             * Sequence
                 - 通过递增的序号管理进行交换的数据(事件)，对数据(事件)的处理过程总是沿着序号逐个递增处理的。
             * xxx
+    - [高性能的消息框架 go-disruptor](https://colobu.com/2016/07/22/using-go-disruptor/)
 
 ## Go性能工具
 
