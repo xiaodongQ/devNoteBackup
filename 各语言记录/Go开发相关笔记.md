@@ -1151,6 +1151,69 @@ log.WithFields(log.Fields{
 }).Fatal("Failed to send event")
 ```
 
+* logrus 使用
+    - [sirupsen/logrus](https://github.com/Sirupsen/logrus)
+    - Logrus是一个结构化的Go日志记录器(golang)，完全使用标准库日志记录器兼容的API
+    - `go get github.com/sirupsen/logrus`
+    - 打印示例`logrus.Printf("hellsdj, %d", 123)`：
+        + `INFO[2020/06/29 16:26:52]F:/work/workspace/go_path/src/plate_calc_server/main.go:76 main.main() hellsdj, 123`
+        + 记录方法名(包括文件名)会增加开销，可以通过benchmarks测试`go test -bench=.*CallerTracing`
+    - 设置钩子hook(可扩展性及功能增强)
+        + e.g. `logrus.AddHook(airbrake.NewHook(123, "xyz", "production"))`
+        + 钩子需要实现logrus.Hook接口
+            * `Levels() []Level` Levels()方法返回感兴趣的日志级别，输出其他日志时不会触发钩子
+            * `Fire(*Entry) error` Fire是日志输出前调用的钩子方法
+        + logrus的第三方 Hook 很多
+            * mgorus：将日志发送到 mongodb；
+            * logrus-redis-hook：将日志发送到 redis
+            * logrus-amqp：将日志发送到 ActiveMQ
+
+```golang
+logrus.SetFormatter(&logrus.TextFormatter{
+    FullTimestamp:   true,
+    TimestampFormat: "2006/01/02 15:04:05",
+    ForceQuote:      true,
+    ForceColors:     true,
+})
+
+// logrus.SetFormatter(&logrus.JSONFormatter{
+//     // 缩进显示json
+//     PrettyPrint: true,
+// })
+// json格式时，可以加自定义的key(logrus.WithFields会创建一个*logrus.Entry，也可以创建一个全局Entry定义默认key)
+// logrus.WithFields(logrus.Fields{
+//     "xdk1": 123,
+//     "xdk2": "abc",
+// }).Errorf("测试: %s", "test only3")
+
+// 保存到文件中
+// file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+// if err != nil {
+//     log.Fatal(err)
+// }
+// logrus.SetOutput(file)
+
+// 若不支持记录方法名，则更新一下logrus：go get github.com/sirupsen/logrus
+log.SetReportCaller(true)
+```
+
+### viper
+
+* [spf13/viper](https://github.com/spf13/viper)
+    - `go get github.com/spf13/viper`
+    - viper是一个完整的配置解决方案，用于Go应用程序，包括12个要素。它被设计为在应用程序中工作，并且可以处理所有类型的配置需求和格式。
+    - 支持：
+        + 设置默认值
+            * `viper.SetDefault("ContentDir", "content")` 配置文件中没有时
+        + 支持文件格式：JSON, TOML, YAML, HCL, envfile文件 和 Java properties配置文件
+        + 实时监测和重新读取配置文件(可选)
+        + 从环境变量读取变量
+        + 从远程配置系统(etcd/consul)读取，并且监测修改
+        + 从命令行参数读取
+        + 从buffer中读取
+        + 设置明确的值
+
+
 ### os包
 
 * os包
@@ -2055,6 +2118,9 @@ func main() {
 
 ## NSQ
 
+* [nsq官网 QUICK START](https://nsq.io/overview/quick_start.html)
+* 
+
 ## 优雅关闭
 
 * 捕捉信号
@@ -2308,3 +2374,5 @@ exit status 66
 
 * nsq
 * skynet
+
+
