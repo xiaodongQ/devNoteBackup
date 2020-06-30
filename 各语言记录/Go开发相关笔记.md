@@ -1167,6 +1167,9 @@ log.WithFields(log.Fields{
             * mgorus：将日志发送到 mongodb；
             * logrus-redis-hook：将日志发送到 redis
             * logrus-amqp：将日志发送到 ActiveMQ
+            * 可以用内置的hooks(syslog/writer)
+                - [Writer Hooks for Logrus](https://github.com/sirupsen/logrus/tree/master/hooks/writer)
+                - syslog是Unix/Linux才有
 
 ```golang
 logrus.SetFormatter(&logrus.TextFormatter{
@@ -1195,6 +1198,12 @@ logrus.SetFormatter(&logrus.TextFormatter{
 
 // 若不支持记录方法名，则更新一下logrus：go get github.com/sirupsen/logrus
 log.SetReportCaller(true)
+
+// 使用内置的hook，可同时记录到标准输出/错误等(还可设置成不同等级输出到不同途径)
+logrus.AddHook(&writer.Hook{
+    Writer:    os.Stdout,
+    LogLevels: logrus.AllLevels,
+})
 ```
 
 ### viper
