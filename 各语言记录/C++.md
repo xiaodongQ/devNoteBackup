@@ -2292,7 +2292,6 @@ void assert( int expression );
         + 通常情况下这个锁是std::mutex
         + 并且管理这个锁 只能是 `std::unique_lock<std::mutex>` RAII模板类。
             * 以上两个类型的`wait`函数都在会阻塞时自动释放锁权限，即调用`unique_lock`的成员函数`unlock()`，以便其他线程能有机会获得锁，搜索："* `std::unique_lock`"
-    - 
 
 ```cpp
 #include <mutex>
@@ -2561,6 +2560,11 @@ private:
 * 一个多生产者-多消费者的、无锁的 并发队列 (基于C++11)
     - star:4.4k fork:934 (20200509)
     - [cameron314/concurrentqueue](https://github.com/cameron314/concurrentqueue)
+
+## 信号量
+
+* [进程间通信之-信号量semaphore](https://blog.csdn.net/gatieme/article/details/50994533)
+    - 信号量的使用主要是用来保护共享资源，使得资源在一个时刻只有一个进程（线程）所拥有
 
 ## lambda表达式
 

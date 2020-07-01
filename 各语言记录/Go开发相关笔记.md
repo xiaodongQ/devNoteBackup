@@ -1214,13 +1214,81 @@ logrus.AddHook(&writer.Hook{
     - 支持：
         + 设置默认值
             * `viper.SetDefault("ContentDir", "content")` 配置文件中没有时
-        + 支持文件格式：JSON, TOML, YAML, HCL, envfile文件 和 Java properties配置文件
+        + 支持配置文件格式：JSON, TOML, YAML, HCL, envfile文件 和 Java properties配置文件
+            * Viper搜索和读取配置文件：
+                - `viper.SetConfigName("config")` 配置文件名(不需要扩展名)
+                    + `viper.SetConfigType("yaml")` 当配置文件没有扩展名时才需要设置
+                - `viper.AddConfigPath("/etc/appname/")` 查找路径(可添加多次来搜索多个路径)
+                    + 目前只支持一份配置文件(多个路径里仅包含一个配置文件)
+                - `err := viper.ReadInConfig()` 读取配置文件
+            * 写配置文件
+                - `viper.WriteConfig()` 当前配置写到预定义读取到的路径文件中，没有预定义则报错。
+                    + 若已存在配置文件，则覆盖。
+                    + 如果不存在文件，则会在程序执行路径生成`SetConfigName`指定名称的文件(无后缀)，格式由`SetConfigType`指定
+                - `viper.SafeWriteConfig()` 和上面一样，区别是若存在配置文件不会覆盖
+                - `viper.WriteConfigAs("/path/to/my/.config")` 保存到指定文件，若存在则覆盖
+                - `viper.SafeWriteConfigAs("/path/to/my/.config")` 和上面一样，区别是存在则不覆盖(报错)
         + 实时监测和重新读取配置文件(可选)
+            * 程序运行中监测配置文件修改，开启功能，调用：`viper.WatchConfig()`
+            * 可指定检测到修改时进行操作：`viper.OnConfigChange( func(e fsnotify.Event) {xxx} )`
         + 从环境变量读取变量
+            * 大小写敏感
+            * `viper.SetEnvPrefix("spf")` 设置环境变量前缀
+                - `viper.BindEnv("id")`
+                - `os.Setenv("SPF_ID", "13")` 外部设置一个环境变量
+                - `id := viper.Get("id")` // 13 获取环境变量
         + 从远程配置系统(etcd/consul)读取，并且监测修改
+            * 要开启远程支持，进入如下导入：`import _ "github.com/spf13/viper/remote"`
+            * etcd示例
+                - `viper.AddRemoteProvider("etcd", "http://127.0.0.1:4001","/config/hugo.json")`
+                - `viper.SetConfigType("json")`
+                - `err := viper.ReadRemoteConfig()`
+            * Consul示例
+                - `viper.AddRemoteProvider("consul", "localhost:8500", "MY_CONSUL_KEY")`
+                - `viper.SetConfigType("json")`
+                - `err := viper.ReadRemoteConfig()`
+                - `fmt.Println(viper.Get("port"))`
+            * 监测
+                - `var runtime_viper = viper.New()`
+                - `runtime_viper.AddRemoteProvider("etcd", "http://127.0.0.1:4001", "/config/hugo.yml")`
+                - `runtime_viper.SetConfigType("yaml")`
+                - 定期执行：
+                    + `err := runtime_viper.WatchRemoteConfig()`
+                    + `runtime_viper.Unmarshal(&runtime_conf)`
         + 从命令行参数读取
+            * 可配合`Cobra`包使用，
+                - github: [spf13/cobra](https://github.com/spf13/cobra)
+                    + 很多Go项目在使用Cobra，包括Kubernetes, Docker, Hugo, and Github CLI等等
+                - 它提供了简单的接口来创建命令行程序，同时，Cobra 也是一个应用程序，用来生成应用框架，从而开发以 Cobra 为基础的应用
+                - 可了解：[Golang : cobra 包简介](https://www.cnblogs.com/sparkdev/p/10856077.html)
         + 从buffer中读取
+            * `viper.ReadConfig(bytes.NewBuffer(yamlExample))`
+                - `var yamlExample []byte(xxx)`，此处yamlExample是定义好的一串yaml格式的文本
+                - `viper.SetConfigType("yaml")` 调用`viper.ReadConfig`前设置一下类型，此处`yaml`可替换为`YAML`
+            * 读取：e.g. `viper.Get("name")`
+            * 设置：e.g. `viper.Set("Verbose", true)`
+            * 设置别名：e.g. `viper.RegisterAlias("loud", "verbose")`，后续操作
         + 设置明确的值
+    - 读取
+        + `Get(key string) : interface{}`
+        + `GetBool(key string) : bool`
+        + `GetFloat64(key string) : float64`
+        + `GetInt(key string) : int`
+        + `GetIntSlice(key string) : []int`
+        + `GetString(key string) : string`
+        + `GetStringMap(key string) : map[string]interface{}`
+        + `GetStringMapString(key string) : map[string]string`
+        + `GetStringSlice(key string) : []string`
+        + `GetTime(key string) : time.Time`
+        + `GetDuration(key string) : time.Duration`
+        + `IsSet(key string) : bool`
+        + `AllSettings() : map[string]interface{}`
+    - 可读取嵌套的域：`GetString("datastore.metric.host")`
+        + 若层级中同时有该域，则优先`"datastore.metric.host"`，层级中的域会被隐藏
+    - 截取子域：`subv := viper.Sub("app.cache1")`
+    - `err := viper.Unmarshal(&C)` 全部或指定值解码转换为struct、map等
+    - `bs, err := yaml.Marshal(c)` 编码为指定格式的string
+        + 导入对应格式的包，此处为`import yaml "gopkg.in/yaml.v2"`
 
 
 ### os包
