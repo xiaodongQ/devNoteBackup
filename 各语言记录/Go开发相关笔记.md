@@ -2255,8 +2255,65 @@ func main() {
         + [bitly/simplehttp](https://github.com/bitly/simplehttp)
         + C语言实现
         + `simplequeue`部分：[simplequeue](https://github.com/bitly/simplehttp/tree/master/simplequeue)
-* 示例：在本地机器运行一个小的NSQ集群，进行发布、消费、归档消息到磁盘
+    - `SPOF`(Singal Point Of Failure) 单点故障
+* 安装
+    - DOCKER方式
+        + 有一个单独的、最小的nsq镜像，它包含所有的NSQ二进制文件
+            * 每个二进制文件可以通过如下命令运行：
+            * `docker run nsqio/nsq /<command>`
+            * 注意前面有一个`/`，e.g. `docker run nsqio/nsq /nsqlookupd`
+        + 拉取镜像：`docker pull nsqio/nsq`
+* 使用
+    - 运行`nsqlookupd`
+        + `docker run --name lookupd -p 4160:4160 -p 4161:4161 nsqio/nsq /nsqlookupd` (没有设置后台执行)
+        + 启动之后，即可通过网络访问，e.g. `curl`或者浏览器输入`http://192.168.50.207:4161/ping`会有应答
+    - (要添加进集群的节点上)运行`nsqd`
+        + 如下命令(`nsqd启动命令示例`)，指定容器主机ip(假设为192.168.50.207)
+            * 类似容器中执行 `nsqd --lookupd-tcp-address=127.0.0.1:4160`
+        + 若要使用`TLS`，需要包含证书文件、私钥、根CA文件，docker镜像有一个卷挂载`/etc/ssl/certs/`用于此用途
+    - 持久化NSQ数据
+        + 存储`nsqd`的数据到主机磁盘，使用`/data`卷或者挂载到主机其他目录
+        + `docker run nsqio/nsq /nsqd --data-path=/data`
+    - 使用`docker-compose`(需要另外安装)同时启动`nsqd`、`nsqlookupd`、`nsqadmin`
+        + 创建一个`docker-compose.yml`文件
+        + 使用`docker-compose up -d`启动
+        + 会创建一个私有的网络，三个容器使用这个网络启动
+    - 运行`nsqadmin` (webUI管理界面)
+        + `docker run --name nsqadmin -p 4171:4171 nsqio/nsq /nsqadmin --lookupd-http-address=192.168.50.207:4161`
+        + 启动`nsqadmin`的那台机器，可以浏览器访问一个管理界面`http://192.168.50.217:4171/`
+    - (起了`nsqd`的节点上)发布一个初始消息(同时会创建topic)
+        + `curl -d 'hello' 'http://127.0.0.1:4151/pub?topic=test'`
+        + `curl -d 't2' 'http://127.0.0.1:4151/pub?topic=tp2'`
+        + `curl -d 't3' 'http://127.0.0.1:4151/pub?topic=tp3'`
+        + 会在请求的那台节点上创建topic
+    - 另一个终端执行`nsq_to_file`，保存到磁盘
+        + 容器环境则需要容器方式运行：
+            * `docker run nsqio/nsq /nsq_to_file --topic=test --output-dir=/tmp --lookupd-http-address=192.168.50.207:4161`
 
+* nsqd启动命令示例
+
+```sh
+# 运行nsqd
+docker run --name nsqd -p 4150:4150 -p 4151:4151 \
+    nsqio/nsq /nsqd \
+    --broadcast-address=<节点ip> \
+    --lookupd-tcp-address=<容器主机ip>:<port 一般为4160>
+
+# 若nsqlookupd运行的主机ip为192.168.50.207，节点217，命令如下
+docker run --name nsqd -idt -p 4150:4150 -p 4151:4151 \
+    nsqio/nsq /nsqd \
+    --broadcast-address=192.168.50.217 \
+    --lookupd-tcp-address=192.168.50.207:4160
+
+# 若使用TLS启动：
+docker run -p 4150:4150 -p 4151:4151 -p 4152:4152 -v /home/docker/certs:/etc/ssl/certs \
+    nsqio/nsq /nsqd \
+    --tls-root-ca-file=/etc/ssl/certs/certs.crt \
+    --tls-cert=/etc/ssl/certs/cert.pem \
+    --tls-key=/etc/ssl/certs/key.pem \
+    --tls-required=true \
+    --tls-client-auth-policy=require-verify
+```
 
 
 ## 优雅关闭
