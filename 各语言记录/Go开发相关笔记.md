@@ -1158,6 +1158,8 @@ log.WithFields(log.Fields{
     - 打印示例`logrus.Printf("hellsdj, %d", 123)`：
         + `INFO[2020/06/29 16:26:52]F:/work/workspace/go_path/src/plate_calc_server/main.go:76 main.main() hellsdj, 123`
         + 记录方法名(包括文件名)会增加开销，可以通过benchmarks测试`go test -bench=.*CallerTracing`
+        + 默认打印出来的文件名是绝对路径，太长了，可设置自定义的回调函数来修改路径，见下面的`CallerPrettyfier`字段
+            * 变为：`INFO[2020/07/02 11:00:27]config.go:59 plate_calc_server/config.initLogger() hellsdj, 123`
     - 设置钩子hook(可扩展性及功能增强)
         + e.g. `logrus.AddHook(airbrake.NewHook(123, "xyz", "production"))`
         + 钩子需要实现logrus.Hook接口
@@ -1170,6 +1172,13 @@ log.WithFields(log.Fields{
             * 可以用内置的hooks(syslog/writer)
                 - [Writer Hooks for Logrus](https://github.com/sirupsen/logrus/tree/master/hooks/writer)
                 - syslog是Unix/Linux才有
+    - 实现日志切分(logrotate)
+        + 日志输出到支持rotate的日志中(如syslog)，利用Linux系统的`logrotate`命令切分
+        + 使用logrus的hook来加载输出模块，模块实现了日志rotate的`io.Writer`，如lumberjack
+            * lumberjack是一个写入日志到滚动文件的Go包
+                - [natefinch/lumberjack](https://github.com/natefinch/lumberjack)
+            * `import "gopkg.in/natefinch/lumberjack.v2"`
+            * 使用：`log.SetOutput(&lumberjack.Logger{xxx}`，见下面的`lumberjack使用示例`
 
 ```golang
 logrus.SetFormatter(&logrus.TextFormatter{
@@ -1177,6 +1186,10 @@ logrus.SetFormatter(&logrus.TextFormatter{
     TimestampFormat: "2006/01/02 15:04:05",
     ForceQuote:      true,
     ForceColors:     true,
+    CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+        filename := path.Base(f.File)
+        return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
+    },
 })
 
 // logrus.SetFormatter(&logrus.JSONFormatter{
@@ -1205,6 +1218,21 @@ logrus.AddHook(&writer.Hook{
     LogLevels: logrus.AllLevels,
 })
 ```
+* lumberjack使用示例
+
+```golang
+import lumberjack "gopkg.in/natefinch/lumberjack.v2"
+// 切割文件格式:logrus-2020-07-02T14-44-37.485.log
+
+logrus.SetOutput(&lumberjack.Logger{
+    Filename:   "/var/log/myapp/foo.log",
+    MaxSize:    500, // megabytes
+    MaxBackups: 3,
+    MaxAge:     28, //days
+    Compress:   true, // disabled by default
+    LocalTime:  true,
+})
+```
 
 ### viper
 
@@ -1216,8 +1244,8 @@ logrus.AddHook(&writer.Hook{
             * `viper.SetDefault("ContentDir", "content")` 配置文件中没有时
         + 支持配置文件格式：JSON, TOML, YAML, HCL, envfile文件 和 Java properties配置文件
             * Viper搜索和读取配置文件：
-                - `viper.SetConfigName("config")` 配置文件名(不需要扩展名)
-                    + `viper.SetConfigType("yaml")` 当配置文件没有扩展名时才需要设置
+                - `viper.SetConfigName("config")` 配置文件名称(不需要扩展名)
+                    + `viper.SetConfigType("yaml")` 当配置文件名中没有扩展名时才需要设置
                 - `viper.AddConfigPath("/etc/appname/")` 查找路径(可添加多次来搜索多个路径)
                     + 目前只支持一份配置文件(多个路径里仅包含一个配置文件)
                 - `err := viper.ReadInConfig()` 读取配置文件
@@ -1424,6 +1452,28 @@ e.g.
 chanT// 可以接收和发送类型为 T 的数据
 chan<-float64// 只可以用来发送 float64 类型的数据
 <-chanint// 只可以用来接收 int 类型的数据
+```
+
+```golang
+// 判断通道是否关闭1
+func isCancelled(cancelChan chan struct{}) bool {
+    select {
+    case <-cancelChan:
+        return true
+    default:
+        return false
+    }
+}
+
+// 判断通道是否关闭2，推荐
+func isCancelled(ctx context.Context) bool {
+    select {
+    case <-ctx.Done():
+        return true
+    default:
+        return false
+    }
+}
 ```
 
 ### select
@@ -1913,6 +1963,10 @@ and their dependencies
                 - `go env -w GO111MODULE=on`
             * `GOPROXY` `GOSUMDB` `GONOPROXY`/`GONOSUMDB`/`GOPRIVATE`
         + 参考链接中从头开始创建一个 Go modules 的项目，原则上所创建的目录应该不要放在 GOPATH 之中
+    - 某个包不使用go module指定的版本或包，可进行降级或指定本地已有包的路径(老代码使用新版本出现目录等不兼容问题时)
+        + `go.mod`文件中修改，e.g.
+            * require中新增：`github.com/gogf/gf v1.13.1`
+            * require外面新增replace，并指定本地包路径：`replace github.com/gogf/gf => F:/work/workspace/go_path/src/github.com/gogf/gf`
     - 示例(在一个非`$GOPATH/src`路径进行)
         + github上随便找的一个string工具包，[github.com/ozgio/strutil](https://github.com/ozgio/strutil)
             * `Words (Docs)`函数，返回文本中的单词
@@ -2195,8 +2249,15 @@ func main() {
 
 ## NSQ
 
-* [nsq官网 QUICK START](https://nsq.io/overview/quick_start.html)
-* 
+* [NSQ官网文档](https://nsq.io/overview/design.html)
+* NSQ是`simplequeue`(`simplehttp`的一部分)的继承者
+    - `simplehttp`是构建在`libevent`之上的一系列库和守护进程，它们使高性能HTTP服务器编写起来简单而直接
+        + [bitly/simplehttp](https://github.com/bitly/simplehttp)
+        + C语言实现
+        + `simplequeue`部分：[simplequeue](https://github.com/bitly/simplehttp/tree/master/simplequeue)
+* 示例：在本地机器运行一个小的NSQ集群，进行发布、消费、归档消息到磁盘
+
+
 
 ## 优雅关闭
 
@@ -2208,7 +2269,20 @@ func main() {
     - [[Go] 捕捉信号以优雅地关闭服务器进程](https://blog.twofei.com/782/)
         + 改造：grpc服务启动放到goroutine中
         + `func Notify(c chan<- os.Signal, sig ...os.Signal)` 捕获信号(让信号中转给`c`)
-        + 
+            * `quit := make(chan os.Signal)`，quit作为参数
+            * `sig := <-quit` 等待信号
+
+```golang
+// main()
+quit := make(chan os.Signal)
+// 让信号转给quit
+signal.Notify(quit, syscall.SIGINT)
+signal.Notify(quit, syscall.SIGTERM)
+// 等待信号
+sig := <-quit
+log.Printf("received signal: %v\n", sig)
+log.Println("server shutted down")
+```
 
 ## Go Code Review Comments 官方列出的常见错误清单
 
