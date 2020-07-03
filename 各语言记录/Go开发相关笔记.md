@@ -611,6 +611,11 @@ func TestMapWithFuncValue(t *testing.T) {
     - type声明可以给基本类型其别名，然后向它绑定一些方法
         + `type TimeZone int`, `func (tz TimeZone) String() string {return fmt.Sprintf("GMT+%dh", tz)}`
         + 传入的是时区值，返回格式化的string，String()方法绑定到了TimeZone类型上(内层函数引用了 外层函数中的变量/自由变量 的函数，闭包)
+    - 注意区分 类型别名 和 类型定义
+        + `type NewInt int` 将NewInt定义为int类型，定义了一个新类型
+        + `type TypeAlias = Type` 将int取一个别名叫IntAlias，类型还是int
+        + 在结构体成员嵌入时使用别名时，若同时存在原类型和类型别名，调用方法时若省略字段名，会提示冲突
+        + [Go语言type关键字（类型别名）](http://c.biancheng.net/view/25.html)
 
 ```golang
 type IntArray [16]int
@@ -1185,7 +1190,7 @@ logrus.SetFormatter(&logrus.TextFormatter{
     FullTimestamp:   true,
     TimestampFormat: "2006/01/02 15:04:05",
     ForceQuote:      true,
-    ForceColors:     true,
+    ForceColors:     true, // 设置该选项会改变日志的格式，会打印普通日志而不是key-value的形式
     CallerPrettyfier: func(f *runtime.Frame) (string, string) {
         filename := path.Base(f.File)
         return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
@@ -1259,6 +1264,7 @@ logrus.SetOutput(&lumberjack.Logger{
         + 实时监测和重新读取配置文件(可选)
             * 程序运行中监测配置文件修改，开启功能，调用：`viper.WatchConfig()`
             * 可指定检测到修改时进行操作：`viper.OnConfigChange( func(e fsnotify.Event) {xxx} )`
+            * 参考下面的示例：`监控配置文件实现日志运行时切换等级和打印格式`
         + 从环境变量读取变量
             * 大小写敏感
             * `viper.SetEnvPrefix("spf")` 设置环境变量前缀
@@ -1318,6 +1324,33 @@ logrus.SetOutput(&lumberjack.Logger{
     - `bs, err := yaml.Marshal(c)` 编码为指定格式的string
         + 导入对应格式的包，此处为`import yaml "gopkg.in/yaml.v2"`
 
+```golang
+// 监控配置文件实现日志运行时切换等级和打印格式
+viper.WatchConfig()
+viper.OnConfigChange(func(e fsnotify.Event) {
+    logrus.Printf("config file[%s] changed, op:%s", e.Name, e.Op.String())
+    // 当前只监控日志等级
+    // 日志等级
+    loglevel := logrus.InfoLevel
+    switch viper.GetString("log.level") {
+    case "error":
+        loglevel = logrus.ErrorLevel
+    case "info":
+        loglevel = logrus.InfoLevel
+    case "debug":
+        loglevel = logrus.DebugLevel
+    case "trace":
+        loglevel = logrus.TraceLevel
+    default:
+        loglevel = logrus.InfoLevel
+    }
+    if logrus.GetLevel() != loglevel {
+        logrus.SetLevel(loglevel)
+    }
+    // 是否开启文件名和函数名记录
+    logrus.SetReportCaller(viper.GetBool("log.PrintFileFunc"))
+})
+```
 
 ### os包
 
@@ -2250,6 +2283,18 @@ func main() {
 ## NSQ
 
 * [NSQ官网文档](https://nsq.io/overview/design.html)
+* NSQ由三个守护进程组成
+    - [INTERNALS](https://nsq.io/overview/internals.html)
+    - `nsqd`
+        + 接收、排队并将消息传递给客户端的守护进程
+        + 一个单独的`nsqd`可以有多个`topic`，一个topic可以有多个`channel`
+            * 一个`topic`是一个独立的数据流
+            * 一个`channel`是用户订阅指定topic的一个逻辑分组
+            * 每个`channel`接收指定topic上的所有消息的副本，当channel上的每个消息分布在其订阅者之间时，支持多播风格的传递，从而支持负载均衡
+    - `nsqlookupd`
+        + 管理拓扑信息并提供最终一致的发现服务
+    - `nsqadmin`
+        + 一个实时查看集群(并执行各种管理任务，可操作topic)的web UI
 * NSQ是`simplequeue`(`simplehttp`的一部分)的继承者
     - `simplehttp`是构建在`libevent`之上的一系列库和守护进程，它们使高性能HTTP服务器编写起来简单而直接
         + [bitly/simplehttp](https://github.com/bitly/simplehttp)
@@ -2267,10 +2312,11 @@ func main() {
     - 运行`nsqlookupd`
         + `docker run --name lookupd -p 4160:4160 -p 4161:4161 nsqio/nsq /nsqlookupd` (没有设置后台执行)
         + 启动之后，即可通过网络访问，e.g. `curl`或者浏览器输入`http://192.168.50.207:4161/ping`会有应答
-    - (要添加进集群的节点上)运行`nsqd`
+    - 运行`nsqd`(要添加进集群的节点上)
         + 如下命令(`nsqd启动命令示例`)，指定容器主机ip(假设为192.168.50.207)
             * 类似容器中执行 `nsqd --lookupd-tcp-address=127.0.0.1:4160`
         + 若要使用`TLS`，需要包含证书文件、私钥、根CA文件，docker镜像有一个卷挂载`/etc/ssl/certs/`用于此用途
+        + `docker exec -it nsqd /bin/sh` 进入容器(注意用`/bin/sh`，镜像中无`bash`)
     - 持久化NSQ数据
         + 存储`nsqd`的数据到主机磁盘，使用`/data`卷或者挂载到主机其他目录
         + `docker run nsqio/nsq /nsqd --data-path=/data`
@@ -2280,14 +2326,15 @@ func main() {
         + 会创建一个私有的网络，三个容器使用这个网络启动
     - 运行`nsqadmin` (webUI管理界面)
         + `docker run --name nsqadmin -p 4171:4171 nsqio/nsq /nsqadmin --lookupd-http-address=192.168.50.207:4161`
-        + 启动`nsqadmin`的那台机器，可以浏览器访问一个管理界面`http://192.168.50.217:4171/`
+        + 启动`nsqadmin`的那台机器(只要指定lookupd所在地址)，可以浏览器访问一个管理界面`http://192.168.50.217:4171/`
     - (起了`nsqd`的节点上)发布一个初始消息(同时会创建topic)
         + `curl -d 'hello' 'http://127.0.0.1:4151/pub?topic=test'`
         + `curl -d 't2' 'http://127.0.0.1:4151/pub?topic=tp2'`
         + `curl -d 't3' 'http://127.0.0.1:4151/pub?topic=tp3'`
         + 会在请求的那台节点上创建topic
-    - 另一个终端执行`nsq_to_file`，保存到磁盘
-        + 容器环境则需要容器方式运行：
+    - 另一个终端执行`nsq_to_file`，保存到磁盘(会一直运行，一来消息就持久化到文件中)
+        + `nsq_to_file --topic=test --output-dir=/tmp --lookupd-http-address=192.168.50.207:4161`
+        + 容器环境则需要进入容器后执行(`docker exec -it nsqd /bin/sh`)，或者直接启动容器方式运行：
             * `docker run nsqio/nsq /nsq_to_file --topic=test --output-dir=/tmp --lookupd-http-address=192.168.50.207:4161`
 
 * nsqd启动命令示例
@@ -2583,4 +2630,81 @@ exit status 66
 * nsq
 * skynet
 
+
+## timer 定时器
+
+* 先看一段下面的代码
+    - 时间在150100之后和92900之前，不执行后续的功能逻辑，但是需要定期检查grpc客户端是否关闭了流
+    - 实现
+        + 可以简单地在for循环中用，`time.Sleep(time.Second * 10)`
+        + 不过看到别处使用过定时器，于是有了下面的修改，由此引入对`time.Ticker`和`time.Timer`源码的跟踪
+
+```golang
+ticker := time.NewTicker(time.Second * 10)
+defer ticker.Stop()
+
+for{
+    if curtime > 150100 || curtime < 92900 {
+        select {
+        case <-ticker.C:
+            if isClientCancelled(stream.Context()) {
+                log.Printf("client cancled, exit loop")
+                break
+            }
+            log.Printf("curtime:%v", curtime)
+        }
+        continue
+    }
+
+    // xxx其他逻辑
+}
+```
+
+* `isClientCancelled`函数定义如下(此处该函数是作为变量定义的)：
+
+```golang
+isClientCancelled := func(ctx context.Context) bool {
+    select {
+    case <-ctx.Done():
+        return true
+    default:
+        return false
+    }
+}
+```
+
+* 源码跟踪
+    - `time.Ticker`和`time.Timer`都包含一个`C <-chan Time`通道 和 一个`r runtimeTimer`类型
+        + 两个类型分别通过`time.NewTicker(d Duration)`和`time.NewTimer(d Duration)`创建
+        + 读类型的chan成员`C`由一个双向的chan赋值，`c := make(chan Time, 1)`
+    - `time.Ticker`或`time.Timer`创建好后，通过调用`startTimer`并传入已经定义好的`runtimeTimer`来实现功能
+        + `runtimeTimer`结构中包含上面创建的`chan`和一个将当前时间传给该`chan`的回调函数
+        + 在VS Code里跳转到`startTimer`函数，会跳转到文件`src/time/sleep.go`，其中只有一个定义而没有函数体
+            * 仅有定义：`func startTimer(*runtimeTimer)`
+            * 它的实现在：`src/runtime/time.go`(`$GOROOT`目录)，两者通过 `go:linkname` 指令关联
+    - 计时功能主要在于`startTimer`，所以关注它的实现
+        + 打开`src/runtime/time.go`文件，查看实现，`startTimer`调用了`addtimer`
+        + 1.14对timer做了优化，所以前后源码并不一样，分别看下两个实现
+        + 1.14之前的实现
+            * 可参考：[9.3.1 实现原理](https://rainbowmango.gitbook.io/go/chapter09/9.3-foreword/9.3.1-timersproc_principle)
+        + 定时器在go 1.13 和 go1.14中的区别
+            * 参考：[go1.14基于netpoll优化timer定时器实现原理](http://xiaorui.cc/archives/6483)
+            * 1.13前
+                - golang在1.10版本之前是由一个独立的`timerproc`通过`小顶堆`和`futexsleep`来管理定时任务
+                - 1.10之后采用的方案是把独立的timerproc和小顶堆分成最多64个timerproc协程和`四叉堆`，用来休眠就近时间的方法还是依赖futex timeout机制
+                - 默认timerproc数量会跟GOMAXPROCS一致的，但最大也就64个，因为会被64取模
+                - ps: 关于`小顶堆`和`四叉堆`，等数据结构get到再放链接。。。
+            * 简单的过一遍go1.13版定时器的实现
+                - 不管是NewTimer、NewTicker、After等其实调用的都是`addTimer`来新增定时任务
+                    + `addTimer`中调用`assignBucket`，给当前协程分配一个`timerBucket`
+                    + go初始化时会预先实例化长度64的timers数组，通过协程的`p`跟64取摸来分配timerBucket
+                    + 如果新的定时任务较新，那么使用notewakeup来激活唤醒timerproc的futex等待。如果发现没有实例化timerproc，则启动
+                - `timerproc`协程运行时会从堆顶拿`timer`，然后判断是否到期，到期则直接执行，当`bucket`无任务时，调用`runtime.goparkunlock`来休眠该协程
+            * go1.14版的timer
+                - 首先把存放定时事件的四叉堆放到`p`结构中，另外取消了`timerproc`协程，转而使用`netpoll`的`epoll wait`来做就近时间的休眠等待
+                - 在每次`runtime.schedule`调度时都检查运行到期的定时器
+            * 源码分析go1.14 timer
+                - 在`struct p`中定义了`timer`相关字段，`timers`数组用来做四叉堆数据结构
+                    + 源码文件`src/runtime/runtime2.go`
+                    + 成员：`timers []*timer`
 
