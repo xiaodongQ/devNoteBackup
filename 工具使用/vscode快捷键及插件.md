@@ -1,23 +1,20 @@
 ## 快捷键
 
-主命令框
-F1 或 Ctrl+Shift+P: 打开命令面板。在打开的输入框内，可以输入任何命令，例如：
+* 主命令框
+    - F1 或 Ctrl+Shift+P: 打开命令面板。在打开的输入框内，可以输入任何命令，例如：
 
-按一下 Backspace 会进入到 Ctrl+P 模式
-在 Ctrl+P 下输入 > 可以进入 Ctrl+Shift+P 模式
-在 Ctrl+P 窗口下还可以:
+* 按一下 Backspace 会进入到 Ctrl+P 模式
+* 在 Ctrl+P 下输入 > 可以进入 Ctrl+Shift+P 模式
+* 在 Ctrl+P 窗口下还可以:
+    - 直接输入文件名，跳转到文件
+    - `?` 列出当前可执行的动作
+    - `!` 显示 Errors或 Warnings，也可以 Ctrl+Shift+M
+    - `:` 跳转到行数，也可以 Ctrl+G 直接进入
+    - `@` 跳转到 symbol（搜索变量或者函数），也可以 Ctrl+Shift+O 直接进入
 
-直接输入文件名，跳转到文件
+* 常用快捷键
 
-? 列出当前可执行的动作
-! 显示 Errors或 Warnings，也可以 Ctrl+Shift+M
-: 跳转到行数，也可以 Ctrl+G 直接进入
-
-@ 跳转到 symbol（搜索变量或者函数），也可以 Ctrl+Shift+O 直接进入
-@ 根据分类跳转 symbol，查找属性或函数，也可以 Ctrl+Shift+O 后输入:进入
-
-
- 常用快捷键
+```
 编辑器与窗口管理
 打开一个新窗口： Ctrl+Shift+N
 关闭窗口： Ctrl+Shift+W
@@ -59,57 +56,49 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 重命名：比如要修改一个方法名，可以选中后按 F2，输入新的名字，回车，会发现所有的文件都修改了
 跳转到下一个 Error 或 Warning：当有多个错误时可以按 F8 逐个跳转
 查看 diff： 在 explorer 里选择文件右键 Set file to compare，然后需要对比的文件上右键选择 Compare with file_name_you_chose
+```
 
-查找替换
+* 查找替换
+    - 查找 Ctrl+F
+        + 在查找框中，alt+w 切换是否全词匹配
+    - 查找替换 Ctrl+H
+    - 整个文件夹中查找 Ctrl+Shift+F
+* 显示相关
+    - 全屏：F11
+    - 显示 Git Ctrl+Shift+G
+    - 显示 Debug Ctrl+Shift+D
+    - 显示 Output Ctrl+Shift+U
+    - 括号展开/收回 zoomIn/zoomOut：Ctrl +/-
+    - 侧边栏显/隐：Ctrl+B
+    - 显示资源管理器 Ctrl+Shift+E
+    - 显示搜索 Ctrl+Shift+F
 
-查找 Ctrl+F
-    在查找框中，alt+w 切换是否全词匹配
+* ctrl+c 不选中内容时，复制当前行
+* ctrl+x 不选中内容时，删除当前行
 
-查找替换 Ctrl+H
-整个文件夹中查找 Ctrl+Shift+F
-显示相关
-全屏：F11
-
-
-显示 Git Ctrl+Shift+G
-显示 Debug Ctrl+Shift+D
-显示 Output Ctrl+Shift+U
-
-
-括号展开/收回 zoomIn/zoomOut：Ctrl +/-
-
-侧边栏显/隐：Ctrl+B
-显示资源管理器 Ctrl+Shift+E
-显示搜索 Ctrl+Shift+F
-
-ctrl+c 不选中内容时，复制当前行
-ctrl+x 不选中内容时，删除当前行
-
-返回上一个位置 alt+左箭头
-下一个位置 alt+右箭头
+* 返回上一个位置 alt+左箭头
+* 下一个位置 alt+右箭头
 
 ## 设置
 
 * workspace vs user
-
-VS Code提供了两种设置方式：
-
+* VS Code提供了两种设置方式：
   - 用户设置： 这种方式进行的设置，会应用于该用户打开的所有工程；
   - 工作空间设置：工作空间是指使用VS Code打开的某个文件夹，在该文件夹下会创建一个名为.vscode的隐藏文件夹，里面包含着**仅适用于当前目录的**VS Code的设置。工作空间的设置会覆盖用户的设置。
-
-  **使用通用的配置则统一加到user用户模式下的配置中。**
+*  **使用通用的配置则统一加到user用户模式下的配置中。**
 
 * 显示空格和tab
+    - file->perferences->settings->搜 renderWhitespace->选all
+    - 或：
+        + 1.打开vscode的用户设置
+        + 2.在右边添加新设置
 
-file->perferences->settings->搜 renderWhitespace->选all
-
-或：
-    1.打开vscode的用户设置
-    2.在右边添加新设置
+```
     {
         "editor.renderControlCharacters": true,
         "editor.renderWhitespace": "all"
     }
+```
 
 * 缩进设置为tab (makefile空格和tab有区别)
     - 在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
@@ -131,18 +120,15 @@ file->perferences->settings->搜 renderWhitespace->选all
 
 ### 自定义代码片段snippets设置
 
-很方便的功能，推荐使用
+* 很方便的功能
+    - 参考：[vs code设置自定义代码块的方法](https://blog.csdn.net/qq_504762354/article/details/81437118)
+* 配置参考官网说明：
+    - [Snippets in Visual Studio Code](https://code.visualstudio.com/docs/editor/userdefinedsnippets)
 
-参考：
-[vs code设置自定义代码块的方法](https://blog.csdn.net/qq_504762354/article/details/81437118)
-
-其他配置最好是参考官网说明：
-[Snippets in Visual Studio Code](https://code.visualstudio.com/docs/editor/userdefinedsnippets)
-
-1. 首先打开“首选项”，选择“用户代码片段”
-2. 然后再选择你需要将此代码块作用在哪种类型的文件，会生成一个json文件
+* 1. 首先打开“首选项”，选择“用户代码片段”
+* 2. 然后再选择你需要将此代码块作用在哪种类型的文件，会生成一个json文件
     - 也可以选全局，生成的json文件中会多一个key，用于设置代码生效范围
-3. 然后配置一个json文件
+* 3. 然后配置一个json文件
     - File->Preferences->User Snippets->选择某个语言或者global->进行配置
 
 配置方法说明(选的是全局为例)：
@@ -242,11 +228,41 @@ file->perferences->settings->搜 renderWhitespace->选all
             * `git clone https://github.com/golang/xerrors.git`
     - `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
     - 安装后，函数跳转、代码提示都是飞速
+* LeetCode插件配置
+    - 在UI配置界面里搜leetcode
+        + 各项配置参考：[settings](https://swift.ctolib.com/jdneo-vscode-leetcode.html#settings)
+    - `Endpoint`选择中文站或者国际站(我用的中文站)
+    - `Show Description`设置题目描述展示的方式，我选`Both`，生成的文件和VSCode里都会显示题目信息
+    - `Workspace Folder`设置生成文件的路径
+    - `File Path` 设置生成文件的格式，由于有时自己像运行些调试测试，所以配置生成的是`_test.go`形式的文件，便于单元测试
+        + 设置File Path选项可以参考官网说明：[Customize the Relative Folder and the File Name](https://github.com/LeetCode-OpenSource/vscode-leetcode/wiki/Customize-the-Relative-Folder-and-the-File-Name-of-the-Problem-File)
+
+```json
+"leetcode.endpoint": "leetcode-cn",
+"leetcode.hint.configWebviewMarkdown": false,
+"leetcode.workspaceFolder": "/home/xxx/lc",
+"leetcode.defaultLanguage": "golang",
+"leetcode.filePath": {
+  "default": {
+    "folder": "",
+    "filename": "${id}.${kebab-case-name}_test.${ext}"
+  }
+},
+"leetcode.hint.commandShortcut": false,
+"leetcode.editor.shortcuts": [
+  "submit",
+  "test",
+  "solution"
+],
+"leetcode.showDescription": "Both",
+"leetcode.hint.commentDescription": false,
+```
 
 ### 配置云端同步
-使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
-(当前版本是3.4.3, 并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
-(网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
+
+* 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
+    - (当前版本是3.4.3, 并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
+    - (网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
 
 ```
 Gist ID
@@ -255,15 +271,15 @@ Gist ID
 b48fa742e2d6036c5ffca098c926942016bf3c02
 ```
 
-ctrl+shift+p, 输入sync，
-  之前有残留配置则reset extension settings;
-  update/upload settings 出来的界面配置gist id和token，再执行一次，左下角状态栏会显示操作(字体比较小)
-  download settings      出来的界面配置gist id和token
+* ctrl+shift+p, 输入sync，
+  - 之前有残留配置则reset extension settings;
+  - update/upload settings 出来的界面配置gist id和token，再执行一次，左下角状态栏会显示操作(字体比较小)
+  - download settings      出来的界面配置gist id和token
 
 ## C++开发环境
 
-参考VS Code官方文档：
-[Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
+* 参考VS Code官方文档：
+    - [Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
 
 * 安装mingw (Minimalist GNU for Windows)，(当前自己用的是安装QT时一并安装的mingw730_64)
     - [mingw官网下载链接](http://mingw-w64.org/doku.php/download/mingw-builds)
@@ -344,7 +360,7 @@ ctrl+shift+p, 输入sync，
 
 ## Go插件安装
 
-由于wall导致gocode等一些扩展自动安装不了。手动下载安装。如果已经手动下载了包到go_path对应src下，则go install进行安装(go get=clone+install)
+* 由于wall导致gocode等一些扩展自动安装不了。手动下载安装。如果已经手动下载了包到go_path对应src下，则go install进行安装(go get=clone+install)
 
 ```cpp
 // gocode
