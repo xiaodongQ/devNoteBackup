@@ -11,7 +11,7 @@
     - `!` 显示 Errors或 Warnings，也可以 Ctrl+Shift+M
     - `:` 跳转到行数，也可以 Ctrl+G 直接进入
     - `@` 跳转到 symbol（搜索变量或者函数），也可以 Ctrl+Shift+O 直接进入
-
+* 代码提示，`editor.action.triggerSuggest`，mac下设置成 shift+空格，其他键太容易冲突了
 * 常用快捷键
 
 ```
