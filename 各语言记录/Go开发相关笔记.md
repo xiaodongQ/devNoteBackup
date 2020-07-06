@@ -2116,6 +2116,7 @@ func main() {
         + Java内置队列，链接中列出了数组、链表、堆实现的多种类型的线程安全的队列类
             * 基于数组的线程安全的队列：`ArrayBlockingQueue`，通过加锁来保证线程安全
             * 基于链表的线程安全的队列，分为：`LinkedBlockingQueue` 和 `ConcurrentLinkedQueue`，前者也通过加锁、后者通过原子变量compare and swap(`CAS`)这种不加锁的方式实现线程安全
+                - 关于`CAS`之前笔记中有记录(搜`并发无锁队列`)：[并发编程.md](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.md)
         + 通过不加锁的方式实现的队列都是无界的（无法保证队列的长度在确定的范围内）；
             * 而加锁的方式，可以实现有界队列
         + 在稳定性要求特别高的系统中，为防止生产者速度过快而导致内存溢出，只能选择有界队列；同时，为减少Java垃圾回收对系统性能的影响，尽量选择array/heap数据结构(链表结构需要另外的指针)，符合条件的队列就只有`ArrayBlockingQueue`(有界、加锁、arraylist结构)
@@ -2633,7 +2634,7 @@ exit status 66
 
 ## timer 定时器
 
-* 先看一段下面的代码
+* 先看一段下面的代码(使用`Timer`)
     - 时间在150100之后和92900之前，不执行后续的功能逻辑，但是需要定期检查grpc客户端是否关闭了流
     - 实现
         + 可以简单地在for循环中用，`time.Sleep(time.Second * 10)`
@@ -2687,24 +2688,108 @@ isClientCancelled := func(ctx context.Context) bool {
         + 1.14对timer做了优化，所以前后源码并不一样，分别看下两个实现
         + 1.14之前的实现
             * 可参考：[9.3.1 实现原理](https://rainbowmango.gitbook.io/go/chapter09/9.3-foreword/9.3.1-timersproc_principle)
-        + 定时器在go 1.13 和 go1.14中的区别
-            * 参考：[go1.14基于netpoll优化timer定时器实现原理](http://xiaorui.cc/archives/6483)
-            * 1.13前
-                - golang在1.10版本之前是由一个独立的`timerproc`通过`小顶堆`和`futexsleep`来管理定时任务
-                - 1.10之后采用的方案是把独立的timerproc和小顶堆分成最多64个timerproc协程和`四叉堆`，用来休眠就近时间的方法还是依赖futex timeout机制
-                - 默认timerproc数量会跟GOMAXPROCS一致的，但最大也就64个，因为会被64取模
-                - ps: 关于`小顶堆`和`四叉堆`，等数据结构get到再放链接。。。
-            * 简单的过一遍go1.13版定时器的实现
-                - 不管是NewTimer、NewTicker、After等其实调用的都是`addTimer`来新增定时任务
-                    + `addTimer`中调用`assignBucket`，给当前协程分配一个`timerBucket`
-                    + go初始化时会预先实例化长度64的timers数组，通过协程的`p`跟64取摸来分配timerBucket
-                    + 如果新的定时任务较新，那么使用notewakeup来激活唤醒timerproc的futex等待。如果发现没有实例化timerproc，则启动
-                - `timerproc`协程运行时会从堆顶拿`timer`，然后判断是否到期，到期则直接执行，当`bucket`无任务时，调用`runtime.goparkunlock`来休眠该协程
-            * go1.14版的timer
-                - 首先把存放定时事件的四叉堆放到`p`结构中，另外取消了`timerproc`协程，转而使用`netpoll`的`epoll wait`来做就近时间的休眠等待
-                - 在每次`runtime.schedule`调度时都检查运行到期的定时器
-            * 源码分析go1.14 timer
-                - 在`struct p`中定义了`timer`相关字段，`timers`数组用来做四叉堆数据结构
-                    + 源码文件`src/runtime/runtime2.go`
-                    + 成员：`timers []*timer`
+    - 定时器在go 1.13 和 go1.14中的区别
+        + 参考：[go1.14基于netpoll优化timer定时器实现原理](http://xiaorui.cc/archives/6483)
+        + 要理解源码里面结构定义(`type g struct{xxx}`, `runtime/runtime2.go`文件)，先了解协程，查看本笔记中的`## 协程(coroutine)`章节
+        + 1.13前
+            * golang在1.10版本之前是由一个独立的`timerproc`通过`小顶堆`和`futexsleep`来管理定时任务
+            * 1.10之后采用的方案是把独立的timerproc和小顶堆分成最多64个timerproc协程和`四叉堆`，用来休眠就近时间的方法还是依赖futex timeout机制
+            * 默认timerproc数量会跟GOMAXPROCS一致的，但最大也就64个，因为会被64取模
+            * ps: 关于`小顶堆`和`四叉堆`，等数据结构get到再放链接。。。
+        + 简单的过一遍go1.13版定时器的实现
+            * 不管是NewTimer、NewTicker、After等其实调用的都是`addTimer`来新增定时任务
+                - `addTimer`中调用`assignBucket`，给当前协程分配一个`timerBucket`
+                - go初始化时会预先实例化长度64的timers数组，通过协程的`p`跟64取摸来分配timerBucket
+                - 如果新的定时任务较新，那么使用notewakeup来激活唤醒timerproc的futex等待。如果发现没有实例化timerproc，则启动
+            * `timerproc`协程运行时会从堆顶拿`timer`，然后判断是否到期，到期则直接执行，当`bucket`无任务时，调用`runtime.goparkunlock`来休眠该协程
+        + go1.14版的timer
+            * 首先把存放定时事件的四叉堆放到`p`结构中，另外取消了`timerproc`协程，转而使用`netpoll`的`epoll wait`来做就近时间的休眠等待
+            * 在每次`runtime.schedule`调度时都检查运行到期的定时器
+        + 源码分析go1.14 timer
+            * 在`struct p`中定义了`timer`相关字段，`timers`数组用来做四叉堆数据结构
+                - 源码文件`src/runtime/runtime2.go`
+                - 成员：`timers []*timer`
 
+## 协程(coroutine)
+
+* [Go语言的协程，系统线程以及CPU管理](https://www.pengrl.com/p/29953/)
+    - M，P，G 模型
+        + Go拥有一个将协程调度到系统线程执行的调度器。这个调度器定义了三个核心概念
+            * `G` - goroutinue. 协程
+            * `M` - worker thread, or machine. 工作线程
+            * `P` - processor, 执行Go代码时所必须的一种资源
+        + `M`必须有一个相关联的`P`才能执行Go代码
+        + 每个协程（`G`）在一个分配给逻辑processor（`P`）的系统线程（`M`）上运行
+        + 首先，Go会根据当前机器的逻辑CPU个数来创建相应数量的`P`，并将它们存放在一张空闲`P`列表中
+        + 然后，新创建并等待被运行的协程会唤醒一个`P`来执行这个任务，这个`P`会创建一个和系统线程相关联的`M`
+            * 和`P`一样，如果一个`M`没有工作可做了，该`M`会被放入空闲`M`链表中
+            * 在程序启动时，Go会预先创建一些系统线程以及相关联的`M`
+        + 上面的参考链接中演示了一个多协程调度的示例
+            * 第一个协程使用主协程，第二个协程会从空闲列表中获取一个`M`和`P`
+    - 进一步看看Go在什么情况下会使用更多的`M`和`P`，以及调用系统调用时协程是如何被管理的
+        + Go对系统调用做了优化，具体做法是在运行时对系统调用做了封装（不管系统调用是否会造成阻塞）。
+        + 该部分封装代码会自动将`P`与线程`M`解除绑定，使得另一个线程`M`可以在这个`P`上运行
+        + 当系统调用结束之后，Go顺序执行如下流程直到其中一条规则被满足：
+            * 试图获取同一个`P`，如果获取到，则恢复执行
+            * 试图在空闲列表中获取一个`P`，如果获取到，则恢复执行
+            * 将协程放入全局队列中，将相关的`M`放入空闲列表中
+
+* 阅读上面的文章链接，发现博主的博客主页有不少好质量的文章:
+* [利用CPU cache特性优化Go程序](https://pengrl.com/p/9125/)
+    - `CPU cache`
+        + CPU cache位于CPU和内存之间，CPU读取数据时，并不是直接从内存读取，而是先从CPU cache中读，读不到再从内存读
+        + 显然，CPU cache命中率越高，程序执行速度就越快。但是受限于制造工艺以及成本，CPU cache的容量远小于内存。所以必须要有一种缓存策略，用于决定哪些数据缓存在CPU cache中。
+        + CPU cache的缓存策略是基于局部性原理设计的。局部性分两点：
+            * 时间局部性，即最近刚被访问的数据大概率会被再次访问；
+            * 空间局部性，即最近刚被访问的数据，相邻的数据大概率会被访问
+    - `CPU cache line` (CPU缓存行)
+        + 根据以上原理，CPU cache在缓存数据时，并不是以单个字节为单位缓存的，而是以`CPU cache line`大小为单位缓存：
+            * `CPU cache line`在一般的x86环境下为`64`字节。
+            * 也就是说，即使从内存读取`1`个字节的数据，也会将邻近的`64`个字节*一并*缓存至CPU cache中
+        + linux下，可以通过`getconf -a | grep CACHE`命令获取cache line大小
+            * (在自己的CentOS上执行)，执行结果形式：`LEVEL1_ICACHE_LINESIZE  64`，可以看到L1、L2、L3缓存linesize都是64
+        + 这也是访问数组通常比链表快的原因之一
+    - `false sharing` (伪共享)
+        + 本笔记中之前的`* Disruptor 框架`章节中的`伪共享`也提到过(不过没有此处这篇文章讲得清晰)
+            * *访问共享数据的速度：寄存器 > 一级缓存L1 > 二级缓存L2 > 三级缓存L3 > 内存(主存)* (但大小增大)
+            * `L1`紧靠着在使用它的*CPU核*；
+            * `L2`只能被一个单独的*CPU核*使用；
+            * `L3`被*单个插槽上的所有CPU核*共享；
+            * 最后是主存，由*全部插槽上的所有CPU核*共享
+        + 一个CPU核在读取一个变量时，以`cache line`的方式将后续的变量也读取进来，缓存在自己这个核的cache中，而后续的变量也可能被其他CPU核并行缓存。
+            * 当前面的CPU对前面的变量进行写入时(要写入变量不一定是cache line的大小)，该变量同样是以`cache line`为单位写回内存
+            * 此时，在其他核上，尽管缓存的是该变量之后的变量，但是由于没法区分自身变量是否被修改，所以它只能认为自己的缓存失效，重新从内存中读取
+            * 这种现象叫做`false sharing`(伪共享)
+    - `cache line padding` (缓存行填充)
+        + 在高性能系统编程场景下，一般解决false sharing的方法是，在变量间添加无意义的填充数据（cache line padding）。使得我们真正需要高频并发读写的不同变量，不出现在一个cache line中(尽量在不同核缓存)
+    - Go标准库中使用cache line padding的两个例子
+        + `Timer`定时器(此处讲得代码是Go1.14之前的定时器，1.14源码做了优化)
+            * (关于定时器原理，之前的章节：`## timer 定时器`也有学习笔记)
+            * 博主的另一篇讲解更详细：[golang源码阅读之定时器以及避坑指南](https://pengrl.com/p/62835/)
+                - 避坑需要的操作：
+                - `Ticker`对象不再使用后，显式调用`Stop`方法
+                - `Timer`对象不再使用后，在高性能场景下，也应该显式调用`Stop`方法，及时释放资源
+                    + 对已超时的Timer调用`Stop`方法内部有变量保护，是安全的。但是这种保护需要拿一次桶内的互斥锁，高性能场景下也需要考虑这个消耗
+                - `Stop()`源码调用关系：`time.Stop()` -> `time.stopTimer()` -> `runtime.deltimer()`
+                    + `runtime.deltimer()`里面是循环执行switch-case，利用`atomic`包进行原子操作：操作`Timer`对象中的`P`，(加锁后)把其成员`deletedTimers`加1
+                    + 加锁操作的实现是，获取本协程(`G`)对应的`M`，然后进行上面的+1操作(`atomic.Cas`原子操作)，而后释放`M`
+            * 在`timers`的定义中，`var timers [timersLen]struct{xxx}`，定义了一个结构体数组
+                - 数组元素类型是一个匿名结构体，结构体包含成员：
+                    + 真正与业务逻辑功能相关的`timersBucket`
+                    + 和 `pad [cpu.CacheLinePadSize - unsafe.Sizeof(timersBucket{})%cpu.CacheLinePadSize]byte`，用于做`cache line padding`优化
+                - 如果去掉cache line padding的优化，上面的匿名结构体数组等价于`var timers [timersLen]timersBucket`
+                    + 匿名结构体对`timersBucket`的封装，相当于在原本一个接一个的`timersBucket`数组元素之间，插入了`pad`。从而保证不同的`timersBucket`对象不会出现在同一个cache line中
+                - 对于`pad`数据成员
+                    + 其中的`cpu.CacheLinePadSize`变量定义在`src/internal/cpu`下，它通过*构建标签*的方式 在不同环境下定义了不同的值，比如在cpu_x86.go文件下被定义为64
+                    + 关于*构建标签*，博主有一篇译文介绍：[Go语言如何使用条件编译](https://pengrl.com/p/41852/)
+                        * 类比C/C++中的宏定义和预处理实现的`条件编译`，根据依赖的底层平台或处理器体系特性的不同，来进行不同的处理
+                        * `构建规则`（Build Constraints）和 `构建标签`（Build tags）
+        + 另外一个Go标准库中的例子，来自内存管理模块
+            * `type mheap struct {xxx}`结构，包含一个结构体数组成员：`central [numSpanClasses]struct {xxx}`
+            * `central`匿名结构体数组的定义，和计时器例子中的定义类似，包含两个成员：
+                - `mcentral mcentral` 和 `pad [cpu.CacheLinePadSize - unsafe.Sizeof(mcentral{})%cpu.CacheLinePadSize]byte`
+    - 总结
+        + cache line padding适用于多个相邻的变量频繁被并发读写的场景
+        + 但也存在其缺点
+            * 首先，内容无实际意义的padding增加了内存使用量开销
+            * 更重要的是，在某些场景下增加padding，意味着你放弃了CPU cache提供给你的空间局部性相关的预读取的奖励

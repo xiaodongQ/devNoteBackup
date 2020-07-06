@@ -214,20 +214,6 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
             * magic，魔法效果(云状的爆炸效果)
             * clippy，回形针效果
             * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
-* vscode开发Go，提示太慢了
-    - [在 VS Code 中使用 gopls](https://segmentfault.com/a/1190000020276833)
-        + `go get golang.org/x/tools/gopls`
-        + `go get`没科学上网访问不了golang.org，开启go module后，设置GOPROXY可直接用该命令
-    - 开启 Use Language Server，需要安装gopls，go get安装被墙
-    - `git clone https://github.com/golang/tools.git`
-        + 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建
-    - `go list -e -compiled -json golang.org/x/tools/gopls` 可以查看build依赖的环境和包，若提示没有包，则单独clone对应的包
-        + 提示少下面几个包(golang.org/x/xerrors、mod、xerrors)，到`go_path\src\golang.org\x\tools`目录git clone
-            * `git clone https://github.com/golang/mod.git`
-            * `git clone https://github.com/golang/sync.git`
-            * `git clone https://github.com/golang/xerrors.git`
-    - `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
-    - 安装后，函数跳转、代码提示都是飞速
 * LeetCode插件配置
     - 在UI配置界面里搜leetcode
         + 各项配置参考：[settings](https://swift.ctolib.com/jdneo-vscode-leetcode.html#settings)
@@ -261,8 +247,9 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 ### 配置云端同步
 
 * 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
-    - (当前版本是3.4.3, 并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
+    - (当前版本是3.4.3，第一次上传时并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
     - (网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
+    - 新版本(当前最新v3.4.3)不需要填令牌token了，下载时配置好`Gist ID`，上传时，会跳出登录github选择哪个Gist ID
 
 ```
 Gist ID
@@ -384,6 +371,21 @@ go install github.com/go-delve/delve/cmd/dlv
 * VSCode里运行时用的环境变量，光配置.bashrc或.bash_profile并不行，需要在配置文件中进行配置gopath
     - e.g. 在settings.json里添加配置: `"go.gopath": "/Users/xd/workspace/src/go_path",`
     - 编辑配置：配置settings.json中的GOROOT和GOPATH点击VS Code，点击最顶部栏的Code选项，选中Preferences，点击Settings，选中Extensions，点击Go configuration，在点击Edit in settings.json，打开settings.json文件，可以通过搜索go.go查到，settings.json 文件里面默认的go.gopath和go.goroot都是null，需要自己设置，设置完gopath和goroot后按command+s保存文件
+* `gopls`
+    - vscode开发Go，提示太慢了
+    - [在 VS Code 中使用 gopls](https://segmentfault.com/a/1190000020276833)
+        + `go get golang.org/x/tools/gopls`
+        + `go get`没科学上网访问不了golang.org，开启go module后，设置GOPROXY可直接用该命令
+    - 开启 Use Language Server，需要安装gopls，go get安装被墙
+    - `git clone https://github.com/golang/tools.git`
+        + 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建
+    - `go list -e -compiled -json golang.org/x/tools/gopls` 可以查看build依赖的环境和包，若提示没有包，则单独clone对应的包
+        + 提示少下面几个包(golang.org/x/xerrors、mod、xerrors)，到`go_path\src\golang.org\x\tools`目录git clone
+            * `git clone https://github.com/golang/mod.git`
+            * `git clone https://github.com/golang/sync.git`
+            * `git clone https://github.com/golang/xerrors.git`
+    - `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
+    - 安装后，函数跳转、代码提示都是飞速
 
 ## koroFileHeader的user配置备份
 
