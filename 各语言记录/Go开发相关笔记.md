@@ -2286,16 +2286,100 @@ func main() {
 * [NSQ官网文档](https://nsq.io/overview/design.html)
 * NSQ由三个守护进程组成
     - [INTERNALS](https://nsq.io/overview/internals.html)
-    - `nsqd`
-        + 接收、排队并将消息传递给客户端的守护进程
-        + 一个单独的`nsqd`可以有多个`topic`，一个topic可以有多个`channel`
+    - `nsqd` (4151 http、4150 tcp)
+        + [nsqd](https://nsq.io/components/nsqd.html)
+        + `nsqd`是接收、排队并将消息传递给客户端的守护进程
+        + 可以单机使用，但是一般配置成集群(通过`nsqlookupd`的实例，这种情况下它会广播topic和channel用于发现)
+        + 一个单独的`nsqd`可以有多个`topic`，一个topic可以有多个`channel` (topic和channel都通过一个string标识)
             * 一个`topic`是一个独立的数据流
             * 一个`channel`是用户订阅指定topic的一个逻辑分组
-            * 每个`channel`接收指定topic上的所有消息的副本，当channel上的每个消息分布在其订阅者之间时，支持多播风格的传递，从而支持负载均衡
-    - `nsqlookupd`
-        + 管理拓扑信息并提供最终一致的发现服务
+            * 每个`channel`接收指定topic上的所有消息的副本，当channel上的每个消息分布在其订阅者之间(多个订阅者订阅用同一个channel)时，支持多播风格的传递，从而支持负载均衡
+        + 命令行选项
+            * 启动nsqd时，监听了两个TCP端口(4150用于tcp客户端、4151用于HTTP API)，可选择监听第三个端口用于HTTPS
+            * `-http-address`
+                - 默认`"0.0.0.0:4151"`，用于监听接收`http`客户端请求
+                - 如：`curl -d 'hello' 'http://127.0.0.1:4151/pub?topic=test'`，`-d`通过`POST`指定请求数据
+            * `-tcp-address`
+                - 默认`"0.0.0.0:4150"`，监听接收`tcp`客户端请求
+            * `-https-address string`
+                - 默认`"0.0.0.0:4152"`，监听接收`https`客户端请求
+            * `-lookupd-tcp-address`
+                - `lookupd`服务的tcp地址(ip:4160形式)，可以指定多个(通过多次指定)
+        + HTTP API
+            * [nsqd http-api](https://nsq.io/components/nsqd.html#http-api)
+            * `GET /stats` 返回内部统计数据
+                - `curl http://192.168.50.207:4151/stats`
+            * `curl http://192.168.50.207:4151/ping` 检查连接，正常返回OK
+            * `curl http://192.168.50.207:4151/info` 版本
+            * `GET /debug/pprof` 返回一个debug信息的地址
+                - 访问浏览器 `http://192.168.50.207:4151/debug/pprof`
+            * `GET /debug/pprof/profile` 启动一个cpu `pprof` 30秒，并输出结果
+                - 结果是二进制，保存成文件再`go tool pprof`分析：
+                    + `curl -o nsqd.prof http://192.168.50.207:4151/debug/pprof/profile`
+                - *推荐*: `go tool`支持url，可以直接`go tool pprof -http=:8080 http://192.168.50.207:4151/debug/pprof/profile`
+                - 注意，这个连接不在`/debug/pprof`的索引页上，考虑到运行时的性能影响
+            * `GET /debug/pprof/goroutine` 返回当前所有运行协程的堆栈跟踪
+                - `go tool pprof -http=:8080 http://192.168.50.207:4151/debug/pprof/goroutine` 直接起一个web页查看
+            * `GET /debug/pprof/heap` 堆和内存状态切片
+            * `GET /debug/pprof/block` goroutine阻塞情况切片
+            * `GET /debug/pprof/threadcreate` 创建系统线程的goroutine堆栈跟踪
+            * `GET /config/nsqlookupd_tcp_addresses` 查询连接的`nsqlookupd` tcp地址
+            * `PUT /config/nsqlookupd_tcp_addresses` 修改要连接的`nsqlookupd` tcp地址
+                - `curl -X PUT http://127.0.0.1:4151/config/nsqlookupd_tcp_addresses -d '["127.0.0.1:4160", "127.0.0.2:4160"]'`
+                - 数据格式是一个json数组的形式
+    - `nsqlookupd` (4161 http、4160 tcp)
+        + [nsqlookupd](https://nsq.io/components/nsqlookupd.html)
+        + `nsqlookupd`是管理拓扑信息并提供最终一致的发现服务的守护进程
+        + 客户端查询`nsqlookupd`来发现指定topic的`nsqd`生产者，`nsqd`节点通过其广播topic和channel信息
+        + 包含两套接口：
+            * 用于给`nsqd`广播的TCP接口
+            * 用于客户端查询和管理的HTTP接口
+        + 选项
+            * `-broadcast-address`
+                - 将会注册到`lookupd`中的地址，默认是当前系统的hostname，如`"PROSNAKES.local"`
+            * `-http-address`
+                - 默认`"0.0.0.0:4161"`，监听接收`http`客户端请求
+            * `-tcp-address`
+                - 默认`"0.0.0.0:4160"`，监听接收`tcp`客户端请求
+        + HTTP API
+            * [nsqlookupd HTTP Interface](https://nsq.io/components/nsqlookupd.html#http-interface)
+            * `GET /lookup`，获取指定topic的生产者列表
+                - e.g. `curl http://192.168.50.207:4161/lookup?topic=test`
+            * `GET /topics` 获取topic列表
+                - `curl http://192.168.50.207:4161/topics`
+            * `GET /channels` 获取指定topic的channel列表
+                - `curl http://192.168.50.207:4161/channels?topic=test`
+            * `GET /nodes` 获取`nsqd`列表
+                - `curl http://192.168.50.207:4161/nodes`
+            * `POST /topic/create` 向`nsqlookupd`的注册表添加一个topic
+                - `curl -d '' http://192.168.50.207:4161/topic/create?topic=xdtp1`
+            * `POST /topic/delete` 删除一个存在的topic
+                - `curl -d '' http://192.168.50.207:4161/topic/delete?topic=xdtp1`
+                - 删除不存在的topic不会报错
+            * `POST /channel/create` 向`nsqlookupd`的注册表添加一个channel
+                - `curl -d '' http://192.168.50.207:4161/channel/create?topic=xdtp2&channel=xdch1`
+                - 若topic不存在则会同时创建topic
+            * `POST /channel/delete` 删除一个已存在topic的已存在channel
+                - `curl -d '' http://192.168.50.207:4161/channel/delete?topic=xdtp2&channel=xdch1`
+                - 删除不存在的channel会报错：`{"message":"CHANNEL_NOT_FOUND"}`
+            * `GET /ping` 检查连接，返回ok
+                - `curl http://192.168.50.207:4161/ping`
+            * `GET /info` 返回版本
+                - `curl http://192.168.50.207:4161/info`
+            * `POST /topic/tombstone` 用于从集群清理topic(直接删除topic的方式保证不了所有消费者的订阅已不再使用)
     - `nsqadmin`
-        + 一个实时查看集群(并执行各种管理任务，可操作topic)的web UI
+        + [nsqadmin](https://nsq.io/components/nsqadmin.html)
+        + 一个实时查看集群状态，并能执行各种管理任务的web UI
+        + 命令行选项
+            * `-http-address`
+                - 默认`"0.0.0.0:4171"`，监听接收`http`客户端请求
+                - 浏览器访问用的就是该端口，e.g. 浏览器输入地址`http://192.168.50.207:4171/`
+            * `-lookupd-http-address`
+                - `lookupd`服务的HTTP地址(ip:4161形式)，可以指定多个(通过多次指定)
+            * `-nsqd-http-address`
+                - `nsqd`的HTTP地址，可指定多个
+                - 这个指定得干嘛不知道，*mark*
+        + 列出了展示的各项指标(包含 topic、channel、client连接 相关的各项信息)，可登录管理界面查看
 * NSQ是`simplequeue`(`simplehttp`的一部分)的继承者
     - `simplehttp`是构建在`libevent`之上的一系列库和守护进程，它们使高性能HTTP服务器编写起来简单而直接
         + [bitly/simplehttp](https://github.com/bitly/simplehttp)
@@ -2342,12 +2426,7 @@ func main() {
 
 ```sh
 # 运行nsqd
-docker run --name nsqd -p 4150:4150 -p 4151:4151 \
-    nsqio/nsq /nsqd \
-    --broadcast-address=<节点ip> \
-    --lookupd-tcp-address=<容器主机ip>:<port 一般为4160>
-
-# 若nsqlookupd运行的主机ip为192.168.50.207，节点217，命令如下
+# 如nsqlookupd运行的主机ip为192.168.50.207，节点217，命令如下
 docker run --name nsqd -idt -p 4150:4150 -p 4151:4151 \
     nsqio/nsq /nsqd \
     --broadcast-address=192.168.50.217 \
