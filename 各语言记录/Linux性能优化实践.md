@@ -1,6 +1,16 @@
-# CPU性能篇
+[TOC]
 
-## 平均负载
+# 性能优化
+
+* 本笔记主要包含极客时间两个性能优化相关的专栏的学习和实践笔记
+    - [Linux性能优化实战](https://time.geekbang.org/column/intro/140)
+    - [系统性能调优必知必会](https://time.geekbang.org/column/intro/308)
+
+# [Linux性能优化实战](https://time.geekbang.org/column/intro/140)
+
+## CPU性能篇
+
+### 平均负载
 
 [02 到底应该怎么理解“平均负载”？](https://time.geekbang.org/column/article/69618)
 
@@ -69,7 +79,7 @@
         + 当系统中运行进程超出 CPU 运行能力时，就会出现等待 CPU 的进程
         + `stress -c 8`，超出系统CPU核数，CPU处于严重过载状态
 
-## CPU 上下文切换
+### CPU 上下文切换
 
 [03 经常说的 CPU 上下文切换是什么意思？](https://time.geekbang.org/column/article/69859)
 
@@ -196,7 +206,7 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
  9  0      0 424868   2116 831880    0    0     0     0 50355 2080560 20 79  1  0  0
 ```
 
-## CPU使用率
+### CPU使用率
 
 [05 基础篇：某个应用的CPU使用率居然达到100%，我该怎么办？](https://time.geekbang.org/column/article/70476)
 
@@ -368,7 +378,7 @@ Percentage of the requests served within a certain time (ms)
  100%    910 (longest request)
 ```
 
-## 案例篇：CPU 使用率很高却找不到高CPU的应用
+### 案例篇：CPU 使用率很高却找不到高CPU的应用
 
 * [06 系统的 CPU 使用率很高，但为啥却找不到高 CPU 的应用？](https://time.geekbang.org/column/article/70822)
     - 回顾前面的内容，系统的 CPU 使用率，不仅包括进程用户态和内核态的运行，还包括`中断处理`、`等待 I/O` 以及`内核线程`等。所以，当你发现系统的 CPU 使用率很高的时候，`不一定`能找到相对应的高 CPU 使用率的`进程`。
@@ -402,7 +412,7 @@ Percentage of the requests served within a certain time (ms)
             * `perf-tools`是一些用于Linux ftrace和perf_events的正在开发和不受支持的性能分析工具的杂项集合
                 - 这些集合使用起来很简单：做一件事并把它做好
 
-## 案例篇：系统中出现大量不可中断进程和僵尸进程怎么办
+### 案例篇：系统中出现大量不可中断进程和僵尸进程怎么办
 
 * [案例篇：系统中出现大量不可中断进程和僵尸进程怎么办](https://time.geekbang.org/column/article/71064)
 
@@ -471,7 +481,7 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
         + 实例中的问题和解决：“服务器上似乎运行了许多IO操作很频繁的程序，jdb2的特点就是牺牲了性能保证了数据完整性，也就是说是我运行的程序太多让jdb2忙不过来了。”，“因此我的最终解决方案就是，用kill把所有当前运行的高IO程序都干掉。最后解决了问题。”
         + 思考：对于业务中就是需要频繁IO的程序逻辑(数据库，先考虑减少数据库操作频率，批量操作)，不能直接kill，那就要评估性能和完整性的取舍了。
 
-## 软中断
+### 软中断
 
 * [09 | 基础篇：怎么理解Linux软中断？](https://time.geekbang.org/column/article/71868)
 * [系统的软中断CPU使用率升高，我该怎么办？](https://time.geekbang.org/column/article/72147)
@@ -554,7 +564,7 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
 15:00:23.774683 IP 192.168.50.118.80 > 192.168.50.231.4806: Flags [S.], seq 414633220, ack 912643939, win 29200, options [mss 1460], length 0
 ```
 
-## 如何迅速分析出系统CPU的瓶颈在哪里？
+### 如何迅速分析出系统CPU的瓶颈在哪里？
 
 * [11 | 套路篇：如何迅速分析出系统CPU的瓶颈在哪里？](https://time.geekbang.org/column/article/72685)
 * [12 | 套路篇：CPU 性能优化的几个思路](https://time.geekbang.org/column/article/73151)
@@ -651,7 +661,7 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
                 - 开启 irqbalance 服务或者配置 smp_affinity，就可以把中断处理过程自动负载均衡到多个 CPU 上。
     - `千万避免过早优化`
 
-# 内存性能篇
+## 内存性能篇
 
 * Linux管理内存
     - 我们通常所说的内存容量是指`物理内存`(也称主存)。大多主存都是DRAM(动态随机访问内存)。
@@ -660,3 +670,136 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
         + 虚拟地址空间内部分为`内核空间`和`用户空间`两部分。
         + 32位系统的内核空间占用1G，用户空间3G；64位系统内核空间和用户空间都是128T
     - 进程在用户态时，只能访问用户空间内存；只有进入内核态后才可以访问内核空间内存。
+
+---
+
+# [系统性能调优必知必会](https://time.geekbang.org/column/intro/308)
+
+## 基础设施优化
+
+* [01 | CPU缓存：怎样写代码能够让CPU执行得更快？](https://time.geekbang.org/column/article/230194)
+    - 缓存的原理使用，之前的笔记中也做过说明(搜 `利用CPU cache特性优化Go程序`)：[Go开发相关笔记.md](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/Go%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0.md)
+    - CPU 的多级缓存
+        + CPU 缓存的材质 SRAM 比内存使用的 DRAM 贵许多，所以不同于内存动辄以`GB`计算，它的大小是以`MB`来计算的
+            * `lscpu`查看自己的Linux机器，L1 32KB，L2 256KB，L3 9216KB
+            * 有2个一级缓存(自己机器上显示为L1d 缓存和L1i 缓存，都是32KB)，这是因为，CPU 会区别对待指令与数据。比如，“1+1=2”这个运算，“+”就是指令，会放在`一级指令缓存`中，而“1”这个输入数字，则放在`一级数据缓存`中
+        + 当下的 CPU 都是多核心的，每个核心都有自己的一、二级缓存，但三级缓存却是一颗 CPU 上所有核心共享的
+        + 程序执行时，会先将内存中的数据载入到共享的三级缓存中，再进入每颗核心独有的二级缓存，最后进入最快的一级缓存，之后才会被 CPU 使用
+        + CPU 访问一次内存通常需要 100 个时钟周期以上，而访问一级缓存只需要 4~5 个时钟周期，二级缓存大约 12 个时钟周期，三级缓存大约 30 个时钟周期
+        + 如果 CPU所要操作的数据在缓存中，则直接读取，这称为缓存命中。命中缓存会带来很大的性能提升，因此，我们的代码优化目标是提升 CPU 缓存的命中率
+    - 提升数据缓存的命中率
+        + 课程代码可clone下来：[russelltao/geektime_distrib_perf](https://github.com/russelltao/geektime_distrib_perf)
+            * fork到了自己的github，便于自己的一些注释学习和实践：[xiaodongQ/geektime_distrib_perf](https://github.com/xiaodongQ/geektime_distrib_perf)
+        + 示例：[traverse_1d_array.cpp](https://github.com/xiaodongQ/geektime_distrib_perf/tree/master/1-cpu_cache/traverse_1d_array)
+            * `./traverse_1d_array -s 1`    耗时50,access count:8388608
+            * `./traverse_1d_array -s 128`  耗时390,access count:8388608
+            * `./traverse_1d_array -s 1024` Out of memory。。。
+            * 调整new出的数组大小为2GB（上面是new了8GB）
+                - -s 1，   20,access count:2097152
+                - -s 128， 80,access count:2097152
+                - -s 1024，600,access count:2097152
+            * 可以看到访问同样总数据量的数据，以不同间隔步长访问，相同次数，第一个是最快的
+            * 使用perf验证缓存命中率(指定关注的事件)
+                - 事件说明
+                    + 缓存未命中 `cache-misses` 事件
+                    + 读取缓存次数 `cache-references` 事件
+                        * 两者相除(未命中/读取次数)就是缓存的未命中率(`#`后面已经算好了)，用 1 相减就是命中率
+                    + `L1-dcache-load-misses`和`L1-dcache-loads` 可计算L1缓存的命中率(`1-未命中率`)
+                        * 相除可以得到L1缓存的未命中率(`#`后面已经算好了)
+                    + perf stat 还可以通过指令执行速度反映出两种访问方式的优劣
+                        * `instructions` 事件指明了进程执行的总指令数，而`cycles`事件指明了运行的时钟周期，二者相除就可以得到每时钟周期所执行的指令数，缩写为`IPC`(`#`后面算好了)
+                        * 如果缓存未命中，则 CPU 要等待内存的慢速读取，因此 `IPC` 就会很低
+                - `perf stat -e cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads ./traverse_1d_array -s 1`
+                    + 216,681      cache-references
+                    + 75,368       cache-misses            #  34.783 % of all cache refs *缓存未命中率很高？*
+                    + 29,937,457   instructions            #  1.53  insn per cycle *每时钟周期执行指令数更多*
+                    + 19,613,832   cycles
+                    + 107,690      L1-dcache-load-misses   #  0.70% of all L1-dcache hits
+                    + 15,367,502   L1-dcache-loads
+                - `perf stat -e cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads ./traverse_1d_array -s 128`
+                    + 11,963,620      cache-references
+                    + 5,064,344       cache-misses          #  42.331 % of all cache refs
+                    + 36,122,526      instructions          #  0.33  insn per cycle
+                    + 108,431,911     cycles
+                    + 6,519,388       L1-dcache-load-misses #  38.82% of all L1-dcache hits *L1未命中率很高*
+                    + 16,792,408      L1-dcache-loads
+            * 可以看到步长1遍历时，时钟周期(cycles)最少，缓存和L1缓存命中率反而小？
+        + 示例：[traverse_2d_array.cpp](https://github.com/xiaodongQ/geektime_distrib_perf/tree/master/1-cpu_cache/traverse_2d_array)
+            * 时间
+                - `./traverse_2d_array -f`，`arr[i][j]`方式访问，耗时10ms (有时0)
+                - `./traverse_2d_array -s`，`arr[j][i]`方式访问，耗时40ms (和链接中的80ms略不同)
+            * 使用perf验证缓存命中率(指定关注的事件)
+                - `perf stat -e cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads ./traverse_2d_array -f`
+                    + 274,098      cache-references
+                    + 124,717      cache-misses           #  45.501 % of all cache refs *缓存未命中率很高？*
+                    + 54,549,109   instructions           #  1.45  insn per cycle
+                    + 37,682,643   cycles
+                    + 150,201      L1-dcache-load-misses  #  0.84% of all L1-dcache hits
+                    + 17,894,603   L1-dcache-loads
+                - `perf stat -e cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads ./traverse_2d_array -s`
+                    + 22,999,477   cache-references
+                    + 317,376      cache-misses           #   1.380 % of all cache refs
+                    + 54,673,902   instructions           #   0.38  insn per cycle
+                    + 144,144,986  cycles
+                    + 6,583,124    L1-dcache-load-misses  #   36.71% of all L1-dcache hits *L1未命中率很高*
+                    + 17,934,431   L1-dcache-loads
+            * 连续访问时更快，理论上相差8倍，与 `CPU Cache Line` 相关，它定义了缓存一次载入数据的大小，Linux 上可以通过 `coherency_line_size` 配置查看它，通常是 64 字节
+                - 当载入 `array[0][0]`时，若它们占用的内存不足 64 字节，CPU 就会顺序地补足后续元素。顺序访问的 `array[i][j]`因为利用了这一特点，所以就会比 `array[j][i]`要快。
+                - 也正因为这样，当元素类型是4个字节的整数时，性能就会比8个字节的高精度浮点数时速度更快，因为缓存一次载入的元素会更多
+                - 为什么执行时间相差 8 倍
+                    + 在二维数组中，其实第一维元素存放的是地址，第二维存放的才是目标元素。由于 64 位操作系统的地址占用 8 个字节（32 位操作系统是 4 个字节），因此，每批 Cache Line 最多也就能载入不到 8 个二维数组元素，所以性能差距大约接近 8 倍。
+            * 因此，遇到这种遍历访问数组的情况时，按照内存布局顺序访问将会带来很大的性能提升。
+        + 提升指令缓存的方法
+            * 利用CPU的**分支预测器**
+                - 当代码中出现 if、switch 等语句时，意味着此时至少可以选择跳转到两段不同的指令去执行。如果分支预测器可以预测接下来要在哪段代码执行（比如 if 还是 else 中的指令），就可以提前把这些指令放在缓存中，CPU 执行时就会很快
+                - 当数组中的元素完全随机时，分支预测器无法有效工作，而当 array 数组有序时，分支预测器会动态地根据历史命中数据对未来进行预测，命中率就会非常高
+                - 示例：[branch_predict.cpp](https://github.com/xiaodongQ/geektime_distrib_perf/tree/master/1-cpu_cache/branch_predict)
+                    + `./branch_predict -s` 遍历随机数组，耗时820ms
+                    + `./branch_predict -f` 遍历有序数组，耗时280ms
+                    + 使用perf验证缓存命中率
+                        * `perf stat -e instructions,cycles,L1-icache-load-misses,branch-load-misses,branch-loads ./branch_predict -s`
+                            - 1,503,492,588   instructions   #  0.45  insn per cycle
+                            - 67,148,018      branch-load-misses
+                            - 273,725,452     branch-loads
+                        * `perf stat -e instructions,cycles,L1-icache-load-misses,branch-load-misses,branch-loads ./branch_predict -f`
+                            - 1,501,361,425   instructions   #  1.22  insn per cycle *每时钟周期执行指令数多*
+                            - 30,483          branch-load-misses
+                            - 273,342,843     branch-loads
+                - C/C++ 语言中编译器还给应用程序员提供了显式预测分支概率的工具，如果 if 中的条件表达式判断为“真”的概率非常高，我们可以用`likely`宏把它括在里面，反之则可以用`unlikely`宏
+                    + 当然，CPU 自身的条件预测已经非常准了，仅当我们确信CPU条件预测不会准，且我们能够知晓实际概率时，才需要加入这两个宏。
+                    + `#define likely(x) __builtin_expect(!!(x), 1)`
+                    + `#define unlikely(x) __builtin_expect(!!(x), 0)`
+                    + `if (likely(a == 1)){xxx}`
+            * 多核 CPU 下的缓存命中率
+                - 当多线程同时执行密集计算，且 CPU 缓存命中率很高时，如果将每个线程分别绑定在不同的 CPU 核心上，性能便会获得非常可观的提升
+                - 操作系统提供了将进程或者线程绑定到某一颗 CPU 上运行的能力
+                    + Linux: `sched_setaffinity` (设置CPU亲和性)
+                        * 之前笔记也记录了`CPU亲和性 (绑定CPU)`：[CPU亲和性 (绑定CPU)](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/C%2B%2B.md)
+                    + API
+                        * `#include <sched.h>`
+                        * `int sched_setaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);`
+                        * `int sched_getaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);`
+                    + 创建的子进程和线程继承CPU亲和性
+                - `perf`提供了`cpu-migrations`事件，显示进程从不同的 CPU 核心上迁移的次数
+                - 示例：[cpu_migrate.cpp](https://github.com/xiaodongQ/geektime_distrib_perf/tree/master/1-cpu_cache/cpu_migrate)
+                    + 使用3个（共6个CPU核心）并发线程测试，不绑定CPU
+                        * `./cpu_migrate -t 3 -s`，耗时(ms) costsum: 1641, avg: 547
+                    + 使用3个（共6个CPU核心）并发线程测试，绑定CPU
+                        * `./cpu_migrate -t 3 -f`，耗时 costsum: 1626, avg: 542
+                        * 差别不大的样子，有时还更久，加大循环的次数(循环再`*20`)，差别明显一些
+                            - 不绑定：costsum: 48344, avg: 16114
+                            - 绑定：  costsum: 48330, avg: 16110
+                    + 使用perf验证缓存命中率
+                        * `perf stat -e cpu-migrations,cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads,L1-icache-load-misses,branch-load-misses,branch-loads ./cpu_migrate -t 3 -s`
+                            - 148              cpu-migrations *CPU迁移次数多一些*
+                            - 2,702,230        cache-misses              #   20.835 % of all cache refs
+                            - 290,246,973,176  instructions              #    1.56  insn per cycle
+                            - 7,268,628        L1-dcache-load-misses     #    0.00% of all L1-dcache hits
+                        * `perf stat -e cpu-migrations,cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads,L1-icache-load-misses,branch-load-misses,branch-loads ./cpu_migrate -t 3 -f`
+                            - 122              cpu-migrations
+                            - 2,321,395        cache-misses              #   18.190 % of all cache refs
+                            - 290,240,522,792  instructions              #    1.56  insn per cycle
+                            - 6,520,711        L1-dcache-load-misses     #    0.00% of all L1-dcache hits
+        + 思考：多线程并行访问不同的变量，这些变量在内存布局是相邻的（比如类中的多个变量），此时CPU缓存就会失效，为什么？又该如何解决呢？
+            * 一片连续的内存被加载到不同cpu核心中（就是同一个cache line在不同的cpu核心），其中一个cpu核心中修改cache line,其它核心都失效(伪共享)，加锁也是加在cache line上，其它核心线程也被锁住，降低了性能。解决办法是填充无用字节数，使得我们真正需要高频并发读写的不同变量，不出现在一个cache line中(尽量在不同核缓存)
+                - Go里面的处理示例：(搜 `利用CPU cache特性优化Go程序`)：[Go开发相关笔记.md](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/Go%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0.md)

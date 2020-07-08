@@ -2937,8 +2937,8 @@ int main()
     - 如何将CPU亲和性应用到程序中？
         + Linux系统中每个进程的`task_struct`结构(sched.h中定义)中有一个`cpus_allowed` 位掩码，该掩码的位数与系统CPU核数相同（若CPU启用了超线程则为核数乘以2），通过修改该位掩码可以控制进程可运行在哪些特定CPU上
         + Linux系统为我们提供了CPU亲和性相关的调用函数和一些操作的宏定义，函数主要是下面两个：
-            * `sched_set_affinity()` （修改位掩码）
-            * `sched_get_affinity()` （查看当前的位掩码）
+            * `sched_setaffinity()` （修改位掩码）
+            * `sched_getaffinity()` （查看当前的位掩码）
         + 除此之外还提供了一些宏定义来修改掩码，如`CPU_ZERO()`(将位掩码全部设置为0)和`CPU_SET()`(设置特定掩码位为1)。
     - CPU亲和性的应用场景
         + 假如某些进程需要高密度的计算，不希望被频繁调度，则可以使用CPU亲和性将该进程绑定到一个CPU上；
@@ -3090,3 +3090,50 @@ jsontest:$(SRC_OBJ)
 clean:
     rm -rf *.o a.out
 ```
+
+## dlopen
+
+
+```cpp
+
+// 定义函数签名的别名
+typedef void  (*pfunc1)(const char* param);
+typedef char*  (*pfunc2)(const char* param);
+
+// 定义函数指针，加载动态库后可直接使用，e.g. g_func1("abc")
+pfunc1 g_func1 = NULL;
+pfunc2 g_func2 = NULL;
+
+int initQuantApi()
+{
+    const char* szDllPathx64 = "./lib/libTestAPIx64.so";
+    const char* szDllPathx86 = "./lib/libTestAPI.so";
+    // 根据情况选择加载哪个动态库
+    const char* szDllPath = szDllPathx86;
+    if (__WORDSIZE == 64)
+    {
+        szDllPath = szDllPathx64;
+    }
+
+    void* pHandle = dlopen(szDllPath, RTLD_LAZY);
+    void* Error = dlerror();
+    if (Error)
+    {
+        LOGGER_ERROR("\n\nOpen Dll failed. error:[{}]",Error);
+        return -1;
+    }
+    g_func1 = (pfunc1)dlsym(pHandle, "func1");
+    g_func2 = (pfunc2)dlsym(pHandle, "func2");
+
+    Error = dlerror();
+    if (Error)
+    {
+        dlclose(pHandle);
+        LOGGER_ERROR("\n\nDll sym failed. Error:[{}}]",Error);
+        return -1;
+    }
+
+    return 0;
+}
+```
+
