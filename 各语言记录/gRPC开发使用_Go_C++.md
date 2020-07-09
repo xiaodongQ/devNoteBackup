@@ -205,7 +205,7 @@ for {
         + `cmake -DBUILD_SHARED_LIBS=ON ../..` (原链接中为=ON，设置不生效，grep查找看用到的地方都是ifeq)
             * 若不`-DBUILD_SHARED_LIBS=ON`开启动态库编译，则只编译出.a静态库
             * 执行完后会在 cmake/build目录生成编译需要的相关文件，检查是否生成，若没有则有问题
-        + `make`
+        + `make`(应该可以不用这步)
         + 安装gRPC(可以通过`CMAKE_INSTALL_PREFIX`配置安装位置，默认`/usr/local`):
             * 配置表示需要生成protoc需要的各语言的plugin等包
             * cmake ../.. -DgRPC_INSTALL=ON                \
@@ -215,10 +215,15 @@ for {
                   -DgRPC_PROTOBUF_PROVIDER=package \
                   -DgRPC_SSL_PROVIDER=package      \
                   -DgRPC_ZLIB_PROVIDER=package
-        + `make`
+        + `make`(若无protobuf，会一并安装protobuf，3.x版本，2.x不支持)
+            * `protoc`生成proto2语法的协议时会报错，xxx.proto:35:3: Expected "required", "optional", or "repeated"
+            * 若有两个不同版本的protobuf，一般是不兼容的，要同时用的话其中一个可使用静态库的方式
+            * grpc用的是protocbuf 3.x版本
+            * 自动安装出问题的话，也可以手动到`cd grpc/third_party/protobuf`，然后执行`make install`(`make`是编译grpc时才执行的)
         + `make install`
             * 遇到的问题：
                 - 安装后找不到grpc相关的pkgconfig，`gpr.pc` `grpc.pc` `grpc_unsecure.pc` `grpc++.pc` `grpc++_unsecure.pc`
+                - `/usr/local/lib/pkgconfig`目录
                 - 重试过好多次，调整选项还是没有。。。从另外一台机器拷贝过来了
 
 * 实际使用遇到的问题

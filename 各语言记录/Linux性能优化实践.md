@@ -803,3 +803,5 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
         + 思考：多线程并行访问不同的变量，这些变量在内存布局是相邻的（比如类中的多个变量），此时CPU缓存就会失效，为什么？又该如何解决呢？
             * 一片连续的内存被加载到不同cpu核心中（就是同一个cache line在不同的cpu核心），其中一个cpu核心中修改cache line,其它核心都失效(伪共享)，加锁也是加在cache line上，其它核心线程也被锁住，降低了性能。解决办法是填充无用字节数，使得我们真正需要高频并发读写的不同变量，不出现在一个cache line中(尽量在不同核缓存)
                 - Go里面的处理示例：(搜 `利用CPU cache特性优化Go程序`)：[Go开发相关笔记.md](https://github.com/xiaodongQ/devNoteBackup/blob/master/%E5%90%84%E8%AF%AD%E8%A8%80%E8%AE%B0%E5%BD%95/Go%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0.md)
+* [02 | 内存池：如何提升内存分配的效率？](https://time.geekbang.org/column/article/230221)
+    - [内存优化总结:ptmalloc、tcmalloc和jemalloc](http://www.cnhalo.net/2016/06/13/memory-optimize/)
