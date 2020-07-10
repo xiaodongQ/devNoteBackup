@@ -267,6 +267,8 @@ struct B : A
 
 模板是创建泛型类或函数的蓝图或公式。
 
+搜索查看本笔记中的章节：`## 模板`
+
 ### 使用const, enum, inline代替#define
 
 字符串常量定义方法:
@@ -2157,14 +2159,31 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
 
 * 函数模板的写法如下：
     - `template <class 形参名1, class 形参名2, ...>`
-        + 建议还是用typename：`template <typename 形参名1, typename 形参名2, ...>`
     - `class` 关键字也可以用 `typename` 关键字替换 (在这里typename 和class没区别)
         + `template <typename 形参名1, typename 形参名2, ...>`
+        + 建议还是用`typename`：`template <typename 形参名1, typename 形参名2, ...>`
+        + 这些形参称为：*模板形参* / *模板参数*
     - 编译器由模板自动生成函数时，会用具体的类型名对模板中所有的类型参数进行替换，其他部分则原封不动地保留。
     - 编译器由模板自动生成函数的过程叫模板的*实例化*。
     - 由模板实例化而得到的函数称为*模板函数*。
     - 如：`template <class T>;`, `void Swap(T & x, T & y){}`
-        + T 是*类型参数*，代表类型。
+        + T 是*类型参数*，代表类型。 `类型模板参数`
+    - 三种模板参数
+        + [模板形参与模板实参](https://zh.cppreference.com/w/cpp/language/template_parameters)
+        + 类型模板参数
+            * 类型形参关键词：`typename` 或 `class`
+                - e.g. `template<class T>` 无默认类型的类型模板实参
+                    + `class My_vector { /* ... */ };`
+                - e.g. `template<class T = void>` 有默认类型的类型模板实参
+                    + `struct My_op_functor { /* ... */ };`
+                - e.g. `template<typename... Ts>` 类型模板形参包
+                    + `class My_tuple { /* ... */ };`
+            * 对模板声明时(而不是定义)，形参的名字是可选的
+                - 上面的`My_vector`模板声明，可为：`template<class> class My_vector;`
+                - `template<class = void> struct My_op_functor;`
+                - `template<typename...> class My_tuple;`
+        + 非类型模板参数
+        + 模板模板参数(以模板作为模板的参数)
 
 ```cpp
 template <class 形参名1, class 形参名2, ...>
