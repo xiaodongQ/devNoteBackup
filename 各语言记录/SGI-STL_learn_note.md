@@ -85,15 +85,48 @@ Oracle VM VirtualBox搭建的虚拟机
         + SGI版本被`GCC`采用。
 * `stl_config.h`
     - 不同的编译器对C++语言的支持程度不尽相同。
-    - SGI STL准备了一个 环境组态文件<stl_config.h>，其中定义了许多常量，标识某些组态是否支持(通过宏控制代码块或功能的开关)
+    - SGI STL准备了一个 环境组态文件<stl_config.h>，其中定义了许多常量，标识某些组态是否支持(通过宏控制代码块或功能的开关)，根据各家编译器给予常量设定
     - 预处理器(pre-processor)根据各个常量决定取舍哪一段程序代码
+* SGI STL文件分布
+    - STL标准头文件(无扩展名)，如`vector`，`deque`，`list`
+        + 实际功能应观察对应的`stl_xxx`文件
+    - C++标准定案前，HP所规范的STL头文件，如`vector.h`，`deque.h`，`list.h`
+        + 实际功能应观察对应的`stl_xxx`文件
+    - SGI STL内部文件(STL真正实现于此)，如`stl_vector.h`，`stl_deque.h`，`stl_list.h`
 
 ### 空间配置器 (allocator)
 
 * 配置器：负责空间配置与管理，从实现的角度来看，配置器是一个实现了动态空间配置、空间管理、空间释放的 class template。
     - 空间不一定是内存。不过SGI STL提供的配置器配置的对象是内存。
-* 空间配置器：整个 STL 的操作对象(所有的数值)都存放在容器之内，而容器一定需要配置空间以存放内容
-* 书中自实现了一个版本的配置器allocator，对比是否适用兼容PJ STL版本和RW STL版本，引申SGI STL版本：逸脱了STL标准规格，使用一个专属的、拥有`次层配置(sub-allocation)`能力的、效率优越的特殊配置器。
+    - 整个 STL 的操作对象(所有的数值)都存放在容器之内，而容器一定需要配置空间以存放内容
+* SGI定义了一个符合STL部分标准的配置器：`std::allocator`
+    - 但SGI自己从未用过它，也不建议我们使用。(定义在`defalloc.h`文件中)
+    - 主要原因是效率不佳。只把`::operator new`和`::operator delete`做了一层薄薄的包装
+* SGI特殊的空间配置器：`std::alloc`
+    - 相比于上面提到的`std::allocator`，其只是对基层内存配置和释放进行简单包装而并没有考虑任何效率上的强化
+    - 一般而言，`new`操作步骤：配置内存、构造对象，`delete`操作步骤：析构对象、释放内存，STL allocator决定将这两阶段操作分开：
+        + 内存配置操作由 `alloc::allocate()`负责，内存释放由 `alloc::deallocate()`负责
+            * `stl_alloc.h`
+        + 对象构造操作由 `::construct()`负责，对象析构由 `::destroy()`负责
+            * `stl_construct.h`
+    - STL标准告诉我们配置器定义于`memory`文件中，SGI `memory`文件中包含了配置器相关的文件：
+        + `stl_construct.h`
+            * 定义了全局函数`construct()`和`destroy()`，负责对象的构造和析构，隶属于STL标准规范
+        + `stl_alloc.h`
+            * 定义了一、二级配置器，彼此合作，配置器名为`alloc`
+            * `std::__malloc_alloc_template` 第一级配置器
+            * `std::__default_alloc_template` 第二级配置器
+                - GCC 默认使用第二级配置器，其作用是避免太多小额区块造成内存的碎片
+        + `stl_uninitialized.h`
+            * 定义了一些全局函数，用来填充(fill)或复制(copy)大块内存数据，隶属于STL标准规范
+            * `uninitialized_copy`/`uninitialized_fill`/`uninitialized_fill_n`等
+                - 实现中有很多用到`__type_traits`，`__type_traits`提供了一种机制，允许针对不同的类型属性，在编译时期完成函数派送决定(function dispatch)
+                    + 定义了两个空struct，`struct __true_type{}` 和 `struct __false_type{}`
+                    + 作为函数的参数时，相当于是两个重载函数，根据是哪个struct来判断调用哪个函数
+            * 这些函数虽然不属于配置器的范畴，但于对象的初值设置有关。对于容器的大规模元素初值设置很有帮助。
+                - 这些函数对于效率有面面俱到的考虑
+                - 最差情况调用`construct()`
+                - 最佳情况则会使用C标准函数`memmove()`直接进行内存数据移动
 
 * 具备次配置力(sub-allocation)的SGI空间配置器
     - SGI STL 的配置器，其名称是 alloc 而不是 allocator，而且不接受任何参数。
@@ -108,24 +141,9 @@ vector<int, std::alloc> iv;
 
 * `<defalloc.h>` SGI 标准的空间配置器，`std::allocator`
     - allocator 只是基层内存配置/释放行为(::operator::new 和 ::operator::delete)的一层薄薄的包装，并没有考虑到任何效率上的强化。
-* SGI 特殊的空间配置器：`std::alloc`
-    - `<stl_construct.h>`：定义了全局函数 construct() 和 destroy()，负责**对象内容的构造和析构**。
-        + 文件结构：
-            * 定义了两个版本的`construct` 和 两个版本的`destroy`，都是内联函数(都使用模板进行泛化)
-            * 上面定义的实现中使用的函数，也分别对应两个内联函数版本的`_Construct`和`_Destroy`
-                - 这些内联函数都使用模板，然后文件中还包含一些`_Destroy`第二个版本的特化(模板)
-        + `destroy`两个版本：1. 接受一个指针 2. 接受两个迭代器([first,last)注意区间)
-            * 第二个版本，迭代器范围万一很大而析构无关痛痒的情况，先用`value_type()`获得所指对象型别，再用`__type_traits<T>`判断该型别的析构是否无关痛痒(不重要的析构trivial destructor)，若是则什么都不做就结束，若否则循环调第一个版本的`destroy`(`value_type`和`__type_traits<>`的实现在后续章节介绍)
-        + `placement new操作符`，查看源码实现中，使用了该操作符
-            * `placement new`是重载`operator new`的一个标准、全局的版本
-            * 原型：`void *operator new( size_t, void *p ) throw()  { return p; }`
-            * `new`, `operator new`, `placement new`
-                - 要实现不同的内存分配行为，需要重载`operator new`(全局函数，相当于C的malloc)，而不是new和delete。
-                - `new`实际执行了三步：1.调用`operator new`分配内存；2.调用构造函数生成类对象；3.返回相应指针
-            * `placement new`在一个预先准备好了的内存缓冲区中进行，不需要查找内存，内存分配的时间是常数；避免像使用`new`操作符分配内存时在堆中查找足够大的剩余空间，这个操作速度是很慢的，而且有可能出现无法分配内存的异常（空间不够）。`placement new`非常适合那些对时间要求比较高，长时间运行不希望被打断的应用程序。
-            * `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
-            * 可参考：[C++中placement new操作符](https://blog.csdn.net/zhangxinrun/article/details/5940019)
-    - `<stl_alloc.h>`：定义了一、二级配置器，配置器名为 alloc 。负责内存空间的配置/释放。
+* `std::alloc` SGI 特殊的空间配置器
+    - `<stl_alloc.h>`
+        + 定义了一、二级配置器，配置器名为 `alloc` 。负责内存空间的配置/释放。
         + 文件结构
             * 定义了模板类`__malloc_alloc_template`、`simple_alloc`、`debug_alloc`、`__default_alloc_template`、`allocator`等
         + `simple_alloc` SGI STL容器全部使用这个simple_alloc接口
@@ -136,6 +154,23 @@ vector<int, std::alloc> iv;
             * 考虑多线程(multi-threads)状态
                 - 通过判断宏`_NOTHREADS`是否定义，若没有定义则用`_Lock`类，利用RAII机制来进行加锁，进行多线程的同步
             * 考虑内存不足时的应变措施
+    - `<stl_construct.h>`
+        + 定义了全局函数 construct() 和 destroy()，负责**对象内容的构造和析构**。
+        + 文件结构：
+            * 定义了两个版本的`construct` 和 两个版本的`destroy`，都是内联函数(都使用模板进行泛化)
+            * 上面定义的实现中使用的函数，也分别对应两个内联函数版本的`_Construct`和`_Destroy`
+                - 这些内联函数都使用模板，然后文件中还包含一些`_Destroy`第二个版本的特化(模板)
+        + `destroy`两个版本：1. 接受一个指针 2. 接受两个迭代器([first,last)注意区间)
+            * 第二个版本，迭代器范围万一很大而析构无关痛痒的情况，先用`value_type()`获得所指对象型别，再用`__type_traits<T>`判断该型别的析构是否无关痛痒(不重要的析构trivial destructor)，若是则什么都不做就结束，若否则循环调第一个版本的`destroy`(`value_type`和`__type_traits<>`的实现在后续章节介绍)
+        + `operator new操作符`，查看源码实现中，使用了该操作符
+            * [C++ 内存分配(new，operator new)详解](https://blog.csdn.net/wudaijun/article/details/9273339)
+            * `placement new`是重载`operator new`的一个标准、全局的版本
+            * 原型：`void *operator new( size_t, void *p ) throw()  { return p; }`
+            * `new`, `operator new`, `placement new`
+                - 要实现不同的内存分配行为，需要重载`operator new`(全局函数，相当于C的malloc)，而不是new和delete。
+                - `new`实际执行了三步：1.调用`operator new`分配内存；2.调用构造函数生成类对象；3.返回相应指针
+            * `placement new`在一个预先准备好了的内存缓冲区中进行，不需要查找内存，内存分配的时间是常数；避免像使用`new`操作符分配内存时在堆中查找足够大的剩余空间，这个操作速度是很慢的，而且有可能出现无法分配内存的异常（空间不够）。`placement new`非常适合那些对时间要求比较高，长时间运行不希望被打断的应用程序。
+            * `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
   + 考虑过多 “小型区块” 可能造成的内存碎片问题
     - `<stl_uninitialized.h>`：定义了全局函数，用来填充(fill)或复制(copy)大块内存数据。
 
