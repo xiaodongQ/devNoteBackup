@@ -504,7 +504,8 @@ const (
 
 * `map`
     - map是由一组无序的元素组成的类型
-    - `make(map[string]int)`, `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
+    - `make(map[string]int)`
+        + `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
     - `len()`获取元素个数
     - nil map和空map，除了nil map不允许添加元素外，两者一样
     - [Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
@@ -514,7 +515,8 @@ const (
 ```golang
 // 创建
 map1 := make(map[string]string)
-var map2 map[string]string{"lisi":"xxx"}  // 定义时初始化
+map2 := map[string]string{"lisi":"xxx"}  // 定义时初始化
+// var map2 map[string]string{"lisi":"xxx"}  // 这一句的语法是不允许的!!!
 // 插入
 map1["zhangsan"] = "a"
 map1["lisi"] = "b"
@@ -525,14 +527,6 @@ map1["lisi"] = "b"
 ```golang
 map1["lisi"] = "assign"             // map是引用类型
 fmt.Printf("map:%s", map1["none"])  // 找不到的记录，map会返回零值(对不同类型对应零值是有区别的)
-```
-
-*  遍历
-
-```golang
-for key,value := range map1 {
-
-}
 ```
 
 * 检测是否存在(不存在时map[unexistkey]会返回零值，不能通过nil来判断是否存在)
@@ -547,9 +541,22 @@ if !ok {
 
 **注意：因为 map 是无序的，因此对于程序的每次执行，不能保证使用 for range 遍历 map 的顺序总是一致的。**
 
+*  遍历
+
+```golang
+for key,value := range map1 {
+
+}
+```
+
+* 比较
+    - map 不能通过 `==` 操作符比较是否相等。`==` 操作符只能用来检测 map 是否为 `nil`
+    - `if map1==map2` 是不允许的，只能比较它们的元素是否相等
 * 使用map实现set (go中没有set基本类型)
     - map[anytype]bool
-
+* 删除
+    - `delete(map, key)` 如果 map为nil或者key不存在，该操作是一个空操作，不会产生错误
+        + `delete`为内建操作
 * 利用value为函数时实现工厂模式
 
 ```

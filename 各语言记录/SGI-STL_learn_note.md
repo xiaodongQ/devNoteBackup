@@ -114,14 +114,23 @@ Oracle VM VirtualBox搭建的虚拟机
             * 定义了全局函数`construct()`和`destroy()`，负责对象的构造和析构，隶属于STL标准规范
         + `stl_alloc.h`
             * 定义了一、二级配置器，彼此合作，配置器名为`alloc`
-            * `std::__malloc_alloc_template` 第一级配置器
-            * `std::__default_alloc_template` 第二级配置器
-                - GCC 默认使用第二级配置器，其作用是避免太多小额区块造成内存的碎片
+                - `std::__malloc_alloc_template` 第一级配置器
+                    + 比较简单，直接调用malloc/free，并考虑内存不足时的申请(`_S_oom_malloc`中不断释放和申请)
+                - `std::__default_alloc_template` 第二级配置器
+                    + GCC 默认使用第二级配置器，其作用是避免太多小额区块造成内存的碎片
+                    + 配置(申请)空间的逻辑：
+                        * 如果区块够大(>128 byte)，则移交给第一级配置器处理
+                        * 当区块小于128bytes时，则以内存池管理，这种方法称为*次层配置*(sub-allocation)
+                            - free list中没有可用区块时，就用`_S_refill()` 重新填充free list的空间
+                            - 新的空间从内存池里面获取，通过`_S_chunk_alloc()`函数，默认获取20个新区块，若内存池空间不足，可能少于20个
+            * 无论alloc被定义为哪一级配置器，SGI还为它包装了一层接口，使配置器接口能符合STL规格
+                - SGI STL容器都使用`simple_alloc`接口，`template<class _Tp, class _Alloc>`内部转调用了模板类`_Alloc`的相应接口
         + `stl_uninitialized.h`
             * 定义了一些全局函数，用来填充(fill)或复制(copy)大块内存数据，隶属于STL标准规范
             * `uninitialized_copy`/`uninitialized_fill`/`uninitialized_fill_n`等
-                - 实现中有很多用到`__type_traits`，`__type_traits`提供了一种机制，允许针对不同的类型属性，在编译时期完成函数派送决定(function dispatch)
-                    + 定义了两个空struct，`struct __true_type{}` 和 `struct __false_type{}`
+                - 实现中有很多用到`__type_traits`，
+                    + `__type_traits`提供了一种机制，允许针对不同的类型属性，在编译时期完成函数派送决定(function dispatch)
+                    + 代码里定义了两个空struct，`struct __true_type{}` 和 `struct __false_type{}`
                     + 作为函数的参数时，相当于是两个重载函数，根据是哪个struct来判断调用哪个函数
             * 这些函数虽然不属于配置器的范畴，但于对象的初值设置有关。对于容器的大规模元素初值设置很有帮助。
                 - 这些函数对于效率有面面俱到的考虑
