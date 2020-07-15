@@ -112,6 +112,16 @@ Oracle VM VirtualBox搭建的虚拟机
     - STL标准告诉我们配置器定义于`memory`文件中，SGI `memory`文件中包含了配置器相关的文件：
         + `stl_construct.h`
             * 定义了全局函数`construct()`和`destroy()`，负责对象的构造和析构，隶属于STL标准规范
+            * `#include <new.h>` 使用 `placement new`，需要先包含此文件
+            * `placement new`
+                - `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
+                    + 非常适合那些对时间要求比较高，长时间运行不希望被打断的应用程序。
+                - `placement new`是重载`operator new`的一个标准、全局的版本
+                    + `new`, `operator new`, `placement new`
+                        * 要实现不同的内存分配行为，需要重载`operator new`(全局函数，相当于C的malloc)，而不是new和delete。
+                        * `new`实际执行了三步：1.调用`operator new`分配内存；2.调用构造函数生成类对象；3.返回相应指针
+                    + 原型：`void *operator new( size_t, void *p ) throw()  { return p; }`
+                    + [C++ 内存分配(new，operator new)详解](https://blog.csdn.net/wudaijun/article/details/9273339)
         + `stl_alloc.h`
             * 定义了一、二级配置器，彼此合作，配置器名为`alloc`
                 - `std::__malloc_alloc_template` 第一级配置器
@@ -128,18 +138,21 @@ Oracle VM VirtualBox搭建的虚拟机
         + `stl_uninitialized.h`
             * 定义了一些全局函数，用来填充(fill)或复制(copy)大块内存数据，隶属于STL标准规范
             * `uninitialized_copy`/`uninitialized_fill`/`uninitialized_fill_n`等
-                - 实现中有很多用到`__type_traits`，
+                - 实现中有很多用到`__type_traits`(下面的迭代器里面会涉及)
                     + `__type_traits`提供了一种机制，允许针对不同的类型属性，在编译时期完成函数派送决定(function dispatch)
                     + 代码里定义了两个空struct，`struct __true_type{}` 和 `struct __false_type{}`
                     + 作为函数的参数时，相当于是两个重载函数，根据是哪个struct来判断调用哪个函数
+                - `uninitialized_fill_n(_ForwardIter __first, _Size __n, const _Tp& __x)`
+                    + 实现为：`return __uninitialized_fill_n(__first, __n, __x, __VALUE_TYPE(__first));`
+                    + 首先用`__VALUE_TYPE` 萃取第一个迭代器的value type，然后判断该型别是否为`POD`型别
+                        * `POD`: 意指*Plain Old Data*，也就是标量型别(scalar type)或者传统的C struct型别(不需要构造函数)
+                        * `POD`型别必定有`trivial ctor`/`dtor`/`copy`/`assignment`函数，因此可以对POD型别采用最有效率的初值填写手法
+                        * 对于非POD型别，会调用到构造函数,其中使用placement new来构造数据
             * 这些函数虽然不属于配置器的范畴，但于对象的初值设置有关。对于容器的大规模元素初值设置很有帮助。
                 - 这些函数对于效率有面面俱到的考虑
                 - 最差情况调用`construct()`
                 - 最佳情况则会使用C标准函数`memmove()`直接进行内存数据移动
-
-* 具备次配置力(sub-allocation)的SGI空间配置器
-    - SGI STL 的配置器，其名称是 alloc 而不是 allocator，而且不接受任何参数。
-    - SGI STL 的每一个容器都已经指定其缺省的空间配置器为 alloc。
+    - SGI STL 的每一个容器都已经指定其缺省的空间配置器为`alloc`。如下面的`vector`
 
 ```cpp
 template <class T, class Alloc = alloc>  // 缺省使用 alloc 为配置器
@@ -148,43 +161,15 @@ class vector {...};
 vector<int, std::alloc> iv;
 ```
 
-* `<defalloc.h>` SGI 标准的空间配置器，`std::allocator`
-    - allocator 只是基层内存配置/释放行为(::operator::new 和 ::operator::delete)的一层薄薄的包装，并没有考虑到任何效率上的强化。
-* `std::alloc` SGI 特殊的空间配置器
-    - `<stl_alloc.h>`
-        + 定义了一、二级配置器，配置器名为 `alloc` 。负责内存空间的配置/释放。
-        + 文件结构
-            * 定义了模板类`__malloc_alloc_template`、`simple_alloc`、`debug_alloc`、`__default_alloc_template`、`allocator`等
-        + `simple_alloc` SGI STL容器全部使用这个simple_alloc接口
-            * 使用模板传入的类型(class或typename)对应的`allocate`和`deallocate`版本
-        + 模板类`__malloc_alloc_template`(模板形参并没有用到)
-        + 空间的配置和释放，std::alloc
-            * 向 system heap 要求空间
-            * 考虑多线程(multi-threads)状态
-                - 通过判断宏`_NOTHREADS`是否定义，若没有定义则用`_Lock`类，利用RAII机制来进行加锁，进行多线程的同步
-            * 考虑内存不足时的应变措施
-    - `<stl_construct.h>`
-        + 定义了全局函数 construct() 和 destroy()，负责**对象内容的构造和析构**。
-        + 文件结构：
-            * 定义了两个版本的`construct` 和 两个版本的`destroy`，都是内联函数(都使用模板进行泛化)
-            * 上面定义的实现中使用的函数，也分别对应两个内联函数版本的`_Construct`和`_Destroy`
-                - 这些内联函数都使用模板，然后文件中还包含一些`_Destroy`第二个版本的特化(模板)
-        + `destroy`两个版本：1. 接受一个指针 2. 接受两个迭代器([first,last)注意区间)
-            * 第二个版本，迭代器范围万一很大而析构无关痛痒的情况，先用`value_type()`获得所指对象型别，再用`__type_traits<T>`判断该型别的析构是否无关痛痒(不重要的析构trivial destructor)，若是则什么都不做就结束，若否则循环调第一个版本的`destroy`(`value_type`和`__type_traits<>`的实现在后续章节介绍)
-        + `operator new操作符`，查看源码实现中，使用了该操作符
-            * [C++ 内存分配(new，operator new)详解](https://blog.csdn.net/wudaijun/article/details/9273339)
-            * `placement new`是重载`operator new`的一个标准、全局的版本
-            * 原型：`void *operator new( size_t, void *p ) throw()  { return p; }`
-            * `new`, `operator new`, `placement new`
-                - 要实现不同的内存分配行为，需要重载`operator new`(全局函数，相当于C的malloc)，而不是new和delete。
-                - `new`实际执行了三步：1.调用`operator new`分配内存；2.调用构造函数生成类对象；3.返回相应指针
-            * `placement new`在一个预先准备好了的内存缓冲区中进行，不需要查找内存，内存分配的时间是常数；避免像使用`new`操作符分配内存时在堆中查找足够大的剩余空间，这个操作速度是很慢的，而且有可能出现无法分配内存的异常（空间不够）。`placement new`非常适合那些对时间要求比较高，长时间运行不希望被打断的应用程序。
-            * `placement new`的作用就是：创建对象(调用该类的构造函数)但是不分配内存，而是在`已有`的内存块上面创建对象。 用于需要反复创建并删除的对象上，可以降低分配释放内存的性能消耗。
-  + 考虑过多 “小型区块” 可能造成的内存碎片问题
-    - `<stl_uninitialized.h>`：定义了全局函数，用来填充(fill)或复制(copy)大块内存数据。
+### 迭代器 (iterators) 和 traits 编程技法
 
-
-
+* 迭代器(iterators)
+    - 是一种抽象的涉及概念，《设计模式》一书中对迭代器模式的描述：提供一种方法，使之能够依序巡访某个聚合物(容器)所含的各个元素，而又无需暴露该聚合物的内部表达方式。
+    - 扮演容器与算法之间的桥梁，是所谓的 “泛型指针”，共有五种类型，以及其它衍生变化。
+* 迭代器相应型别(associated type)
+    - 迭代器所指对象的型别
+        + 可以通过函数模板的参数推导(argument deducation)获得
+    - 迭代器所指对象的型别(类型)，称为该迭代器的`value type`
 
 ## 容器库概述
 

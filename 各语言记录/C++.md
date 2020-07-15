@@ -1,3 +1,5 @@
+[TOC]
+
 ## C++
 
 * 设置vim语法支持C++11
@@ -586,14 +588,160 @@ mtx.unlock()
     “name_”、“type”、以及“_type”，这中间只有“type”是在宏前面出现过的，所以它可以被宏替换。
     A1(a1, int);  /* 等价于: int name_int_type; */
 
-## 文件流 fstream
+### 输入输出流 iostream
 
-从文件读取流和向文件写入流
-要在 C++ 中进行文件处理，必须在 C++ 源代码文件中包含头文件 `<iostream> 和 <fstream>`
+* imbue
+    - 设置本地环境，设置流的关联本地环境为给定值。
+    - `std::locale imbue( const std::locale& loc );`
+    - std::locale 定义于头文件 <locale>
+    - C++ 输入/输出库的每个流对象与一个 std::locale 对象关联，并用其平面分析及格式化所有数据。
+    - 设置输出格式示例：
 
-    ofstream    该数据类型表示输出文件流，用于创建文件并向文件写入信息。
-    ifstream    该数据类型表示输入文件流，用于从文件读取信息。
-    fstream 该数据类型通常表示文件流，且同时具有 ofstream 和 ifstream 两种功能，这意味着它可以创建文件，向文件写入信息，从文件读取信息。
+```cpp
+    const boost::posix_time::ptime dateToFormat;
+
+    time_facet *facet = new time_facet("%Y-%m-%d %H:%M:%S");
+    std::ostringstream oss;
+    oss.imbue(std::locale(oss.getloc(), facet));
+
+    oss << dateToFormat;
+
+    return oss.str();
+```
+
+* std::stringstream 示例
+
+```cpp
+    std::stringstream ssstarttime;
+    ssstarttime << dateToFormat;
+    std::string sTime = ssstarttime.str();
+```
+
+## 输入输出流
+
+* [C++ 流（stream）总结](https://blog.csdn.net/luguifang2011/article/details/40979231)
+    - 使用流插入运算符`<<`向文件写入信息，使用流提取运算符`>>`从文件读取信息
+    - 标准I/O流：内存与标准输入输出设备之间信息的传递
+        + `istream`、`ostream`、`iostream`
+            * `std::cin` 是 `istream` 类的对象(声明在 `<iostream>` 头文件中)
+                - e.g. `cin >> str1` 从标准输入中读取string到str1中
+                - 会忽略开头所有的空白字符（空格、换行、制表符等）
+                - 读取字符直至再次遇到空白字符，读取终止
+            * `std::cout` 是 `ostream` 类的对象
+        + `getline(istream, string)` 读取整行文本
+            * 不忽略开头的空白字符
+            * 读取字符直至遇到换行符，如果第一个字符是换行符，则返回空string
+            * 返回时丢弃换行符，换行符不存储在string中
+            * e.g. `getline(cin,s);` 从`std::cin`标准输入读取数据到s(根据s的类型自动推导)
+    - 文件I/O流：内存与外部文件之间信息的传递
+        + `ifstream`、`ofstream`、`fstream` (`<fstream>`头文件)
+    - 字符串I/O流：内存变量与表示字符串流的字符数组之间信息的传递
+        + `istringstream`、`ostringstream`、`stringstream` (`<sstream>`头文件)
+        + 经常用作格式转换，使用`stringstream`对象简化类型转换
+            * 若想用`sprintf()`函数将一个变量从int类型转换到字符串类型。
+                - 为了正确地完成这个任务，你必须确保证目标缓冲区有足够大空间以容纳转换完的字符串。
+                - 此外，还必须使用正确的格式化符。如果使用了不正确的格式化符，会导致非预知的后果
+                - 错误占位符示例：
+                    + `int n=10000;`, `char s[10];`, `sprintf(s,"%f",n)` 会导致程序崩溃
+            * 相同示例对于`stringstream`
+                - 由于n和s的类型在编译期就确定了，所以编译器拥有足够的信息来判断需要哪些转换
+                - `<sstream>`使用`string`对象来代替字符数组。这样可以避免缓冲区溢出的危险。而且，传入参数和目标对象的类型被自动推导出来，即使使用了不正确的格式化符也没有危险
+                - 示例：
+                    + `stringstream ss;`
+                    + `string result="10000";`, `int n=0;`, `ss<<result;`(写入到ss), `ss>>n`(从ss读取到n中)
+            * 如果打算在多次转换中使用同一个`stringstream`对象，记住再每次转换前要使用`clear()`方法
+                - 在多次转换中重复使用同一个`stringstream`（而不是每次都创建一个新的对象）对象最大的好处在于效率。`stringstream`对象的构造和析构函数通常是非常耗费CPU时间的
+            * 配合模板可以定义一个通用的转换模板，用于任意类型之间的转换，如下面两个示例
+
+```cpp
+template<class T>
+void to_string1(string & result,const T& t)
+{
+    ostringstream oss;//创建一个流
+    oss<<t;//把值传递如流中
+    result=oss.str();//获取转换后的字符转并将其写入result
+}
+
+```
+
+* 利用`stringstream`进行通用类型转换
+
+```cpp
+template<class out_type,class in_value>
+out_type convert(const in_value & t)
+{
+    stringstream stream;
+    stream<<t;//向流中传值
+    out_type result;//这里存储转换结果
+    stream>>result;//向result中写入值
+    return result;
+}
+
+// 使用
+    double d;
+    string s = "12.56";
+    d = convert<double>(s);//d等于12.56
+    string salary=convert<string>(9000.0); //salary等于"9000"
+```
+
+
+* [C++ 文件和流](https://www.w3cschool.cn/cpp/cpp-files-streams.html)
+    - 用于从文件读取流和向文件写入流
+    - 要在 C++ 中进行文件处理，必须在 C++ 源代码文件中包含头文件 `<iostream> 和 <fstream>`
+    - `ofstream`
+        + 该数据类型表示输出文件流，用于创建文件并向文件写入信息
+        + 注意这里的`o`和`i`，自己老是容易搞混淆是读取还是写入，速记：`o`输出到指定流，即写，`i`流的输入来源，即读
+    - `ifstream`
+        + 该数据类型表示输入文件流，用于从文件读取信息
+    - `fstream`
+        + 该数据类型通常表示文件流，且同时具有 ofstream 和 ifstream 两种功能，这意味着它可以创建文件，向文件写入信息，从文件读取信息
+* 操作
+    - 打开`open()`
+        + 在从文件读取信息或者向文件写入信息之前，必须先打开文件
+        + `ofstream` 和 `fstream` 对象都可以用来打开文件进行*写*操作
+        + 如果只需要打开文件进行*读*操作，则使用 `ifstream` 对象
+        + `void open(const char *filename, ios::openmode mode);`
+            * `open()` 函数是 fstream、ifstream 和 ofstream 对象的一个成员
+                - (指的是这些流的成员函数，不是指系统函数，`xstream.open(xxx)`的方式调用)
+            * 第二个参数`mode`是打开模式
+                - `ios::app` 追加模式
+                - `ios::ate` 文件打开后定位到文件末尾
+                - `ios::in` 打开文件用于读取
+                - `ios::out` 打开文件用于写入
+                - `ios::trunc` 截断
+            * 可以把以上两种或两种以上的模式结合使用
+                - 用于写：`outfile.open("file.dat", ios::out | ios::trunc );` (`ofstream outfile;`)
+                - 用于读写：`afile.open("file.dat", ios::out | ios::in );` (`fstream afile;`)
+    - 关闭`close()`
+    - 写入、读取
+        + 使用流插入运算符`<<`向文件写入信息
+            * 示例
+                - `ofstream outfile;` 创建ofstream并以写模式(ofstream默认)打开文件
+                - `outfile.open("afile.dat");`
+                - `outfile << data << endl;` 将data写入文件(`char data[100];`)
+                - `outfile.close();` 关闭文件
+        + 使用流提取运算符`>>`从文件读取信息
+            * 示例
+                - `ifstream infile;` 以读模式打开文件
+                - `infile.open("afile.dat");`
+                - `infile >> data;` 读取内容到data中(`char data[100];`)
+                - `infile.close();` 关闭文件
+    - 文件位置指针
+        + 文件位置指针是一个整数值，指定了从文件的起始位置到指针所在位置的字节数
+        + `istream` 和`ostream` 都提供了用于重新定位文件位置指针的成员函数
+            * `istream` 的 `seekg` ("seek get")
+            * `ostream` 的 `seekp` ("seek put")
+        + 参数
+            * `seekg`和`seekp`的参数通常是一个长整型
+            * 第二个参数可以用于指定查找方向
+                - `ios::beg` 默认的，从流的开头开始定位
+                - `ios::cur` 从流的当前位置开始定位
+                - `ios::end` 从流的末尾开始定位
+        + e.g.
+            * `fileObject.seekg(n);` 从流的开头起，向后n个字节(默认`ios::beg`)
+            * `fileObject.seekg(n, ios::cur);` 当前位置向后移动n字节
+            * `fileObject.seekg(n, ios::end);` 从fileObject末尾往回移 n 个字节
+            * `fileObject.seekg(0, ios::end);` 定位到末尾
 
 ### RAII (Resource Acquisition Is Initialization) 资源获取即初始化
 
@@ -1969,43 +2117,33 @@ std::advance用来对迭代器做偏移操作
 // std::advance用来对迭代器做偏移操作, 类似于splitIter=splitIter+splitPos
 std::advance(splitIter,splitPos);
 
-### 输入输出流 iostream
+### 运算符重载
 
-imbue
-
-`std::locale imbue( const std::locale& loc );`
-
-设置本地环境
-设置流的关联本地环境为给定值。
-
-std::locale 定义于头文件 <locale>
-
-C++ 输入/输出库的每个流对象与一个 std::locale 对象关联，并用其平面分析及格式化所有数据。
-
-### stringstream
-
-#### std::ostringstream
-
-```cpp
-const boost::posix_time::ptime dateToFormat;
-
-time_facet *facet = new time_facet("%Y-%m-%d %H:%M:%S");
-std::ostringstream oss;
-oss.imbue(std::locale(oss.getloc(), facet));
-
-oss << dateToFormat;
-
-return oss.str();
-```
-
-#### std::stringstream
-
-```cpp
-std::stringstream ssstarttime;
-ssstarttime << dateToFormat;
-std::string sTime = ssstarttime.str();
-```
-
+* [C++ 中的运算符重载](https://www.runoob.com/cplusplus/cpp-overloading.html)
+    - 可以重定义或重载大部分 C++ 内置的运算符，链接中列出了可重载运算符/不可重载运算符
+        + 不可重载：
+            * `.` 成员访问运算符
+            * `.*` `->*` 成员指针访问运算符
+                - [指针到成员运算符：.* 和 ->*](https://docs.microsoft.com/zh-cn/cpp/cpp/pointer-to-member-operators-dot-star-and-star?view=vs-2019)
+                - 指针到成员运算符 .* 和 ->*返回表达式左侧指定对象的特定类成员的值
+                    + 右侧必须指定该类的成员
+                    + 仅指向指定的类成员而不是类对象
+                - 如类`Testpm`中有一个成员函数`m_func1()`和成员变量`int m_num;`
+                    + `Testpm ATestpm;`定义一个类实例(若`Testpm *pTestpm = new Testpm;`则下面使用`->*`访问)
+                    + 在类外定义一个`指向类成员的指针`：
+                        * `void (Testpm::*pmfn)() = &Testpm::m_func1;`
+                        * 使用时：`(ATestpm.*pmfn)();`
+                    + 也可以定义非函数类型成员的指针
+                        * `int Testpm::*pmd = &Testpm::m_num;`
+                        * `ATestpm.*pmd = 1;`
+            * `::` 域运算符
+            * `sizeof` 长度运算符
+            * `?:` 条件运算符
+            * `#` 预处理符号
+    - 运算符重载实例
+        + 对于`++`，分前缀版本(`++i`)和后缀版本(`i++`)
+            * `Time operator++()`    // 前缀版本，返回++之后的数据
+            * `Time operator++(int)` // 后缀版本，返回++之前的数据
 
 ### 重载()
 
@@ -2139,7 +2277,7 @@ Missing separate debuginfos, use: debuginfo-install cyrus-sasl-lib-2.1.26-23.el7
         + 否则，CPU 需要从来源把每一片段的资料复制到暂存器，然后把它们再次写回到新的地方。在这个时间中，CPU 对于其他的工作来说就无法使用。
         + DMA 传输将数据从一个地址空间复制到另外一个地址空间。在实现DMA传输时，是由DMA控制器直接掌管总线，因此，存在着一个总线控制权转移问题。即DMA传输前，CPU要把总线控制权交给DMA控制器，而在结束DMA传输后，DMA控制器应立即把总线控制权再交回给CPU。一个完整的DMA传输过程必须经过DMA请求、DMA响应、DMA传输、DMA结束4个步骤。
 
-# 现代C++实战30讲
+## 现代C++实战30讲
 
 * 极客时间课程：[现代C++实战30讲](https://time.geekbang.org/column/article/169268)
 
