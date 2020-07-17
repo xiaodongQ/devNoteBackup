@@ -144,10 +144,12 @@ Oracle VM VirtualBox搭建的虚拟机
                     + 作为函数的参数时，相当于是两个重载函数，根据是哪个struct来判断调用哪个函数
                 - `uninitialized_fill_n(_ForwardIter __first, _Size __n, const _Tp& __x)`
                     + 实现为：`return __uninitialized_fill_n(__first, __n, __x, __VALUE_TYPE(__first));`
-                    + 首先用`__VALUE_TYPE` 萃取第一个迭代器的value type，然后判断该型别是否为`POD`型别
-                        * `POD`: 意指*Plain Old Data*，也就是标量型别(scalar type)或者传统的C struct型别(不需要构造函数)
-                        * `POD`型别必定有`trivial ctor`/`dtor`/`copy`/`assignment`函数，因此可以对POD型别采用最有效率的初值填写手法
-                        * 对于非POD型别，会调用到构造函数,其中使用placement new来构造数据
+                    + 首先用`__VALUE_TYPE` 萃取第一个迭代器的value type，然后判断该类型是否为`POD`类型
+                        * `POD`: 意指*Plain Old Data*，也就是标量类型(scalar type)或者传统的C struct类型(不需要构造函数)
+                        * `POD`类型必定有`trivial ctor`/`dtor`/`copy`/`assignment`函数，因此可以对POD类型采用最有效率的初值填写手法
+                            - `ctor`是缩写，指的是包含默认构造，`dtor`析构，`copy`拷贝构造，`ass..`赋值操作
+                            - `trivial`平凡的
+                        * 对于非POD类型，会调用到构造函数,其中使用placement new来构造数据
             * 这些函数虽然不属于配置器的范畴，但于对象的初值设置有关。对于容器的大规模元素初值设置很有帮助。
                 - 这些函数对于效率有面面俱到的考虑
                 - 最差情况调用`construct()`
@@ -166,10 +168,107 @@ vector<int, std::alloc> iv;
 * 迭代器(iterators)
     - 是一种抽象的涉及概念，《设计模式》一书中对迭代器模式的描述：提供一种方法，使之能够依序巡访某个聚合物(容器)所含的各个元素，而又无需暴露该聚合物的内部表达方式。
     - 扮演容器与算法之间的桥梁，是所谓的 “泛型指针”，共有五种类型，以及其它衍生变化。
-* 迭代器相应型别(associated type)
-    - 迭代器所指对象的型别
-        + 可以通过函数模板的参数推导(argument deducation)获得
-    - 迭代器所指对象的型别(类型)，称为该迭代器的`value type`
+* `迭代器相应类型`(`associated type`)
+    - 迭代器相应类型(associated type)，不只是 迭代器所指对象的类型(value type)
+        + 迭代器所指对象的类型
+            * 可以通过函数模板(`function template`)的参数推导(`argument deducation`)获得
+                - 但只能推导出参数的类型，无法推导出函数返回值类型
+            * 对于返回值类型，可以声明内嵌类型(nested type)
+                - 在类里面做新的类型声明：`typedef T value_type`
+                - 返回值要使用这个类型时：
+                    + `template <class T>`
+                    + `typename T::value_type funcxxx(T ite){ return *ite;}`
+                        * `typename T::value_type`是返回值类型
+                        * 返回值类型前必须加上`typename`，因为`T`是一个template参数。在它被编译器具现化之前，编译器对`T`一无所知，换句话说，编译器此时并不知道`MyIter<T>::value_type`代表的是一个类型或是一个函数或是一个成员变量，`typename`用意在于告诉编译器这是一个类型，如此才能通过编译
+            * 但这样还有个问题，并不是所有迭代器都是class类型，原生指针就不是
+                - 所以无法为它定义内嵌类型
+                - 通过下面的`模板偏特化`可以解决
+    - 迭代器相应类型有5种，下面小节做说明
+* Traits 编程技术
+    - `traits`意为 “特性”，扮演 “`特性萃取机`” 角色，萃取各个迭代器的特性(`相应类型`，`traits`)
+    - `模板偏特化`(template partial specialization)
+        + 针对 template 参数更进一步的条件限制所设计出来的一个特化版本，本身仍然是 template
+        + 如果class template拥有一个以上template参数，我们可以针对其中某个(或数个)template参数进行特化工作
+        + `specialization`特化，`refinement`强化
+    - 迭代器相应类型有5种
+        + `value type`
+            * value type 就是迭代器所指对象的类型
+        + `difference type`
+            * difference type 用来表示两个迭代器之间的距离，因此可以用来表示一个容器的最大容量
+            * 如STL的`count()`，返回值就必须使用迭代器的difference type
+        + `pointer`
+            * 指针
+        + `reference`
+            * 引用
+        + `iterator category`
+            * 迭代器分类
+                - 输入迭代器 (InputIterator) 是能从所指向元素读取的迭代器 (Iterator)
+                    + 输入迭代器 (InputIterator) 仅保证单趟算法的合法性
+                - 输出迭代器 (OutputIterator) 是能写入所指元素的迭代器 (Iterator)
+                - 向前迭代器 (ForwardIterator) 是一种能从所指向元素读取数据的迭代器 (Iterator)
+                - 双向迭代器 (BidirectionalIterator) 是能双向移动（即自增与自减）的向前迭代器(ForwardIterator)
+                - 随机访问迭代器 (RandomAccessIterator) 是能在常数时间内移动到指向任何元素的双向迭代器 (BidirectionalIterator)
+    - 为了符合规范，任何迭代器都应该提供五个内嵌相应类型，以利用`traits`萃取，否则便是自别于整个STL架构，可能无法与其他STL组件顺利搭配。
+        + STL提供了`struct iterator {xxx}`，若每个新设计的迭代器都继承自它，就可以保证符合STL所需的规范
+* `stl_iterator.h` (用到其中的迭代器类型却没包含`stl_iterator_base.h`，有点疑问)
+    - 下面的类都在`stl_iterator_base.h`文件中定义，和书中说的`stl_iterator.h`不一致，版本问题？
+        + 五种迭代器类型
+            * `struct input_iterator_tag {};`
+            * `struct output_iterator_tag {};`
+            * `struct forward_iterator_tag : public input_iterator_tag {};`
+            * `struct bidirectional_iterator_tag : public forward_iterator_tag {};`
+            * `struct random_access_iterator_tag : public bidirectional_iterator_tag {};`
+        + 类 `struct iterator{xxx}`
+            * 自行开发的迭代器最好继承该类
+        + 类 `struct iterator_traits{xxx}`
+            * 特性萃取机
+        + 类 `struct iterator_traits<_Tp*>`
+            * 针对原生指针(native pointer)而设计的 traits 偏特化版
+        + 类 `struct iterator_traits<const _Tp*> {xxx}`
+            * 针对原生之 pointer-to-const 而设计的 traits 偏特化版
+    - 对于`stl_iterator.h`
+        + 里面实现了各种不同类型的迭代器，如下：
+            * `back_insert_iterator`
+            * `front_insert_iterator`
+            * `insert_iterator`
+            * `istream_iterator`
+                - 另外包括一个`istream_iterator`的偏特化版本
+            * `istreambuf_iterator`
+            * `ostream_iterator`
+                - 另外包括一个`ostream_iterator`的偏特化版本
+            * `ostreambuf_iterator`
+            * `reverse_bidirectional_iterator`
+            * `reverse_iterator`
+                - 包括一个`reverse_iterator`的偏特化版本
+        + 运用上面的类型萃取、偏特化等特性实现，并没有去继承`struct iterator`
+* `__type_traits` (定义在：`type_traits.h`)
+    - `traits`编程技法适度弥补了C++语言本身的不足。
+        + STL只对迭代器加以规范，制定出`iterator_traits`这样的东西
+        + SGI把这种技法进一步扩大到迭代器以外的世界，于是有了所谓的`__type_traits`
+        + `__`双底线前缀意指这是SGI STL内部所用的东西，不在STL标准规范之内
+    - `iterator_traits` 负责萃取迭代器的特性，`__type_traits` 负责萃取类型的特性
+    - `type_traits.h`
+        + 定义了两个空类：`struct __true_type {}` 和 `struct __false_type {}`
+            * `__type_traits`提供了一种机制，允许针对不同的类型属性，在编译时期完成函数派送决定(function dispatch)
+            * `__true_type`或者`__false_type`分别作为两个同名函数的参数，两个函数为重载关系，编译时根据形参类型就知道该调用哪个重载函数了
+        + 类 `struct __type_traits {xxx}`，包含下面这些特性：
+            * `has_trivial_default_constructor` 有简单(平凡)的默认构造函数
+            * `has_trivial_copy_constructor` 拷贝构造
+            * `has_trivial_assignment_operator` 赋值操作
+            * `has_trivial_destructor` 析构
+            * `is_POD_type` 是POD类型，Plain Old Data，也就是标量类型(scalar type)或者传统的C struct类型
+        + 定义了各种基本类型(bool/char/short/int/...)的特化版本，用于类型特性的萃取
+    - 如果一个class包含指针成员，且要对它进行内存动态配置，则这个class需要实现自己的`non-trival-xxx`
+
+### 序列式容器(sequence container)
+
+* 序列式容器
+    - 所谓序列式容器，其中的元素都可序(ordered)，但未必有序(sorted)
+    - `vector`
+        + 要使用`vector`要先包括`<vector>`，实现是在更底层的`<stl_vector.h>`
+        + `class vector : protected _Vector_base<_Tp, _Alloc> {xxx}`
+
+
 
 ## 容器库概述
 
