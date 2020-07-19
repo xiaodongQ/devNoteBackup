@@ -222,7 +222,7 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
     - `Workspace Folder`设置生成文件的路径
     - `File Path` 设置生成文件的格式，由于有时自己像运行些调试测试，所以配置生成的是`_test.go`形式的文件，便于单元测试
         + 设置File Path选项可以参考官网说明：[Customize the Relative Folder and the File Name](https://github.com/LeetCode-OpenSource/vscode-leetcode/wiki/Customize-the-Relative-Folder-and-the-File-Name-of-the-Problem-File)
-    - 设置换行为`\n`，插件只支持这类文件的自动调整(不过我windows上自动生成的文件还是`\r\n`。。。)
+    - 设置换行为`\n`，插件(不确定是gopls还是leetcode插件)只支持这类文件的自动调整(不过我windows上自动生成的文件还是`\r\n`。。。)
     - 不同机器用同一个账号，题目没有自动同步，自己的方式是切换一下站点再切回来(会自动退出原有登录)，重新登录
 
 ```json
