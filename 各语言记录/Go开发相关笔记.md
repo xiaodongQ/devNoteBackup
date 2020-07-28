@@ -2717,6 +2717,10 @@ exit status 66
 * nsq
 * skynet
 
+* ginbro
+    - Gin脚手架工具，生成app代码
+    - [SQL+RESTful开源GO脚手架工具ginbro(gin and gorm's brother) 详解](https://mojotv.cn/2019/05/22/golang-felix-ginbro)
+
 
 ## timer 定时器
 
