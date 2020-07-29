@@ -58,6 +58,9 @@ c.String返回content-type是plain或者text
     })
 ```
 
+* `gin.RouterGroup`
+    - 在Gin中定义的所有路由，都在根路由分组下面
+
 #### query string 参数
 
 客户端向服务器发送请求，除了路由参数，其他的参数无非两种，查询字符串`query string`和报文体`body参数`
