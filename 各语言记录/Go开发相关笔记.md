@@ -1459,8 +1459,9 @@ viper.OnConfigChange(func(e fsnotify.Event) {
 
 * `bytes.NewReader`
 
+### sync包
 
-### sync.WaitGroup
+#### sync.WaitGroup
 
 golang中有2种方式同步程序，一种使用channel，另一种使用锁机制。
 这里要涉及的是锁机制，更具体的是sync.WaitGroup
@@ -1474,6 +1475,185 @@ go func(){
 	wg.Done()
 }()
 wg.Wait()
+```
+
+
+#### sync.Map
+
+* [Go语言sync.Map（在并发环境中使用的map）](http://c.biancheng.net/view/34.html)
+    - Go语言中的 map 在并发情况下，只读是线程安全的，同时读写是线程不安全的
+    - 需要并发读写时，一般的做法是加锁，但这样性能并不高，Go语言在 1.9 版本中提供了一种效率较高的并发安全的 `sync.Map`，sync.Map和map不同，不是以语言原生形态提供，而是在 sync 包下的特殊结构
+    - `sync.Map` 有以下特性：
+        + 无须初始化，直接声明即可
+        + `sync.Map` 不能使用 map 的方式进行取值和设置等操作，而是使用 sync.Map 的方法进行调用
+            * `Store` 表示存储，`Load` 表示获取，`Delete` 表示删除
+        + 使用 `Range` 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值，Range 参数中回调函数的返回值在需要继续迭代遍历时，返回 true，终止迭代遍历时，返回 false
+    - sync.Map 没有提供获取 map 数量的方法，替代方法是在获取 sync.Map 时遍历自行计算数量，sync.Map 为了保证并发安全有一些性能损失，因此在非并发情况下，使用 map 相比使用 sync.Map 会有更好的性能
+
+```golang
+package main
+import (
+    "fmt"
+    "sync"
+)
+
+func main() {
+    var scene sync.Map
+    // 将键值对保存到sync.Map
+    scene.Store("greece", 97)
+    scene.Store("london", 100)
+    scene.Store("egypt", 200)
+    // 从sync.Map中根据键取值
+    fmt.Println(scene.Load("london"))
+    // 根据键删除对应的键值对
+    scene.Delete("london")
+    // 遍历所有sync.Map中的键值对
+    scene.Range(func(k, v interface{}) bool {
+        fmt.Println("iterate:", k, v)
+        return true
+    })
+}
+```
+
+#### sync.Pool
+
+* [深入分析Golang sync.pool](http://myself659.github.io/post/golang-sync-pool-1/)
+    - sync.Pool是一个可以存或取的临时对象池。对外提供New、Get、Put等API，利用mutex支持多线程并发
+    - sync.Pool解决以下问题：
+        + 增加临时对象的用复用率，减少GC负担
+        + 通过对象的复用，减少内存申请开销，有利于提高一部分性能
+    - 操作
+        + `New` 定义一个函数并赋值给`New`
+            * 当对象池中为空，则会通过指定的函数来分配对象
+            * e.g. `var pool = sync.Pool{  New: func() interface{} { return new(Object) }, }`
+        + `Get`
+            * Get解决了如何从具体sync.Pool中获取对象的问题
+            * 获取对象有三个来源：
+                - private池
+                - shared池
+                - 系统的Heap内存
+            * 获取对象顺序是先从private池获取，如果不成功则从shared池获取，如果继续不成功，则从Heap中申请一个对象。
+                - 先从本P绑定的poolLocal获取对象：先从本poolLocal的private池获取对象，再从本poolLocal的shared池获取对象
+                - 上一步没有成功获取对象，再从其他P的shared池获取对象
+                - 上一步没有成功获取对象，则从Heap申请对象
+        + `Put`
+            * Put完成将对象放回对象池
+                - 如果poolLocalInternal的private为空，则将回收的对象放到private池中
+                - 如果poolLocalInternal的private非空，则将回收的对象放到shared池中
+        + `CleanUp`
+            * pool.go里的`init()`会注册`poolCleanup`函数
+            * CleanUp时机：在gc开始前，进行CleanUp回收对象池
+                - `func gcStart(trigger gcTrigger)`中调用到的`clearpools()`就是清理sync.Pools
+            * `clearpools()`
+                - 如果`poolcleanup`不为空，调用`poolcleanup`函数，`poolcleanup`即`init`中注册的清理函数
+    - 应用
+        + sync.Pool并不是万能药。要根据具体情境而定是否使用sync.Pool
+        + 总结不适合使用sync.Pool的情境
+            * 对象中分配的系统资源如socket，buffer
+            * 对象需要进行异步处理
+            * 对象是组合对象，如存在指针指向其他的对象
+            * 批量对象需要并发处理
+            * 复用对象大小存在的波动，如对象结构成员存在slice
+        + 在排除上面情境下，适合使用的sync.Pool应满足以下条件
+            * 对象是buffer或非组合类型如buffer reader, json decode, bufio writer
+            * 对象内存可以重复使用
+        + 同时在使用应该注意问题：
+            * Put对象之前完成初始化，避免数据污染带来问题, 这可能带来各种各样的问题
+            * 写代码时要满足one Get， one Put的要求
+            * 注意获取对象后是否存在修改对象内存布局的代码
+            * 关注应用场景是否容易出现Pool竞争的情况
+            * sync.Pool不是万能药，不要拿着锤子，看什么都是钉子
+
+```golang
+// sync/pool.go
+// go.1.14(而1.13之前的版本如1.12.7，poolLocalInternal中还定义了一个Mutex，且无poolChain)
+type Pool struct {
+    // 防止sync.Pool被复制
+    noCopy noCopy
+
+    // poolLocal数组的指针
+    local     unsafe.Pointer // local fixed-size per-P pool, actual type is [P]poolLocal
+    // poolLocal数组大小
+    localSize uintptr        // size of the local array
+
+    // go1.12中没有，go1.13之后有
+    // 前一个周期的局部数据
+    victim     unsafe.Pointer // local from previous cycle
+    victimSize uintptr        // size of victims array
+
+    // New optionally specifies a function to generate
+    // a value when Get would otherwise return nil.
+    // It may not be changed concurrently with calls to Get.
+    // 函数指针申请具体的对象，便于用户定制各种类型的对象
+    New func() interface{}
+}
+
+// Local per-P Pool appendix.
+type poolLocalInternal struct {
+    // private私有池，只能被对应P使用
+    private interface{} // Can be used only by the respective P.
+    // shared共享池，能被任何P使用
+    shared  poolChain   // Local P can pushHead/popHead; any P can popTail.
+}
+
+type poolLocal struct {
+    poolLocalInternal
+
+    // Prevents false sharing on widespread platforms with
+    // 128 mod (cache line size) = 0 .
+    // 防止伪共享，组成cpu cache line的倍数(x86环境一般为64)
+    pad [128 - unsafe.Sizeof(poolLocalInternal{})%128]byte
+}
+```
+
+```golang
+// sync/pool.go
+// go.1.12.7
+type poolLocalInternal struct {
+    private interface{}   // Can be used only by the respective P.
+    shared  []interface{} // Can be used by any P.
+    // 保护shared共享池
+    Mutex                 // Protects shared.
+}
+```
+
+#### sync.Once
+
+* [sync.Once惰性初始化](https://books.studygolang.com/gopl-zh/ch9/ch9-05.html)
+    - 如果初始化成本比较大的话，那么将初始化延迟到需要的时候再去做就是一个比较好的选择。如果在程序启动的时候就去做这类初始化的话，会增加程序的启动时间，并且因为执行的时候可能也并不需要这些变量，所以实际上有一些浪费。
+    - 使用方式
+        + `var once sync.Once`
+        + `once.Do(func() {xxx})`，传入一个初始化函数给`once.Do`即可
+
+```golang
+// sync/once.go
+type Once struct {
+    // done indicates whether the action has been performed.
+    // It is first in the struct because it is used in the hot path.
+    // The hot path is inlined at every call site.
+    // Placing done first allows more compact instructions on some architectures (amd64/x86),
+    // and fewer instructions (to calculate offset) on other architectures.
+    done uint32
+    m    Mutex
+}
+
+// 调用Do时的逻辑
+func (o *Once) Do(f func()) {
+    if atomic.LoadUint32(&o.done) == 0 {
+        // Outlined slow-path to allow inlining of the fast-path.
+        o.doSlow(f)
+    }
+}
+
+// 加锁检查变量 done 是否为0，是则执行传入的函数，并最后置1。后续再调用就不会再执行函数了
+func (o *Once) doSlow(f func()) {
+    o.m.Lock()
+    defer o.m.Unlock()
+    if o.done == 0 {
+        defer atomic.StoreUint32(&o.done, 1)
+        f()
+    }
+}
 ```
 
 ### channel
@@ -2883,43 +3063,3 @@ isClientCancelled := func(ctx context.Context) bool {
         + 但也存在其缺点
             * 首先，内容无实际意义的padding增加了内存使用量开销
             * 更重要的是，在某些场景下增加padding，意味着你放弃了CPU cache提供给你的空间局部性相关的预读取的奖励
-
-## sync.Map
-
-* [Go语言sync.Map（在并发环境中使用的map）](http://c.biancheng.net/view/34.html)
-    - Go语言中的 map 在并发情况下，只读是线程安全的，同时读写是线程不安全的
-    - 需要并发读写时，一般的做法是加锁，但这样性能并不高，Go语言在 1.9 版本中提供了一种效率较高的并发安全的 `sync.Map`，sync.Map和map不同，不是以语言原生形态提供，而是在 sync 包下的特殊结构
-    - `sync.Map` 有以下特性：
-        + 无须初始化，直接声明即可
-        + `sync.Map` 不能使用 map 的方式进行取值和设置等操作，而是使用 sync.Map 的方法进行调用
-            * `Store` 表示存储，`Load` 表示获取，`Delete` 表示删除
-        + 使用 `Range` 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值，Range 参数中回调函数的返回值在需要继续迭代遍历时，返回 true，终止迭代遍历时，返回 false
-    - sync.Map 没有提供获取 map 数量的方法，替代方法是在获取 sync.Map 时遍历自行计算数量，sync.Map 为了保证并发安全有一些性能损失，因此在非并发情况下，使用 map 相比使用 sync.Map 会有更好的性能
-
-```golang
-package main
-import (
-    "fmt"
-    "sync"
-)
-
-func main() {
-    var scene sync.Map
-    // 将键值对保存到sync.Map
-    scene.Store("greece", 97)
-    scene.Store("london", 100)
-    scene.Store("egypt", 200)
-    // 从sync.Map中根据键取值
-    fmt.Println(scene.Load("london"))
-    // 根据键删除对应的键值对
-    scene.Delete("london")
-    // 遍历所有sync.Map中的键值对
-    scene.Range(func(k, v interface{}) bool {
-        fmt.Println("iterate:", k, v)
-        return true
-    })
-}
-```
-
-## sync.Pool
-
