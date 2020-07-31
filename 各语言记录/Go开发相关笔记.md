@@ -2900,6 +2900,7 @@ exit status 66
 * ginbro
     - Gin脚手架工具，生成app代码
     - [SQL+RESTful开源GO脚手架工具ginbro(gin and gorm's brother) 详解](https://mojotv.cn/2019/05/22/golang-felix-ginbro)
+    - 见下面的`## ginbro`
 
 
 ## timer 定时器
@@ -3063,3 +3064,44 @@ isClientCancelled := func(ctx context.Context) bool {
         + 但也存在其缺点
             * 首先，内容无实际意义的padding增加了内存使用量开销
             * 更重要的是，在某些场景下增加padding，意味着你放弃了CPU cache提供给你的空间局部性相关的预读取的奖励
+
+## ginbro
+
+* [felix/README_zh.md](https://github.com/libragen/felix/blob/master/README_zh.md)
+    - ginbro原来项目在：[ginbro/readme_zh.md](https://github.com/libragen/ginbro/blob/master/readme_zh.md)，现在已经转移到felix里了
+* 使用`ginbro`
+    - MySQL数据库生成RESTful APIs APP
+    - 一个命令行工具:快速生成go语言RESTful APIs应用
+    - 安装：`go get github.com/dejavuzhou/ginbro`
+        + 安装完之后，`ginbro` 可执行文件默认存放在 $GOPATH/bin
+    - 使用 e.g.
+        + `ginbro gen -u root -p xd_123456 -a "127.0.0.1:3306" -d spiders -o "xdtest_ginbro"`
+        + 生成的代码放在$GOPATH下面，试着指定本地路径没成功`xdtest_ginbro`不要加`./`前缀，要不会包含在包里
+        + 生成时需要找`$GOPATH/github.com/dejavuzhou/ginbro/`下的信息，如果是通过go mod安装的ginbro，会报错，我的解决方式是在`$GOPATH/github.com/`下新建`dejavuzhou`目录，然后去clone项目到这个路径`git clone https://github.com/libragen/ginbro.git`
+* 使用`felix`(*失败*)
+    - felix安装：`go get github.com/libragen/felix`
+    - 使用e.g.
+        * `felix ginbro -a 127.0.0.1:3306 -P xdtest -n spiders -u root -p 'xd_123456' -d './xdtest_ginbro'`
+        * **失败**，提示：level=fatal msg="master fail to open its sqlite db
+            - 找不到sqlite.db，我用的是mysql，硬是每次提示我没有sqlite
+            - `-t mysql`指定数据库也不行
+            - 安装了一个sqlite也不行:Error 1045: Access denied for user 'root'@'localhost' (using password: YES)，mysql登录密码并没有问题
+- 使用上面`ginbro`生成的框架文件
+    + 生成的代码结构可见：[libragen/ginbro-son](https://github.com/libragen/ginbro-son)
+    + 访问的时候，用127.0.0.1，用真实ip试了并连接不上
+    + swagger：`http://127.0.0.1:5555/swagger`
+        * `http://192.168.50.204:5555/swagger`却连接不上
+        * 访问swagger能看到给你生成了一些表对应的CRUD的接口，可以点击页面的操作发起请求进行数据库的CRUD操作
+        * 666！
+    + 关于 Swagger，参考：[5分钟了解swagger](https://blog.csdn.net/i6448038/article/details/77622977)
+        * API文档工具
+            - swagger-ui 用来显示API文档
+            - swagger-editor 一个在线编辑文档说明文件（swagger.json或swagger.yaml文件）的工具，以方便生态中的其他小工具（swagger-ui）等使用。左边编辑，右边立马就显示出编辑内容来。
+                + 目前最流行的做法，就是在代码注释中写上swagger相关的注释，然后，利用小工具生成swagger.json或者swagger.yaml文件
+                + 在线网页：`https://editor.swagger.io/#/` (右边显示内容后一样可以发起请求操作)
+            - swagger-validator 用来校验生成的文档说明文件是否符合语法规定
+            - swagger-codegen 代码生成器，脚手架。
+                + 可以根据swagger.json或者swagger.yml文件生成指定的计算机语言指定框架的代码
+            - mock server
+                + mock测试就是在测试过程中，对于某些不容易构造或者不容易获取的对象，用一个虚拟的对象来创建以便测试的测试方法
+                + 这个虚拟的对象就是mock对象。mock对象就是真实对象在调试期间的代替品
