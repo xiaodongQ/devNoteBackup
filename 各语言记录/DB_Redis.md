@@ -251,3 +251,21 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
 1871 1:M 21 May 2020 08:26:46.283 * DB loaded from disk: 10.042 seconds
 1872 1:M 21 May 2020 08:26:46.283 * Ready to accept connections
 ```
+
+## Redis源码
+
+* 5.0.5版本
+* Redis类型介绍：[An introduction to Redis data types and abstractions](https://redis.io/topics/data-types-intro)
+    - `Redis Key` (键)
+        + Redis的key是二进制安全的，这意味着可以使用任何二进制序列：从简单的"foo"到JPEG文件的内容，空的string也是一个有效的key
+        + 很长的key不是一个好主意，例如一个1024长度的Key不仅在内存方面不是一个好主意，而且还因为在数据集中查找键可能需要进行多次代价高昂的键比较。即使有大的键场景，哈希(如SHA1)也是一个更好的主意，特别是从内存和带宽的角度来看
+        + 很短的key通常也不是一个好主意，`"u1000flw"`写成`"user:1000:followers"`更具有可读性，增加的空间相对键对象本身和值对象使用的空间相比也是很小的。当然更短的key会消耗更少的内存，你的工作是找到正确的平衡
+        + 试着保持一个模式，如 `"object-type:id"`是个好主意，如`"user:1000"`，点或破折号通常用于多词字段，如`"comment:1234:reply"`或`"comment:1234:reply-to"`
+        + key允许的最大大小为512MB
+    - `Redis Strings`
+        + Values可以是任何形式的strings(包括二进制数据)，不超过512MB
+        + `set`命令有很多有趣的选项
+            * `set mykey newval nx` 已存在则设置失败(即需要key不存在)
+            * `set mykey newval xx` 不存在则设置失败(即需要key存在)
+        + `incr`、`incrby` 是原子增加
+        + 在单个命令中设置或检索多个键值的能力也有助于减少延迟，`mset` `mget`

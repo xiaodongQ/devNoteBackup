@@ -1617,6 +1617,22 @@ type poolLocalInternal struct {
 }
 ```
 
+* 使用示例
+
+```golang
+var bytePool = sync.Pool{
+  New: func() interface{} {
+    b := make([]byte, 1024)
+    return &b
+  },
+}
+
+// 从对象池获取
+obj := bytePool.Get().(*[]byte)
+// 放回对象池
+defer bytePool.Put(obj)
+```
+
 #### sync.Once
 
 * [sync.Once惰性初始化](https://books.studygolang.com/gopl-zh/ch9/ch9-05.html)
