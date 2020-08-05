@@ -1,5 +1,9 @@
 ## MySQL
 
+* 查看数据库连接
+    - `show status like 'Threads%';`
+    - `show variables like '%max_connections%';`
+
 * Windows下部署
     - 步骤
         + 下载mysql zip
