@@ -785,6 +785,74 @@ estimated_document_count 使用该接口快速返回近似值
         + 容器部署时配置cacheSizeGB选项，YAML格式的配置文件，绑定配置文件查看章节：`指定配置文件`
     - [Memory Use](https://docs.mongodb.com/v3.4/core/wiredtiger/index.html#memory-use)
 
+* 优化(未试过)
+    - [MongoDB 生产环境笔记](https://www.cnblogs.com/operationhome/p/10734047.html#%E4%BA%8C%E3%80%81%E6%B7%BB%E5%8A%A0-swap-%E5%88%86%E5%8C%BA)
+    - `swappiness`
+        + [Set vm.swappiness to 1 or 0](https://docs.mongodb.com/manual/administration/production-notes/index.html#set-vm-swappiness-to-1-or-0)
+        + 可以通过查看`/proc/sys/vm/swappiness`内容的值来确定系统对 SWAP 分区的使用原则
+        + 当swappiness 内容的值为 0 时，表示最大限度地使用物理内存，物理内存使用完毕后，才会使用 SWAP 分区。当swappiness 内容的值为 100 时，表示积极地使用 SWAP 分区，并且把内存中的数据及时地置换到 SWAP 分区。
+        + 如果我们运行的主机系统 RHEL / CentOS 的内核版本在 2.6.32-303 及以上，我们可以把该值设置为 `1`(设置成1防止OOM，0则内存用满后可能OOM)
+        + 临时修改
+            * `sysctl -w vm.swappiness=1`
+        + 永久修改
+            * `/etc/sysctl.conf`配置文件中，新增或修改`vm.swappiness = 1`
+            * `sysctl -p` 生效
+        + 查看`sysctl -a |grep vm.swappiness`
+    - 建议使用 `XFS` 文件系统(单独对磁盘分区)
+        + 使用`WiredTiger`存储引擎时，推荐使用`XFS`系统
+        + > When running MongoDB in production on Linux, you should use Linux kernel version 2.6.36 or later, with either the XFS or EXT4 filesystem. If possible, use XFS as it generally performs better with MongoDB
+        + > With the WiredTiger storage engine, using XFS is strongly recommended for data bearing nodes to avoid performance issues that may occur when using EXT4 with WiredTiger
+        + 参考官网：[Kernel and File Systems](https://docs.mongodb.com/manual/administration/production-notes/#kernel-and-file-systems)
+    - 禁用 Transparent Huge Pages (THP)
+        + THP 不适用于在数据库上，因为数据库是不连续的内存访问模式，我们需要禁用THP以确保使用MongoDB获得最佳性能。
+        + 查看 Transparent Huge Pages 状态
+            * `cat /sys/kernel/mm/transparent_hugepage/enabled`
+            * `cat /sys/kernel/mm/transparent_hugepage/defrag`
+            * 如果输出结果为`[always]`表示 THP 启用了。`[never]`表示 THP 禁用、`[madvise]`表示（只在MADV_HUGEPAGE标志的VMA中使用THP
+        + 配置关闭，需要创建systemd service文件(使用`systemd (systemctl)`的系统，如CentOS7)
+            * 创建文件：`/etc/systemd/system/disable-transparent-huge-pages.service`，内容参考官网
+                - 部分系统是使用`/sys/kernel/mm/redhat_transparent_hugepage/enabled`路径，CentOS7不是
+            * 重新加载systemd unit文件，`sudo systemctl daemon-reload`
+            * 启动服务：`sudo systemctl start disable-transparent-huge-pages`
+            * `cat /sys/kernel/mm/transparent_hugepage/enabled` 查看状态是否已经改变
+            * 配置开机启动该服务：`sudo systemctl enable disable-transparent-huge-pages`
+            * 自定义`tuned` 或 `ktune`配置文件
+                - CentOS7里用的是`tuned`(systemctl list-unit-files查看服务启动情况可看到)
+                    + `tuned` 是一项守护程序，它会使用`udev`来监控联网装置，并且根据选择的配置文件对系统设置进行静态和动态的微调。(静态微调主要包括预定义的 sysctl 和 sysfs 设置和对几种配置工具的单次激活，例如ethtool；动态微调使得在任何给定系统的运行时间内，不同的系统组件能够以不同的方式被使用)
+                    + [2.5. TUNED](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/html/power_management_guide/tuned)
+                - CentOS7下的操作
+                    + 创建新的`tuned`配置文件目录：`sudo mkdir /etc/tuned/virtual-guest-no-thp`
+                    + 编辑配置文件：`/etc/tuned/virtual-guest-no-thp/tuned.conf`，内容查看下面的官网链接
+                    + 使能配置：`sudo tuned-adm profile virtual-guest-no-thp`
+                    + [Red Hat/CentOS 7 and 8](https://docs.mongodb.com/manual/tutorial/transparent-huge-pages/index.html#red-hat-centos-7-and-8)
+            * 可参考官网：[Disable Transparent Huge Pages (THP)](https://docs.mongodb.com/manual/tutorial/transparent-huge-pages/index.html#disable-transparent-huge-pages-thp)
+        + ulimit 设置
+            * 官网推荐设置：[Recommended ulimit Settings](https://docs.mongodb.com/manual/reference/ulimit/#recommended-ulimit-settings)
+            * 对比了一下自己的机器，还需设置(可在启动脚本ulimit设置对应选项)：
+                - `-v (virtual memory): unlimited [1]`
+                - `-n (open files): 64000`
+                - `-u (processes/threads): 64000`
+
+* MongoDB 存储引擎
+    - 存储引擎（Storage Engine）是MongoDB的核心组件，负责管理数据如何存储在硬盘（Disk）和内存（Memory）上。
+        + 从MongoDB 3.2 版本开始，MongoDB 支持多数据存储引擎（Storage Engine）
+        + MongoDB支持的存储引擎有：`WiredTiger`，`MMAPv1`和`In-Memory`
+    - 从MongoDB 3.2 版本开始，`WiredTiger`成为MongDB默认的Storage Engine
+        + 用于将数据持久化存储到硬盘文件中，WiredTiger提供*文档级别（Document-Level）的并发控制*，*检查点（CheckPoint）*，*数据压缩和本地数据加密（ Native Encryption）*等功能
+        + 文档级别的并发控制（Document-Level Concurrency Control）
+            * MongoDB在执行写操作时，WiredTiger 在文档级别进行并发控制
+                - 就是说，在同一时间，多个写操作能够修改同一个集合中的不同文档；
+                - 当多个写操作修改同一个文档时，必须以序列化方式执行；
+                - 这意味着，如果该文档正在被修改，其他写操作必须等待，直到在该文档上的写操作完成之后，其他写操作相互竞争，获胜的写操作在该文档上执行修改操作
+            * 对于大多数读写操作，WiredTiger使用乐观并发控制（optimistic concurrency control），如果WiredTiger检测到两个操作发生冲突时，导致MongoDB将其中一个操作重新执行，这个过程是系统自动完成的。
+        + 检查点（Checkpoint）
+            * 在Checkpoint操作开始时，WiredTiger提供指定时间点（point-in-time）的数据库快照（Snapshot），该Snapshot呈现的是内存中数据的一致性视图。
+            * Checkpoint担当的是还原点（Recovery Point），Checkpoint操作能够缩短MongoDB从Journal日志文件还原数据的时间
+            * 在默认情况下，WiredTiger创建Checkpoint的时间间隔是60s，或产生2GB的Journal文件。在WiredTiger创建新的Checkpoint期间，上一个Checkpoint仍然是有效的，这意味着，即使MongoDB在创建新的Checkpoint期间遭遇到错误而异常终止运行，只要重启，MongoDB就能从上一个有效的Checkpoint开始还原数据
+    - `In-Memory`，MongoDB不仅能将数据持久化存储到硬盘文件中，而且还能将数据只保存到内存中；
+        + `In-Memory`存储引擎用于将数据只存储在内存中，只将少量的元数据和诊断日志（Diagnostic）存储到硬盘文件中，由于不需要Disk的IO操作，就能获取索取的数据，In-Memory存储引擎大幅度降低了数据查询的延迟（Latency）
+    - [MongoDB 存储引擎：WiredTiger和In-Memory](https://www.cnblogs.com/ljhdo/p/4947357.html)
+
 ## 服务状态
 
 * `db.serverStatus()` 返回服务状态的概览
