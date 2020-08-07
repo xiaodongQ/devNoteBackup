@@ -187,7 +187,7 @@
             * `SUNION superpowers birdpowers` 联合两个set，并返回所有成员(去重)
             * `SPOP letters 2` 从set中删除并返回几个元素
                 - `SRANDMEMBER letters 2` 从set中随机返回几个元素，并不删除，若数量为负数则可能返回重复的元素值
-        + sorted set 有序集合
+        + *sorted set* 有序集合
             * Redis 1.2引入，有序集合中每个元素都有一个关联的score，用于排序
             * `ZADD hackers 1940 "Alan Kay"` 添加成员
                 - 向常规set中添加会报错 WRONGTYPE Operation against a key holding the wrong kind of value
@@ -312,6 +312,19 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                     + 另一个客户端可以监视处理列表中停留太长时间的项，并在需要时将那些超时的项再次推入队列
                 - 详情可见：[RPOPLPUSH source destination](https://redis.io/commands/rpoplpush)
         + 自动创建和删除key
-            * 当我们向聚合数据类型添加元素时，如果目标键不存在，则在添加元素之前会自动创建一个空的聚合数据类型
-            * 当我们从聚合数据类型中删除元素时，如果值仍然为空，则键被自动销毁。流数据类型(Stream)是这一规则的唯一例外。
-            * 调用只读命令，比如`LLEN`(返回列表的长度)，或者使用删除元素的写命令`DEL`，操作一个空或者不存在的key，和存在的key一样总是会产生相同的结果
+            * 基本上，我们可以用三条规则来总结这种行为
+                - 当我们向聚合数据类型添加元素时，如果目标键不存在，则在添加元素之前会自动创建一个空的聚合数据类型
+                - 当我们从聚合数据类型中删除元素时，如果值仍然为空，则键被自动销毁。流数据类型(Stream)是这一规则的唯一例外。
+                - 调用只读命令，比如`LLEN`(返回列表的长度)，或者使用删除元素的写命令`DEL`，操作一个空或者不存在的key时，和操作一个空的聚合类型一样总是会产生相同的结果
+    - `Redis Hashes`
+        + 使用可参见上面的`- *hashes*`(下面也列几个示例)
+            * `hmset user:1000 username antirez birthyear 1977 verified 1`
+                - 设置指定hash key的多个域
+                - `user:1000`为key，`username`为域，`antirez`为该域的值；`birthyear`为域，`1977`为该域的值...
+            * `hmget user:1000 username birthyear no-such-field`
+                - `user:1000`为key，获取三个域:`username` `birthyear` `no-such-field`(不存在的域，会返回NULL)
+            * 可单独操作某个域：`hincrby user:1000 birthyear 10`
+    - `Redis Sets`
+        + 集合有利于表示对象之间的关系。例如，我们可以很容易地使用集合来实现标记
+        + 建模这个问题的一个简单方法是为每个我们想标记的对象设置一个集合。该集合包含与对象关联的标记的id。
+            * 
