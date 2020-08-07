@@ -1,9 +1,7 @@
 # devNoteBackup
 Development notes record and backup
 
-Welcome to the devNoteBackup wiki!
-
-## 章节目录说明
+## 章节目录概览
 
 
 ```
