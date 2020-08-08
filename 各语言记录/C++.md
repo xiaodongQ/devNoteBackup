@@ -3250,9 +3250,9 @@ clean:
 
 ## dlopen
 
+* dlopen实现插件式加载动态库
 
 ```cpp
-
 // 定义函数签名的别名
 typedef void  (*pfunc1)(const char* param);
 typedef char*  (*pfunc2)(const char* param);
@@ -3294,3 +3294,46 @@ int initQuantApi()
 }
 ```
 
+## 常用数学函数
+
+* [常用数学函数](https://zh.cppreference.com/w/cpp/numeric/math)
+* `std::round` 计算最接近arg的整数值(四舍五入)
+    - 头文件：`<cmath>`
+    - 以浮点格式表示
+        + `float       round ( float arg );`  (C++11 起)
+        + `double      round ( double arg );` (C++11 起)
+    - 以整数格式表示
+        + `long lround ( float arg );`  (C++11 起)
+        + `long lround ( double arg );` (C++11 起)
+    - 示例
+        + `round(+2.3) = 2`  `round(+2.5) = 3`  `round(+2.7) = 3`
+        + `round(-2.3) = -2`  `round(-2.5) = -3`  `round(-2.7) = -3`
+* `std::floor` 计算不大于arg的最大整数值
+    - 头文件：`<cmath>`
+    - `float       floor ( float arg );`
+    - `double      floor ( double arg );`
+    - 示例
+        + `floor(+2.7) = 2.000000`
+        + `floor(-2.7) = -3.000000`
+        + `floor(-0.0) = -0.000000`
+* `std::ceil` 不小于arg的最小整数值
+    - 头文件：`<cmath>`
+    - `float       ceil ( float arg );`
+    - `double      ceil ( double arg );`
+    - 示例
+        + `ceil(+2.4) = 3.000000`
+        + `ceil(-2.4) = -2.000000`
+        + `ceil(-0.0) = -0.000000`
+* `std::abs(float)` 计算浮点值arg的绝对值
+    - 头文件：`<cmath>`
+    - `float       abs( float arg );`
+    - `double      abs( double arg );`
+    - 示例
+        + `abs(+3.0) = 3`
+        + `abs(-3.0) = 3`
+* `std::abs(int)` 计算整数的绝对值
+    - 头文件 `<cstdlib>`
+        + C++17起，`<cmath>`也支持
+    - `int       abs( int n );`
+    - `long      abs( long n );`
+    - [std::abs(int), std::labs, std::llabs, std::imaxabs](https://zh.cppreference.com/w/cpp/numeric/math/abs)
