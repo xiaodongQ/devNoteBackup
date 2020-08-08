@@ -81,6 +81,7 @@
             * 此步骤不会生成输出文件，而是将编译的包保存在本地编译缓存中
         + 在其他函数中调用上述函数(使用`import 相对$GOPATH的路径`导入其所在的包)，`go install` 生成执行文件，执行即可
             * `import ("stringutil")`
+    - 编译汇编等其他编译操作，见下面的章节 `### Golang工程结构和编译`
 * `Package names`
     - 在Go源文件中，第一个语句必须是 `package name`
     - `name`是`import`时默认的package包名
@@ -344,6 +345,14 @@ func init() {
     - [Numeric types](https://go-zh.org/ref/spec#Numeric_types)
 * `struct类型`
     - 允许有声明类型而没有明确字段域名字的域(成员)，这种成员称为匿名域(也叫嵌入式域)
+    - 只有在所有字段类型全部支持时，才可做相等操作
+        + e.g. 包含map对象成员，则`==`会报错
+    - 空结构(`struct{}`)
+        + 它比较特殊，无论是其自身(`struct{}`)，还是作为数组元素类型(`[100]struct{}`)，其长度都为0
+            * a定义：`var a struct{}`或`var a [100]struct{}`，`unsafe.Sizeof(a)` 结果都为0
+        + 尽管没有分配数组内存，但依然可以操作元素，`len`和`cap`也正常(`var a [100]struct{}`，len、cap为100)
+        + 实际上这类长度为0的对象，通常都指向`runtime.zerobase`变量
+        + 空结构可作为通道元素类型，用于事件通知
     - 不过在一个struct中，匿名域必须是独一无二的，下面示例的情况是不允许的(三者都会冲突)
     - 一个域声明的时候可以接一个可选的tag标签，参考本笔记中的`### struct json标签`记录，序列化时会将结构体和标签关联，像json的标签，序列化为json时就会成为key
     - 示例：
@@ -508,6 +517,7 @@ const (
         + `make(map[string]int, 100)` 使用make新建一个空map，可同时指定容量
     - `len()`获取元素个数
     - nil map和空map，除了nil map不允许添加元素外，两者一样
+        + `var m map[string]int`，此时m为`nil`，不允许添加元素
     - [Golang教程：（十三）Map](https://blog.csdn.net/u011304970/article/details/75003344)
         + `cap()`不能用于求map
         + 创建和使用(*注意需要创建后才能使用*)
@@ -557,6 +567,10 @@ for key,value := range map1 {
 * 删除
     - `delete(map, key)` 如果 map为nil或者key不存在，该操作是一个空操作，不会产生错误
         + `delete`为内建操作
+* map并发
+    - map不是线程安全的，Go运行时会对map并发操作进行检测，若某任务在进行写操作，其他任务就不能对其进行并发操作，否则会导致进程崩溃
+    - 可用数据竞争(data race)检查此类问题，`go run -race test.go`
+    - 可使用`sync.RWMutex`锁来实现同步(搜索章节`* mutex`)，或者使用`sync.Map`(搜索章节`#### sync.Map`)
 * 利用value为函数时实现工厂模式
 
 ```
@@ -739,12 +753,13 @@ type Block interface {
         + `Q2 := year[3:6]`      // 下标从3到5(注意不包含6, [3,6))，结果：[Apr May 6]
         + `summer := year[5:8]`  // 结果[6 7 8]
         + `summer[0] = "Unknow"` // 修改summer成员，Q2和year都会受影响，都变成 "Unknow"
-        + 切片的传值和指针问题，参考本笔记章节：`* slice作为形参`
-    - 完整的切片表达式：`a[low : high : max]`
+        + 切片的传值和指针问题实验，参考本笔记章节：`* slice作为形参`
+    - **完整的切片表达式**：`a[low : high : max]`
         + 和`a[low:high]`有一样的长度`(high-low)`，另外设置结果slice的容量为`(max-low)`，第一个索引可省略(默认0)
         + e.g. `a := [5]int{1, 2, 3, 4, 5}`，`t := a[1:3:5]`，结果t为`{2,3}`，len为2，容量为4(而不是5，5-1)
     - 遍历
         + `for index, v := range arr {}`
+    - **不支持比较操作**，就算元素类型支持也不行，仅能比较是否为nil
     - append
         + `arr = append(arr, 3)`  // 把值3添加到[]int，len()新增，cap()按2^n可能受影响
             * 注意append之后，len加1，而不是把之前的空填上了
@@ -761,6 +776,10 @@ type Block interface {
         + `for i:=1; i<10; i++ {}`, 类似C的for(i=0; i<10; i++){}
         + `for {}`, 无限循环，类似while(1){}或for(;;){}
         + `for condition {}`, 类似C的while(condition){}
+    - `copy`
+        + `func copy(dst, src []Type) int`
+        + 两个切片对象间复制数据，复制个数为两个切片间最小的长度，返回值为复制的个数
+        + 如果切片长时间引用大数组中很小的片段，那么建议新建独立切片，复制出所需数据，以便原数组内存可被即使回收
 * 类型断言
     - `x.(T)`
     - 由于接口是一般类型，不知道具体的数据类型，如果需要转成具体类型，就需要使用类型断言
@@ -830,6 +849,7 @@ type Block interface {
         + `sliceA`作为参数传入时，会新建一个`sliceB`并将其复制为`sliceA`的内容传入(即传值)，其指向的数组和`sliceA`指向的数组(假设为`arrPA`)一样(取slice元素成员的地址，是一样的)
         + 函数内修改`s`的成员时，切片指向的数组内容会被修改
             * 表现是`sliceA`和`sliceB`的元素成员都被修改了
+            * 前提是没有发生扩容，如果扩容后对成员修改，那原来的`sliceA`成员并不会被修改，原因如下面所述
         + `test1()`中操作导致传入slice扩容时，slice的地址不变，但是指向的数组地址会改变，假设为`arrPB`(不再是`arrPA`)
             * 此时原来的`sliceA`指向的数组并不会改变(`arrPA`)
             * 只是新建的`sliceB`指向的数组变成了`arrPB`
@@ -1952,11 +1972,12 @@ go install
 
 ### Golang工程结构和编译
 
-go build : 编译出可执行文件
+* go build : 编译出可执行文件
+    - `go build -gcflags "-N -l"` 禁止优化(《Go语言学习笔记》书中常这样编译用于`gdb`分析)
 
-go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
+* go install : go build + 把编译后的可执行文件放到GOPATH/bin目录下
 
-go get : git clone + go install
+* go get : git clone + go install
 
 ### time包 获取时间
 
@@ -3121,3 +3142,23 @@ isClientCancelled := func(ctx context.Context) bool {
             - mock server
                 + mock测试就是在测试过程中，对于某些不容易构造或者不容易获取的对象，用一个虚拟的对象来创建以便测试的测试方法
                 + 这个虚拟的对象就是mock对象。mock对象就是真实对象在调试期间的代替品
+
+## reflect 包
+
+* [Package reflect](https://golang.org/pkg/reflect/#SliceHeader)
+    - `Zero`返回一个类型为`Type`且值为对应零值的数据
+    - `reflect.SliceHeader` 是一个`slice`的运行时表示
+        + 可配合`unsafe`包获取对应指针：`(*reflect.SliceHeader)(unsafe.Pointer(&a))`，a为一个slice对象：`var a []int`
+
+* [4.3 反射](https://draveness.me/golang/docs/part2-foundation/ch04-basic/golang-reflect/)
+    - `reflect`实现了运行时的反射能力，能够让程序操作不同类型的对象。
+        + 反射包中有两对非常重要的函数和类型
+        + `reflect.TypeOf` 能获取类型信息，`reflect.ValueOf` 能获取数据的运行时表示
+        + 另外两个类型是 `Type` 和 `Value`，它们与函数是一一对应的关系
+            * 类型 `Type` 是反射包定义的一个接口，我们可以使用 `reflect.TypeOf` 函数获取任意变量的的类型
+            * `Type` 接口中定义了一些有趣的方法
+                - `MethodByName` 可以获取当前类型对应方法的引用
+                - `Implements` 可以判断当前类型是否实现了某个接口
+            * 反射包中`Value`的类型与`Type`不同，它被声明成了结构体。
+                - 这个结构体没有对外暴露的字段，但是提供了获取或者写入数据的方法
+        + 反射包中的所有方法基本都是围绕着 `Type` 和 `Value` 这两个类型设计的
