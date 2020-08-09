@@ -325,6 +325,29 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                 - `user:1000`为key，获取三个域:`username` `birthyear` `no-such-field`(不存在的域，会返回NULL)
             * 可单独操作某个域：`hincrby user:1000 birthyear 10`
     - `Redis Sets`
-        + 集合有利于表示对象之间的关系。例如，我们可以很容易地使用集合来实现标记
-        + 建模这个问题的一个简单方法是为每个我们想标记的对象设置一个集合。该集合包含与对象关联的标记的id。
-            * 
+        + 集合有利于表示对象之间的关系。
+            * 例如，我们可以很容易地使用集合来实现标记(tag)
+            * 建模这个问题的一个简单方法是为每个我们想标记的对象设置一个集合。该集合包含与对象关联的标记的id。
+            * 如给新闻文章加标签，id为1000的文章，有多个标签`1` `2` `5` `77` (此处用标签的id，标签名称可用另外的hash对应)
+                - 可使用：`sadd news:1000:tags 1 2 5 77`
+                    + 获取指定文章的标签：
+                        * `smembers news:1000:tags`
+                - 也可使用反向关系：
+                    + `sadd tag:1:news 1000`
+                    + `sadd tag:2:news 1000`
+                    + `sadd tag:5:news 1000`
+                    + `sadd tag:77:news 1000`
+                    + 可以用`sinter`来获取set的交集，所以可以过滤出同时包含多个标签的文章
+                        * `sinter tag:1:news tag:2:news tag:5:news tag:77:news`
+        + 应用：实现一个基于web的扑克游戏
+            * 整付牌(没包括Joker鬼牌/大小王)：
+                - `sadd deck C1 C2 C3 C4 C5 C6 C7 C8 C9 C10 CJ CQ CK D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 DJ DQ DK H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 HJ HQ HK S1 S2 S3 S4 S5 S6 S7 S8 S9 S10 SJ SQ SK`
+                - (C)lubs 梅花, (D)iamonds 方块, (H)earts 红心, (S)pades 黑桃
+            * 不直接使用set而使用一个set的拷贝，以免每次游戏后，原来的牌都要重新加到set
+                - 使用 `SUNIONSTORE`，把一个set存储到一个新的set
+                - 拷贝纸牌：`sunionstore game:1:deck deck`
+            * 使用`SPOP`发牌(会从set删除，若不删除则可用`SRANDMEMBER`)
+                - `spop game:1:deck` 给玩家1发一张牌
+                - `SCARD`可查看set个数，e.g. `scard game:1:deck`
+    - `Redis Sorted sets`
+        + 有序set是通过一个包含跳表和哈希表的双端数据结构实现的，所以每次我们添加一个元素，Redis都会执行`O(log(N))`操作
