@@ -524,6 +524,10 @@ for (auto &n : arr)   //n类型是int&，引用，循环内对成员做修改操
         + `s.replace(pos, n, s1)` 用s1替换s中从pos开始（包括0）的n个字符的子串
     - 查找子串
         + `s.find(s1)` 查找s中第一次出现s1的位置，并返回（包括0）
+            * 若找不到子串则返回为 `std::string::npos`
+            * `static const size_type npos = -1;` 其值为-1，
+                - 虽然定义使用 `-1` ，由于有符号到无符号隐式转换，且 `size_type`是无符号整数类型，`npos`的值是其所能保有的最大正值。
+                - 这是指定任何无符号类型的最大值的可移植方式。
         + `s.rfind(s1)` 最后一次
     - [C++基础-string截取、替换、查找子串函数](https://www.cnblogs.com/catgatp/p/6407788.html)
 
