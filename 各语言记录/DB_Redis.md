@@ -19,6 +19,7 @@
         + 配置文件redis.conf进行缓存大小和策略配置(使用LRU，Least Recently Used最近最少使用)
             * `maxmemory 1.5gb` (1.5GB作缓存，单位可参考下面的比较说明，搜索`内存单位可选如下`)
             * `maxmemory-policy allkeys-lru`
+    - 内存瓶颈
 
 * [官网](https://redis.io/)
 * [中文官网](http://www.redis.cn/)
