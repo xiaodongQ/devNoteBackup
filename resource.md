@@ -44,6 +44,12 @@ boost的TR1：
         + 性能优化，高性能编程，分布式，Nginx，MongoDB
         + 智链达CTO，《深入理解Nginx》作者+ 上面的CSDN看文章老提示登录，比较烦，不过目录导航还是比较便捷。博主的其他主页：
         + [个人站点](http://www.taohui.pub/?s=paxos)，[腾讯云](https://cloud.tencent.com/developer/article/1449436)
+    - [鸟窝](https://colobu.com/)
+        + Go并发
+        + [基于protobuf快速生成服务治理的RPC代码](https://blog.rpcx.io/posts/generate-rpcx-code-from-protobuf-files/)
+    - [yoko blog](https://pengrl.com/)
+        + 一些Go的文章
+        + 实现的基础库：[q191201771/naza](https://github.com/q191201771/naza)
 * 官方
     - [golang.org](https://golang.org/)
         + go.dev发布之后，golang.org官网将更加聚焦go开源项目本身的开发、语言演化以及Go版本发布
@@ -58,3 +64,4 @@ boost的TR1：
     - 网络编程 libevent(C)、Asio(C++ boost)、ACE(C++)
 * C++筑基
     - [C++11 并发指南系列](https://www.cnblogs.com/haippy/p/3284540.html)
+
