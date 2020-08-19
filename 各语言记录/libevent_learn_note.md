@@ -2,6 +2,7 @@
 
 * GitHub：[libevent](https://github.com/libevent/libevent)
 * 个人fork学习路径：[libevent学习](https://github.com/xiaodongQ/libevent)
+* 网络相关编程学习和实践一并在该笔记记录
 
 * 文档：[Fast portable non-blocking network programming with Libevent](http://www.wangafu.net/~nickm/libevent-book/)
 * 文档开始的示例演示了不同网络IO的问题：
@@ -219,3 +220,212 @@
     - 若要获得Libevent中的锁，必须告诉Libevent使用哪些锁函数。需要在调用Libevent的分配函数来申请用于多线程的结构之前这样做。如果使用的是`pthreads`库，或者本地`Windows`线程代码，那么就比较幸运了。预先定义的函数将会设置Libevent来使用正确的`Pthreads`或`Windows`函数
     - 锁和线程结构和函数相关的文件：`thread.h`、`evthread_pthread.c`(Pthreads)、`evthread.c`
         + (Linux使用)`int evthread_use_pthreads(void);`，用于设置Libevent来使用`Pthreads`锁和线程函数。其声明在`thread.h`，实现在`evthread_pthread.c`。其中会调用到`int evthread_use_pthreads_with_flags(int flags)`，该函数会注册设置一系列Libevent基于Pthreads实现的锁相关函数
+
+---
+
+## 网络相关编程
+
+* UDP
+    - TCP和UDP都使用相同的网络层（IP），TCP却向应用层提供与UDP完全不同的服务。
+        + TCP提供一种面向连接的、可靠的字节流服务
+        + UDP是无连接的，可能丢包、无序、重复(发"abc"收到"ab" "bc")
+
+## TCP封包解包
+
+* TCP封包解包
+    - [最简单的TCP网络封包解包](https://developer.aliyun.com/article/228575)
+        + 代码见(更完整一点)：[TCP/IP 网络数据封包和解包](https://blog.csdn.net/dai_jing/article/details/17914445)
+    - TCP为什么需要进行封包解包？
+        + TCP采用字节流的方式，即以字节为单位传输字节序列。那么，我们recv到的就是一串毫无规则的字节流
+        + 如果要让这无规则的字节流有规则，那么，就需要我们去定义一个规则。那便是所谓的“封包规则”
+    - 封包结构是怎么样的？
+        + 网络封包由两部分组成：`包头`、`数据`
+            - 包头域是定长的，数据域是不定长的
+        + 包头必然包含两个信息：`操作码`、`包长度`
+        + 伪代码如下(`* 封包伪代码`)
+    - 收包中存在的一个问题（粘包，半包）
+        + TCP`粘包`是指发送方发送的若干包数据到接收方接收时粘成一包，从接收缓冲区看，后一包数据的头紧接着前一包数据的尾
+        + 由于丢包和TCP重传，接收者收到的数据流中可能不是完整的数据包，或者是一部分，或者粘着别的数据包，因此，接收者还需要对接收到的数据流的数据进行`分包`
+
+* 封包结构代码
+
+```cpp
+// 数据结构题大小
+#define NET_PACKET_DATA_SIZE 1024 
+// 缓冲大小
+#define NET_PACKET_SIZE (sizeof(NetPacketHeader) + NET_PACKET_DATA_SIZE) * 10
+
+/// 包头
+struct NetPacketHeader
+{
+    unsigned short      wDataSize;  ///< 数据包大小，包含封包头和封包数据大小
+    unsigned short      wOpcode;    ///< 操作码
+};
+
+/// 网络数据包
+struct NetPacket
+{
+    NetPacketHeader     Header;                         ///< 包头
+    unsigned char       Data[NET_PACKET_DATA_SIZE];     ///< 数据
+};
+
+/// 测试1的网络数据包定义
+// 即TCP传输的应用层数据结构，以字节流的方式传输，接收方判断收到完整的包后即为本示例结构，然后数据分包给应用层处理
+struct NetPacket_Test1
+{
+    int     nIndex;
+    char    name[20];  // 本示例是在32位系统的对齐补齐方式，对齐为4字节，所以此处20字节不用另外对齐
+    char    sex[20];
+    int     age;
+    char    arrMessage[512];
+};
+```
+
+* 服务端类定义
+
+```cpp
+class TCPServer
+{
+public:
+    // 省略构造析构对句柄的创建和销毁
+
+    /// 发送数据
+    bool SendData(unsigned short nOpcode, const char* pDataBuffer, const unsigned int& nDataSize);
+private:
+    // 省略监听和accept到的socket句柄
+
+    char m_cbSendBuf[NET_PACKET_SIZE];
+};
+```
+
+* 服务端发送(封包)
+
+```cpp
+// 只发送一个sizeof测试结构的数据，按字节方式发送
+bool TCPServer::SendData( unsigned short nOpcode, const char* pDataBuffer, const unsigned int& nDataSize )
+{
+    // 让指针指向m_cbSendBuf，并且定义的是包头结构体指针，便于操作前面 sizeof(包头) 字节内容
+    // m_cbSendBuf 中除了要发送的数据外，会在前面多加一个封包头
+    NetPacketHeader* pHead = (NetPacketHeader*) m_cbSendBuf;
+    pHead->wOpcode = nOpcode;//操作码
+ 
+    // 数据封包
+    if ( (nDataSize > 0) && (pDataBuffer != 0) )
+    {
+        // 要发送的数据
+        CopyMemory(pHead+1, pDataBuffer, nDataSize); 
+    }
+ 
+    // 发送消息，额外加了一个包头，并更新了包头字段的值
+    const unsigned short nSendSize = nDataSize + sizeof(NetPacketHeader);//包的大小是发送数据的大小加上包头大小
+    // 长度更新到包头(包头结构长度+原数据长度)
+    pHead->wDataSize = nSendSize;//包大小
+    int ret = ::send(mAcceptSocket, m_cbSendBuf, nSendSize, 0);
+    return (ret > 0) ? true : false;
+```
+
+* 客户端类定义
+
+```cpp
+class TCPClient
+{
+public:
+    /// 主循环，里面循环接收字节流，并进行解包分包判断
+    void run();
+
+    /// 处理网络消息，传入的已经是完整大小的应用层结构，里面转换一下指针即可直接按结构题使用
+    // NetPacket_Test1* pMsg = (NetPacket_Test1*) pDataBuffer;
+    bool OnNetMessage(const unsigned short& nOpcode, 
+        const char* pDataBuffer, unsigned short nDataSize);
+private:
+    // 省略服务端句柄 mServerSocket
+
+    char m_cbRecvBuf[NET_PACKET_SIZE]; // 接收buf，可能不满一个完整的应用层结构体
+    char m_cbDataBuf[NET_PACKET_SIZE]; // 应用层数据
+    int  m_nRecvSize;                  // 接收到buf的长度，对应的是 m_cbRecvBuf 的长度
+}
+
+```
+
+* 客户端接收(解包和分包)
+
+```cpp
+void TCPClient::run()
+{
+    int nCount = 0;
+    for (;;)
+    {
+        // 接收数据，往 m_cbRecvBuf 中继续追加，请求读取大小足够大，实际读取到 nRecvSize 大小
+        int nRecvSize = ::recv(mServerSocket,
+            m_cbRecvBuf+m_nRecvSize, 
+            sizeof(m_cbRecvBuf)-m_nRecvSize, 0);
+        if (nRecvSize <= 0)
+        {
+            // 服务端close断开的话，被动方变为 CLOSE_WAIT
+            std::cout << "服务器主动断开连接!" << std::endl;
+            break;
+        }
+ 
+        // 保存已经接收数据的大小
+        m_nRecvSize += nRecvSize;
+ 
+        // 接收到的数据够不够一个包头的长度
+        // 不够一个包头大小(主要为了获取该包头里的数据长度)，则会进入for(;;)的下一次循环接收
+        while (m_nRecvSize >= sizeof(NetPacketHeader))
+        {
+            // 收够5个包，主动与服务器断开
+            if (nCount >= 5)
+            {
+                ::closesocket(mServerSocket);
+                break;
+            }
+ 
+            // 读取包头
+            NetPacketHeader* pHead = (NetPacketHeader*) (m_cbRecvBuf);
+            const unsigned short nPacketSize = pHead->wDataSize;
+ 
+            // 判断是否已接收到足够一个完整包的数据
+            // 此处的大小是从包头读取的，有可能不只一个 包头+sizeof应用层结构
+            if (m_nRecvSize < nPacketSize)
+            {
+                // 还不够拼凑出一个完整包，则退出while，进行for(;;)的循环读取
+                break;
+            }
+ 
+            // 拷贝到数据缓存
+            // 此处只拷贝包头指定的长度 nPacketSize ，剩余数据还是留在buf中
+            // m_cbDataBuf 每次覆盖
+            CopyMemory(m_cbDataBuf, m_cbRecvBuf, nPacketSize);
+ 
+            // 从接收缓存移除
+            // 把本次完整的包放到应用层数据中后，就从buf中移除对应数据(通过前移的方式)
+            // "head-abc,hea"，此处不是 nPacketSize？ memmove(buf, buf+整包大小, buf大小)？不应该是buf-整包大小吗
+                // 这样会导致移动后，原有的一些位置还保留了原值，memmove与memcopy类似，只是内存重叠更灵活
+            // 注意此处move(copy)整个buf大小，保证偏移整包后，前移后原来最后的位置都清0了，把相应的'\0'也做了move
+            MoveMemory(m_cbRecvBuf, m_cbRecvBuf+nPacketSize, m_nRecvSize);
+            m_nRecvSize -= nPacketSize;
+ 
+            // 解密数据，对 m_cbDataBuf 做处理，网络序(大端)转本地字节序
+            // ...
+ 
+            // 分派数据包，让应用层进行逻辑处理
+            pHead = (NetPacketHeader*) (m_cbDataBuf);
+            const unsigned short nDataSize = nPacketSize - (unsigned short)sizeof(NetPacketHeader);
+            // 跳过封包头后的数据及其大小
+            OnNetMessage(pHead->wOpcode, m_cbDataBuf+sizeof(NetPacketHeader), nDataSize);
+ 
+            ++nCount;
+        }
+    }
+ 
+    std::cout << "已经和服务器断开连接!" << std::endl;
+}
+
+```
+
+
+
+
+
+
+
