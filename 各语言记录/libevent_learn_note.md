@@ -144,10 +144,10 @@
             * 当然，`SO_REUSEPORT`和`SO_REUSEADDR`在一个socket上可以同时设置
 * 关于`listen`函数的第二个参数，`int listen(int socket, int backlog);`
     - [listen()函数中backlog参数分析](https://blog.csdn.net/ordeder/article/details/21551567)
-    - 当socket函数创建一个套接字时，它被假设为一个主动套装口(客户端socket，用于调用connect去连接服务端)，listen函数把一个未连接的套接字转换成一个被动套接字(告诉内核接受指向该socket的连接请求)。根据TCP状态转换图，调用listen导致套接字从`CLOSED`状态转换到`LISTEN`状态。
+    - 当socket函数创建一个套接字时，它被假设为一个主动套接口(客户端socket，用于调用connect去连接服务端)，listen函数把一个未连接的套接字转换成一个被动套接字(告诉内核接受指向该socket的连接请求)。根据TCP状态转换图，调用listen导致套接字从`CLOSED`状态转换到`LISTEN`状态。
     - 第二个参数`backlog`规定了内核应该为相应socket(套接字)排队的最大连接个数。一般为 `未完成三次握手队列` 和 `已经完成三次握手队列` 的大小之和
         + 未完成连接队列（incomplete connection queue）
-            * `SYN`已由某个客户发出并到达服务器，而服务器正在等待完成相应的TCP三次握手过程。这些套接字处于`SYN_RCVD`状态。
+            * `SYN`已由某个客户发出并到达服务器，而服务器正在等待完成相应的TCP三次握手过程。这些套接字处于`SYN_RECV`状态。
         + 已完成连接队列（completed connection queue）
             * 每个已完成TCP三次握手过程的客户对应其中一项。这些套接字处于`ESTABLISHED`状态。
     - 当来自客户的`SYN`到达时，TCP在未完成连接队列中创建一个新项，然后服务器给该项组装`SYN`响应，其中稍带对客户SYN的`ACK`（即SYN+ACK）(三次握手的第二个分节)，该项一直保留在未完成连接队列中，直到三次握手的第三个分节或者达到该项的超时时间。如果三次握手正常完成，该项就从未完成连接队列移到已完成连接队列的队尾。当进程调用`accept`时，已完成连接队列中的队头项将返回给进程(从已完成连接队列中取出一个“连接”)，如果队列为空，则进程进入睡眠，直到TCP在该队列中放入一项才唤醒它(监听套接字的已完成连接队列中的元素个数大于0，那么该套接字是可读的)。

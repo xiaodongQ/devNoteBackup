@@ -712,7 +712,7 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
                         * 如果缓存未命中，则 CPU 要等待内存的慢速读取，因此 `IPC` 就会很低
                 - `perf stat -e cache-references,cache-misses,instructions,cycles,L1-dcache-load-misses,L1-dcache-loads ./traverse_1d_array -s 1`
                     + 216,681      cache-references
-                    + 75,368       cache-misses            #  34.783 % of all cache refs *缓存未命中率很高？*
+                    + 75,368       cache-misses            #  34.783 % of all cache refs *缓存未命中率更低*
                     + 29,937,457   instructions            #  1.53  insn per cycle *每时钟周期执行指令数更多*
                     + 19,613,832   cycles
                     + 107,690      L1-dcache-load-misses   #  0.70% of all L1-dcache hits
@@ -779,8 +779,11 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
                     + API
                         * `#include <sched.h>`
                         * `int sched_setaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);`
+                            - 如果设置线程，也可用：`int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize, const cpu_set_t *cpuset);`
+                            - 两个api，无论线程还是进程，创建的子进程或者线程都会继承(拷贝)创建者的亲和性
                         * `int sched_getaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);`
                     + 创建的子进程和线程继承CPU亲和性
+                    + `pidstat -p 11412 -t 1` 可以查看指定进程各个线程对应的cpu使用情况
                 - `perf`提供了`cpu-migrations`事件，显示进程从不同的 CPU 核心上迁移的次数
                 - 示例：[cpu_migrate.cpp](https://github.com/xiaodongQ/geektime_distrib_perf/tree/master/1-cpu_cache/cpu_migrate)
                     + 使用3个（共6个CPU核心）并发线程测试，不绑定CPU

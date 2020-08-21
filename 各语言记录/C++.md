@@ -364,6 +364,24 @@ li.remove(99);   // 除去所有等于99的元素：
 
 * 在向 vector 插入元素的时候使用 emplace_back() 而不是 push_back() ?
 
+* [C++性能优化技术导论](https://blog.csdn.net/iteye_15898/article/details/82236319)
+    - 为了精确的计算一段代码的耗时，我们需要极高精度的时间函数。`gettimeofday`是其中一个不错的选择，它的精度在1us，每秒可以调用几十万次
+        + 1us内cpu可以处理几千甚至上万条指令。对于代码长度少于百行的函数来说，其单次执行时间很可能小于1us
+        + 目前最精确的计时方式是cpu自己提供的指令：`rdtsc`。它可以精确到一个时钟周期（1条指令需要消耗cpu几个时钟周期）
+    - 系统在调度程序的时候，可能会把程序放到不同的cpu核心上面运行，而每个cpu核心上面运行的周期不同，从而导致了采用rdtsc时，计算的结果不正确。解决方案是调用linux系统的`sched_setaffinity`来强制进程只在固定的cpu核心上运行
+    - 除了基本的计算执行次数和时间外，还有如下几种分析性能的策略：
+        + 基于概率
+            * 通过不断的中断程序，查看程序中断的位置所在的函数，出现次数最多的函数即为耗时最严重的函数
+        + 基于事件
+            * 当发生一次cpu硬件事件的时候，某些cup会通知进程。如果事件包括L1失效多少次这种，我们就能知道程序跑的慢的原因
+        + 避免干扰
+            * 性能测试最忌讳外界干扰。比如，内存不足，读内存变成了磁盘操作
+    - 性能分析工具-`callgrind`
+        + valgrind系列工具因为免费，所以在linux系统上面最常见。
+        + callgrind是valgrind工具里面的一员，它的主要功能是模拟cpu的cache，能够计算多级cache的有效、失效次数，以及每个函数的调用耗时统计
+            * callgrind的实现机理（基于外部中断）决定了它有不少缺点。比如，会导致程序严重变慢、不支持高度优化的程序、耗时统计的结果误差较大等等。
+    - `gprof`是g++自带的性能分析工具（gnuprofile）。它通过内嵌代码到各个函数里面来计算函数耗时。按理说它应该对高度优化代码很有效，但实际上它对-O2的代码并不友好，这个可能和它的实现位置有关系（在代码优化之后）
+
 ## list
 
 * 删除成员
@@ -2463,7 +2481,8 @@ void assert( int expression );
 using namespace std;
 
 std::mutex g_cvMutex;
-std::condition_variable g_cv;
+// 定义两个条件变量，生产和消费单独通知
+std::condition_variable g_cv_produce, g_cv_consume;
 
 //缓存区
 std::deque<int> g_data_deque;
@@ -2478,20 +2497,24 @@ const int CONSUMER_THREAD_NUM = 3;
 
 void producer_thread(int thread_id)
 {
-     while (true)
-     {
-         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-         //加锁
-         std::unique_lock <std::mutex> lk(g_cvMutex);
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        //加锁
+        std::unique_lock <std::mutex> lk(g_cvMutex);
          //当队列未满时，继续添加数据
-         g_cv.wait(lk, [](){ return g_data_deque.size() <= MAX_NUM; });  //lambda表达式
-         g_next_index++;
-         g_data_deque.push_back(g_next_index);
-         std::cout << "producer_thread: " << thread_id << " producer data: " << g_next_index;
-         std::cout << " queue size: " << g_data_deque.size() << std::endl;
-         //唤醒其他线程 
-         g_cv.notify_all();
-         //自动释放锁
+        // while(g_data_deque.size() >= MAX_NUM)
+        // {
+        //     g_cv_produce.wait(lk);
+        // }
+        g_cv_produce.wait(lk, [](){ return g_data_deque.size() < MAX_NUM; });  //lambda表达式
+        g_next_index++;
+        g_data_deque.push_back(g_next_index);
+        std::cout << "producer_thread: " << thread_id << " producer data: " << g_next_index;
+        std::cout << " queue size: " << g_data_deque.size() << std::endl;
+        //唤醒其他线程 
+        g_cv_consume.notify_all();
+        //自动释放锁
      }
 }
 
@@ -2503,14 +2526,14 @@ void consumer_thread(int thread_id)
         //加锁
         std::unique_lock <std::mutex> lk(g_cvMutex);
         //检测条件是否达成
-        g_cv.wait( lk,   []{ return !g_data_deque.empty(); });
+        g_cv_consume.wait( lk,   []{ return !g_data_deque.empty(); });
         //互斥操作，消息数据
         int data = g_data_deque.front();
         g_data_deque.pop_front();
         std::cout << "\tconsumer_thread: " << thread_id << " consumer data: ";
         std::cout << data << " deque size: " << g_data_deque.size() << std::endl;
         //唤醒其他线程
-        g_cv.notify_all();
+        g_cv_produce.notify_all();
         //自动释放锁
     }
 }
