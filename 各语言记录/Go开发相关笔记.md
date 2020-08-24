@@ -2168,6 +2168,8 @@ v1, err := strconv.ParseFloat(f, 32)
         + `-flag` // 只支持 bool 类型
         + `-flag=x`
         + `-flag x` // 只支持非 bool 类型
+    - 可了解`cobra`包(`### viper`章节提到过)：[Golang : cobra 包简介](https://www.cnblogs.com/sparkdev/p/10856077.html)
+        + 生成应用程序框架，生成子命令，命令行参数
 
 ## govendor
 

@@ -420,3 +420,114 @@ done
     - 添加 `cd $(dirname $0)` 即可保证进入到脚本所在的路径
         + `sh ./test.sh` 会 `cd .`
         + `sh /home/xd/workspace/test.sh` 会 `cd /home/xd/workspace`
+
+### find
+
+查找目录 时跳过指定目录，使用prune(英 /pruːn/   删除；减少)
+  (注意顺序，-path接源路径，后面跟-prune，再跟-o，后面再跟其他过滤选项，-print不能少)：
+  `find . -path './util' -prune -o -type d -print`
+
+过滤多个目录：
+  `find . \( -path './util' -o -path './tradebot \) -prune -o -type d -print`
+
+  -o 类似于 or,  或者;
+  -a 类似于 and, 且
+
+  (1) grep指定h文件类型查找hello字符串：
+find . -type f -name '*.h' | xargs grep "hello"
+
+查看端口 lsof -i:5000
+
+* 排除目录下所有以md结尾的文件：
+`find . -type f ! -name "*.md"`
+
+* 排除多个：
+`find . -type f ! -name "*.md" ! -name "*.o"`
+
+* 正则表达式：
+`find . -regex '.*\.md\|.*\.h\|.*\.cpp'`
+
+### 统计文本行数
+
+语法：wc [选项] 文件…
+
+说明：该命令统计给定文件中的字节数、字数、行数。如果没有给出文件名，则从标准输入读取。
+
+    该命令各选项含义如下：
+
+    　　- c 统计字节数
+    　　- l 统计行数
+    　　- w 统计字数
+
+* `wc -lcw Makefile`
+
+* 统计src目录下所有cpp文件代码行数(子目录也会统计)
+
+`find src/ -name "*.cpp" |xargs cat|wc -l`
+
+* 统计当前目录及子目录下文件行数
+`find . -type f |xargs cat|wc -l`
+
+* 统计当前目录及子目录下.h和.cpp文件行数
+`find . -type f -name "*.h" -o -name "*.cpp" |xargs cat|wc -l`
+`find . -type f -name "*.h" |xargs cat|wc -l`
+
+* 统计src目录下所有cpp文件代码行数(过滤空行)
+
+`find src/ -name "*.cpp" |xargs cat | grep -v ^$ | wc -l`
+
+### unzip
+
+unzip zip文件
+
+### 目录排序
+
+du -s -d1|sort -n      (h会影响排序，仅按数字来排的)
+
+### grep 查找后去重
+
+`grep "#include <boost" -rn *|awk -F' ' '{print $2}'|sort|uniq`  (注意要先sort，要不仅会去重相邻的)
+
+* `grep -o targetStr_1\|targetStr_2\|targetStr_3…… filename | wc -l` 统计关键字个数
+    - `\|` 过滤多个
+    - `-o` 只显示字符串，不显示整行
+        + `grep -o` 一条数据里面有多个相同，会统计实际的次数
+        + `grep` 一条数据里面有多个相同，只会统计一次次数
+
+### sort uniq 文件去重
+
+对文件排序：  
+sort test.csv (可>输出到新文件)
+
+* `sort`
+    - 实例
+        + 文件words存放英文单词，格式为每行一个英文单词（单词可以重复），统计这个文件中出现次数最多的前10个单词
+        + `cat words.txt | sort | uniq -c | sort -k1,1nr | head -10`
+            * `uniq -c` 行首显示出现次数
+            * `sort -k1,1nr`
+                - `-k1,1` 只按第一个域
+                    + 另外：`-k 1.2` 从第一个域的第二个字符，到本域最后一个字符为止的字符串排序
+                    + 如`baidu 100`，`-k1.1`从`b`排序，`-k1.2`从`a`位置开始排序
+                - `-n` 按照字符串的数值顺序比较
+                - `-r` 颠倒比较的结果
+            * 这几个选项使用，可以再参考：[sort命令](https://man.linuxde.net/sort)
+
+### echo 不换行
+
+* echo -e 允许对下面列出的加反斜线转义的字符进行解释
+
+```sh
+  \n    换行符
+  \c    禁止尾随的换行符
+  \t    水平制表符
+  等等
+
+  echo -e "hello\n"  在原来基础上多加一个换行
+  echo -e "hello\c"  不换行
+```
+
+* `echo -n "hello"` 也可指定不换行(-n 不输出行尾的换行符)
+
+### 正则表达式
+
+非：  volume:[^0] 匹配"volume:"后接非0的行
