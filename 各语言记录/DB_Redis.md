@@ -352,3 +352,33 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                 - `SCARD`可查看set个数，e.g. `scard game:1:deck`
     - `Redis Sorted sets`
         + 有序set是通过一个包含跳表和哈希表的双端数据结构实现的，所以每次我们添加一个元素，Redis都会执行`O(log(N))`操作
+
+* [Redis 使用](http://www.redis.cn/documentation.html)
+    - [Pub/Sub](http://www.redis.cn/topics/pubsub.html)
+        + `subscribe foo bar` 订阅两个频道
+        + `public foo Hello` 向频道foo发布消息(可在另一个客户端操作)
+        + `UNSUBSCRIBE` 取消订阅(不过在其他客户端执行没反应)
+        + 模式匹配订阅：
+            * Redis 的Pub/Sub实现支持模式匹配。客户端可以订阅全风格的模式以便接收所有来自能匹配到`给定模式`的频道的消息
+            * `psubscribe news.*` 订阅接收所有发到news.art.figurative, news.music.jazz形式频道的消息
+                - `publish news.1 123` 形式发布
+                - 可以多个`psubscribe`和`subscribe`一起订阅，会同时收到发布给匹配频道的消息(区别是pmessage和message)
+    - [将redis当做使用LRU算法的缓存来使用](http://www.redis.cn/topics/lru-cache.html)
+        + `LRU`是Redis唯一支持的回收方法(4.0之前)，Redis 4.0引入了新的`LFU`(Least Frequently Used)回收策略
+        + `maxmemory`配置指令用于配置Redis存储数据时指定限制的内存大小
+            * `redis.conf` 配置文件中的`maxmemory`指定
+        + 到达内存限制后，根据回收策略(Eviction policies)不同而表现不同
+            * redis.conf中的`maxmemory-policy` 中配置
+    - `info`命令查看信息
+        + 查看服务统计信息，可以加指定段只查看指定信息
+            * [INFO [section]](https://redis.io/commands/info)
+        + 数据库db信息 (`info keyspace`查看)
+            * 不同的应用程序数据存储在不同的数据库下
+            * redis下，数据库是由一个整数索引标识，而不是由一个数据库名称。默认情况下，一个客户端连接到数据库0(`db0`)。redis配置文件中下面的参数来控制数据库总数：`/etc/redis/redis.conf`，文件中，有个配置项 `databases = 16`
+                - `select 3`切换到db3
+            * 每个数据库都有属于自己的空间，不必担心之间的key冲突
+            * 可参考：[redis db0-db15](https://www.jianshu.com/p/03c1276941cc)
+        + 内存(`info memory`)
+            * 可看到内存池使用jemalloc：`mem_allocator:jemalloc-5.1.0`
+            * 关于jemalloc实现：[jemalloc 源码分析](https://youjiali1995.github.io/allocator/jemalloc/)
+            * 什么场景使用`Ptmalloc2` `tcmalloc` `jemalloc`等，可参考：[02 | 内存池：如何提升内存分配的效率？](https://time.geekbang.org/column/article/230221)
