@@ -671,3 +671,26 @@ message Ping {
 }
 ```
 
+## 负载均衡
+
+* [Load Balancing in gRPC](https://github.com/grpc/grpc/blob/master/doc/load-balancing.md)
+* [gRPC负载均衡（客户端负载均衡）](https://www.cnblogs.com/FireworksEasyCool/p/12912839.html)
+
+## 客户端调用过程分析
+
+* `conn, err := grpc.Dial(serverAddr, xxx...)`
+    - `Dial`创建一个客户端连接，默认情况下，该函数是非阻塞的(不会等到连接创建完成才返回，而是后台进行连接)
+        + 可指定 `grpc.WithBlock()`来使其变成阻塞，阻塞直到创建连接成功，若一直不成功则阻塞到超时(go test超时为10min)
+        + e.g. `conn, err := grpc.Dial(serverAddr, grpc.WithBlock())`
+    - 可指定多个选项
+* 函数调用
+    - 原型：`func Dial(target string, opts ...DialOption) (*ClientConn, error)`
+        + 函数体只有：`return DialContext(context.Background(), target, opts...)`
+    - `func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *ClientConn, err error)`
+        + 在非阻塞情况下，ctx不会对连接进行操作
+* gRPC client会解析域名，然后会维护一个lb负载均衡
+    - [简析gRPC client 连接管理](https://blog.csdn.net/weixin_33806300/article/details/88803908)
+    - gRPC 管理连接的方式，默认情况下，大于10s没有数据发送，gRPC 就会认为是个idle 连接。server 端会给client 端发送一个GOAWAY 的包。client 收到这个包之后就会主动关闭连接。下次需要发包的时候，就会重新建立连接
+
+* [GRPC连接池的设计与实现](https://blog.didiyun.com/index.php/2019/12/30/4629/)
+
