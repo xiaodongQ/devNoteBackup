@@ -446,6 +446,7 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
         + 设计模式：使用`SETNX`加锁
             * `SETNX lock.foo <current Unix time + lock timeout + 1>`
             * (类似set时nx的含义，`set mykey newval nx`，不存在才设置成功)
+            * redis 官方不推荐 setnx 来实现分布式锁(https://redis.io/commands/setnx) 官方给出了 the Redlock algorithm 各语言的实现版本是来实现分布式锁的机制(即上面的各语言版本的`Redlock`)
         + 如果客户端出现故障，崩溃或者其他情况无法释放该锁会发生什么情况？
             * 原来锁被C3持有，但是C3宕机，然后C1和C2同时读取锁的时间戳，然后去DEL后SETNX获取锁，由于竞态条件导致 C1 和 C2 都获取到了锁(C1和C2同时SETNX获取时，不会保证并行安全？)
         + 使用以下算法避免这种情况
@@ -456,3 +457,35 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                 - 如果另一个客户端，假如为 C5 ，比 C4 更快的通过GETSET操作获取到锁，那么 C4 执行GETSET操作会返回一个没有过期的时间戳。C4 将会从第一个步骤重新开始
         + 为了使这种加锁算法更加的健壮，持有锁的客户端应该一直检查锁是否过期，保证使用DEL释放锁之前不会过期，因为客户端故障的情况可能很复杂
             * 不止是崩溃，还可能由于一些操作阻塞一段时间，并且在阻塞比较久并恢复后尝试执行DEL（而此时该LOCK可能已经被其他客户端所持有）
+
+
+## Redis集群
+
+* [Redis cluster tutorial](https://redis.io/topics/cluster-tutorial)
+    - 每个节点都需要开放两个端口，普通端口和集群总线端口(在普通端口基础上固定+10000)
+    - 一个Redis至少要6个节点，3主3备
+    - Redis集群数据分片并不使用一致性哈希，而是用 哈希槽(hash slot)，Redis集群中有`16384`个hash slot
+        + 要计算给定key的hash slot，通过对key的`CRC16`(循环冗余校验)对16384取模
+        + 每个集群节点都负责一部分hash slot
+        + 移动hash slot到另一个节点，并不需要停止服务
+        + every hash slot has from 1 (the master itself) to N replicas (N-1 additional slaves nodes).
+    - 通过`redis-cli`创建集群
+        + 创建6个实例目录，`mkdir 7000 7001 7002 7003 7004 7005` (`mkdir cluster-test`，`cd cluster-test`)
+        + 每个目录创建一个`redis.conf`配置文件，其中指定端口和启用集群
+        + 编译`redis-server`(下载源码后，gcc版本有要求，4.8会报很多字段找不到，临时升级到了9.x)
+        + 启动一个实例，`cd 7000`，`../redis-server ./redis.conf`
+            * 依次后台启动这6个实例 `nohup ../redis-server ./redis.conf &`
+        + `redis-cli`创建集群(5.0版本及之后)(Redis4和3版本，用`redis-trib.rb`)
+            * 完整命令：`redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 --cluster-replicas 1`
+                - `--cluster-replicas 1` 表示每创建一个master都需要一个slave
+        + 创建成功显示：[OK] All 16384 slots covered.
+    - 也可以通过`create-cluster`脚本创建集群
+        + 脚本中做的操作和上面操作差不多
+    - 测试集群
+        + `redis-cli -c -p 7000` 连接集群
+        + 然后就可以操作了：`set foo bar`
+            * 会显示写入到哪个节点了：`-> Redirected to slot [12182] located at 127.0.0.1:7002`
+            * `get foo`
+                - `-> Redirected to slot [12182] located at 127.0.0.1:7002-> Redirected to slot [12182] located at 127.0.0.1:7002`
+* [Redis Cluster Specification](https://redis.io/topics/cluster-spec)
+    - Redis集群规范
