@@ -3364,3 +3364,7 @@ int initQuantApi()
     - `int       abs( int n );`
     - `long      abs( long n );`
     - [std::abs(int), std::labs, std::llabs, std::imaxabs](https://zh.cppreference.com/w/cpp/numeric/math/abs)
+
+## ctest
+
+* ctest 单元测试
