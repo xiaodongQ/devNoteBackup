@@ -1125,7 +1125,9 @@ C++是从14之后的版本才正式支持共享互斥量，也就是实现读写
 
 参考zh.cppreference.com整理的对于各个标准特性的支持情况(包含C++11,C++14,17等等)：
 
-[C++ 编译器支持情况表](https://zh.cppreference.com/w/cpp/compiler_support#cpp11)
+* [C++ 编译器支持情况表](https://zh.cppreference.com/w/cpp/compiler_support#cpp11)
+    - 另外`gcc`对于`C++17`的支持情况，很多特性都是在`gcc7`才支持，部分特性在`gcc5`和`gcc6`支持，所以若要用C++17特性，最好还是升级到`gcc7`
+* gcc版本升级可参考：[为CentOS 6、7升级gcc至4.8、4.9、5.2、6.3、7.3等高版本](https://www.vpser.net/manage/centos-6-upgrade-gcc.html)
 
 选取GCC中个人目前注意的几个：
 
