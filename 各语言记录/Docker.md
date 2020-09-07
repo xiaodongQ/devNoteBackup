@@ -322,3 +322,6 @@
     - `docker save -o kube-proxy_1.17.3.tar k8s.gcr.io/kube-proxy:v1.17.3`
 * 导入 docker 镜像文件
     - `docker load -i kube-proxy_1.17.3.tar`
+
+* [将 Docker 镜像体积减小 99%](https://yq.aliyun.com/articles/751376)
+    - [Docker之操作系统Alpine](https://blog.csdn.net/bbwangj/article/details/81088231)
