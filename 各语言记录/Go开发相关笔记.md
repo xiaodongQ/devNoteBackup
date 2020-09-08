@@ -1979,6 +1979,18 @@ go install
 
 * go get : git clone + go install
 
+
+* [CGO_ENABLED环境变量对Go静态编译机制的影响](https://johng.cn/cgo-enabled-affect-go-static-compile/)
+    - [Go的可移植性](https://tonybai.com/2017/06/27/an-intro-about-go-portability/)
+    - 默认`CGO_ENABLED=1`，会动态链接C运行时(libc)，需要依赖动态库
+        + 所以scratch制作依赖动态链接库的go程序容器镜像会报：`standard_init_linux.go:211: exec user process caused "no such file or directory"`
+        + 可改用Alpine做基础镜像或者纯静态编译
+    - 若要纯静态编译，可`export CGO_ENABLED=0`
+        + 如果`CGO_ENABLED=1`，但依然要强制静态编译，需传递`-linkmode=external`给cmd/link
+            * `-ldflags '-linkmode "external" -extldflags "-static"'`
+            * e.g. `go build -o testcgo-static-link  -ldflags '-extldflags "-static"' testcgo.go`
+
+
 ### time包 获取时间
 
 * [golang timestamp time 时间戳小结](https://pylist.com/t/1438769640)
@@ -3164,3 +3176,6 @@ isClientCancelled := func(ctx context.Context) bool {
             * 反射包中`Value`的类型与`Type`不同，它被声明成了结构体。
                 - 这个结构体没有对外暴露的字段，但是提供了获取或者写入数据的方法
         + 反射包中的所有方法基本都是围绕着 `Type` 和 `Value` 这两个类型设计的
+
+
+* [Go语言高级编程(Advanced Go Programming)](https://books.studygolang.com/advanced-go-programming-book/)

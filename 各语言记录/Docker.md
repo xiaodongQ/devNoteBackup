@@ -325,3 +325,5 @@
 
 * [将 Docker 镜像体积减小 99%](https://yq.aliyun.com/articles/751376)
     - [Docker之操作系统Alpine](https://blog.csdn.net/bbwangj/article/details/81088231)
+    - [CGO_ENABLED环境变量对Go静态编译机制的影响](https://johng.cn/cgo-enabled-affect-go-static-compile/)
+        + 纯静态编译
