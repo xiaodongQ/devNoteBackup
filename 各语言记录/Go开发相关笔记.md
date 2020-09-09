@@ -3179,3 +3179,15 @@ isClientCancelled := func(ctx context.Context) bool {
 
 
 * [Go语言高级编程(Advanced Go Programming)](https://books.studygolang.com/advanced-go-programming-book/)
+    - 1.5 面向并发的内存模型
+        + 用互斥锁(`sync.Mutex`)来保护一个数值型的共享资源，麻烦且效率低下
+        + 标准库的`sync/atomic`包对原子操作提供了丰富的支持
+            * `var total uint64` total为全局变量
+            * `atomic.AddUint64(&total, i)` 对total加i
+            * `atomic.AddUint64`函数调用保证了total的读取、更新和保存是一个原子操作，因此在多线程中访问也是安全的
+        + 原子操作配合互斥锁可以实现非常高效的单件(单例)模式。
+            * 互斥锁的代价比普通整数的原子读写高很多，在性能敏感的地方可以增加一个数字型的标志位，通过原子检测标志位状态降低互斥锁的使用次数来提高性能
+                - `if (atomic.LoadUint32(&initialized) == 1)` 通过initialized标识是否初始化了单例，
+                - 是则返回实例，否则加锁进行实例创建，然后返回实例
+            * 标准库中的`sync.Once`就是类似操作
+                - 所以可直接用`sync.Once`包来实现单例：`once.Do(func() {instance = &singleton{}})`

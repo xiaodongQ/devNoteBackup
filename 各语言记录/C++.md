@@ -426,6 +426,12 @@ for(iter=begin; ...; )
 }
 
 //正确
+    // 注意list,set,map可用该方式，vector、deque不行！
+    // (vector可使用iter = veci.erase(iter);方式)
+    // [STL的erase()陷阱-迭代器失效总结](https://www.cnblogs.com/blueoverflow/p/4923523.html#_lab2_0_0)
+    // 对于关联容器(如map, set, multimap,multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响
+    // 对于序列式容器(如vector,deque)，删除当前的iterator会使后面所有元素的iterator都失效。这是因为vetor,deque使用了连续分配的内存，删除一个元素导致后面所有的元素会向前移动一个位置。还好erase方法可以返回下一个有效的iterator
+    // 对于list来说，它使用了不连续分配的内存，并且它的erase方法也会返回下一个有效的iterator，因此两种方法都可使用
 for(iter=begin; ...; )
 {
     erase(iter++)
