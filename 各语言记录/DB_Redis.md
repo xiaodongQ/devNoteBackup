@@ -188,7 +188,7 @@
             * `SUNION superpowers birdpowers` 联合两个set，并返回所有成员(去重)
             * `SPOP letters 2` 从set中删除并返回几个元素
                 - `SRANDMEMBER letters 2` 从set中随机返回几个元素，并不删除，若数量为负数则可能返回重复的元素值
-        + *sorted set* 有序集合
+        + *sorted set* 有序集合(zset)
             * Redis 1.2引入，有序集合中每个元素都有一个关联的score，用于排序
             * `ZADD hackers 1940 "Alan Kay"` 添加成员
                 - 向常规set中添加会报错 WRONGTYPE Operation against a key holding the wrong kind of value
@@ -465,6 +465,10 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
     - api
         + t_zset.c `sorted set api`
 
+* [Redis源码分析](https://blog.csdn.net/androidlushangderen/category_9263229.html)
+    - 动态字符串（sds.h/sds.c）
+        + `sds sdsnewlen(const void *init, size_t initlen)` 根据内容和长度创建字符串
+
 ## Redis集群
 
 * [Redis cluster tutorial](https://redis.io/topics/cluster-tutorial)
@@ -726,4 +730,23 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
         + 该选择哪个从库作为主库？
         + 怎么把新主库的相关信息通知给从库和客户端呢？
     - 哨兵机制的基本流程
-        + 
+        + 哨兵其实就是一个运行在特殊模式下的 Redis 进程，主从库实例运行的同时，它也在运行。
+        + 哨兵主要负责的就是三个任务：`监控`、`选主`（选择主库）和`通知`
+            * `监控`是指哨兵进程在运行时，周期性地给所有的主从库发送 `PING` 命令，检测它们是否仍然在线运行
+                - 如果从库没有在规定时间内响应哨兵的 PING 命令，哨兵就会把它标记为“下线状态”；
+                - 同样，如果主库也没有在规定时间内响应哨兵的 PING 命令，哨兵就会判定主库下线，然后开始自动切换主库的流程
+            * `选主` 主库挂了以后，哨兵就需要从很多个从库里，按照一定的规则选择一个从库实例，把它作为新的主库
+            * 哨兵会执行最后一个任务：`通知`
+                - 在执行通知任务时，哨兵会把新主库的连接信息发给其他从库，让它们执行`replicaof`命令，和新主库建立连接，并进行数据复制
+                - 同时，哨兵会把新主库的连接信息通知给客户端，让它们把请求操作发到新主库上
+        + 主观下线和客观下线
+            * 哨兵进程会使用 PING 命令检测它自己和主、从库的网络连接情况，用来判断实例的状态
+                - 如果哨兵发现主库或从库对 PING 命令的响应超时了，那么，哨兵就会先把它标记为“主观下线”
+            * 通常会采用多实例组成的集群模式进行部署，这也被称为`哨兵集群`
+                - 在判断主库是否下线时，不能由一个哨兵说了算，只有大多数的哨兵实例，都判断主库已经“主观下线”了，主库才会被标记为“客观下线”
+                - 这个叫法也是表明主库下线成为一个客观事实了。这个判断原则就是：少数服从多数(`raft`)。同时，这会进一步触发哨兵开始主从切换流程
+                    + sentinel选举的过程，借鉴了分布式系统中的Raft协议。Raft协议是用来解决分布式系统一致性问题的协议，在很长一段时间，Paxos被认为是解决分布式系统一致性的代名词。但是Paxos难于理解，更难以实现。而Raft协议设计的初衷就是容易实现，保证对于普遍的人群都可以十分舒适容易的去理解
+                    + 要理解哨兵的选举过程，关键就在于理解`选举纪元`(epoch) (选举任期?) 的概念。所谓的选举纪元，直白的解释就是“第几届选举”
+                        * 同一个监控单位内的所有哨兵，他们的选举纪元最终就会达成一个统一的值，这也就是Raft中，最终一致性的意思
+                    + 参考：[Redis源码解析：22sentinel(三)客观下线以及故障转移之选举领导节点](https://www.cnblogs.com/gqtcgq/p/7247047.html)
+                        * Raft参考：[The Raft Consensus Algorithm](https://raft.github.io/)
