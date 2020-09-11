@@ -194,6 +194,7 @@
                 - 向常规set中添加会报错 WRONGTYPE Operation against a key holding the wrong kind of value
                 - `smembers`也不能用于查看有序集合
             * `ZRANGE hackers 2 4` 查看有序集合，两个参数是索引范围
+            * `Zcard` 命令用于计算集合中元素的数量
     - *hashes*
         + 哈希是string域和string值的映射，是表示目标绝佳的类型
         + `HSET user:1000 name "John Smith"`，key为user:1000，域为name，域的值为"John Smith"
@@ -356,13 +357,15 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
 * [Redis 使用](http://www.redis.cn/documentation.html)
     - [Pub/Sub](http://www.redis.cn/topics/pubsub.html)
         + `subscribe foo bar` 订阅两个频道
-        + `public foo Hello` 向频道foo发布消息(可在另一个客户端操作)
-        + `UNSUBSCRIBE` 取消订阅(不过在其他客户端执行没反应)
+        + `publish foo Hello` 向频道foo发布消息(可在另一个客户端操作)
+        + `unsubscribe` 取消订阅(不过在其他客户端执行没反应)
+            * 没有任何参数
         + 模式匹配订阅：
             * Redis 的Pub/Sub实现支持模式匹配。客户端可以订阅全风格的模式以便接收所有来自能匹配到`给定模式`的频道的消息
             * `psubscribe news.*` 订阅接收所有发到news.art.figurative, news.music.jazz形式频道的消息
                 - `publish news.1 123` 形式发布
                 - 可以多个`psubscribe`和`subscribe`一起订阅，会同时收到发布给匹配频道的消息(区别是pmessage和message)
+            * `punsubscribe news.*` 取消匹配指定模式的订阅
     - [将redis当做使用LRU算法的缓存来使用](http://www.redis.cn/topics/lru-cache.html)
         + `LRU`是Redis唯一支持的回收方法(4.0之前)，Redis 4.0引入了新的`LFU`(Least Frequently Used)回收策略
         + `maxmemory`配置指令用于配置Redis存储数据时指定限制的内存大小
@@ -466,8 +469,12 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
         + t_zset.c `sorted set api`
 
 * [Redis源码分析](https://blog.csdn.net/androidlushangderen/category_9263229.html)
-    - 动态字符串（sds.h/sds.c）
+    - fork源码便于个人注释学习：[xiaodongQ/redis](https://github.com/xiaodongQ/redis)
+    - 动态字符串 (sds.h/sds.c)
+        + [Redis源码分析（四）-- sds字符串](https://blog.csdn.net/Androidlushangderen/article/details/39898557)
         + `sds sdsnewlen(const void *init, size_t initlen)` 根据内容和长度创建字符串
+    - dict哈希结构 (dict.h/dict.c)
+        + [Redis源码分析（三）---dict哈希结构](https://blog.csdn.net/Androidlushangderen/article/details/39860693)
 
 ## Redis集群
 
@@ -750,3 +757,13 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                         * 同一个监控单位内的所有哨兵，他们的选举纪元最终就会达成一个统一的值，这也就是Raft中，最终一致性的意思
                     + 参考：[Redis源码解析：22sentinel(三)客观下线以及故障转移之选举领导节点](https://www.cnblogs.com/gqtcgq/p/7247047.html)
                         * Raft参考：[The Raft Consensus Algorithm](https://raft.github.io/)
+        + 如何选定新主库？
+            * 在选主时，除了要检查从库的当前在线状态，还要判断它之前的网络连接状态
+            * 接下来就要给剩余的从库打分了。按照三个规则依次进行三轮打分，这三个规则分别是从库优先级、从库复制进度以及从库 ID 号
+                - 第一轮：优先级最高的从库得分高
+                    + 用户可以通过 slave-priority 配置项，给不同的从库设置不同优先级
+                - 第二轮：和旧主库同步程度最接近的从库得分高
+                    + 在所有从库中，有从库的 `slave_repl_offset` 最接近 `master_repl_offset`，那么它的得分就最高，可以作为新主库
+                - 第三轮：ID 号小的从库得分高
+    - 流程回顾
+        + 首先，哨兵会按照在线状态、网络状态，筛选过滤掉一部分不符合要求的从库，然后，依次按照优先级、复制进度、ID 号大小再对剩余的从库进行打分，只要有得分最高的从库出现，就把它选为新主库
