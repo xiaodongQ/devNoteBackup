@@ -3376,3 +3376,17 @@ int initQuantApi()
 ## ctest
 
 * ctest 单元测试
+
+## Effective C++
+
+* 条款02：尽量以`const`，`enum`，`inline`替换`#define`
+    - 对于单纯常量，最好以const对象或enums替换#defines
+    - 对于形似函数的宏(macros)，最好改用inline函数替换#defines
+* 条款03：尽可能使用const
+    - 如果关键字const出现在星号左边，表示所指事物是常量
+        + `const char* p = greeting;` 指向数据不可变，指针指向可变
+            * 其中，greeting变量为`char greeting[]="hello"`
+    - 如果出现在星号右边，表示指针自身是常量
+        + `char* const p = greeting` 指针指向不可变，指向数据可变
+    - 如果出现在星号两边，表示被指事物和指针两者都是常量
+        + `const char* const p = greeting` 指针指向和指向数据都不可变
