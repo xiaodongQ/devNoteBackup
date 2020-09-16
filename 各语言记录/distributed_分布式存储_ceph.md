@@ -207,3 +207,149 @@
                 - 本机安装后，`ceph -v`查看，安装成功
                     + ceph version 15.2.4 (7447c15c6ff58d7fce91843b705a268a1917325c) octopus (stable)
                     + 若当前终端输入`ceph`按tab没有找到位置，则重新加载一下`.bashrc`或者`.zshrc`
+
+## Ceph源码
+
+* 《Ceph源码分析》
+* Ceph整体架构
+    - 2012年，Ceph发布了第一个稳定版本
+    - Ceph的设计目标是采用商用硬件（Commodity Hardware）来构建大规模的、具有高可用性、高可扩展性、高性能的分布式存储系统
+        + 系统的高可用性指的是系统某个部件失效后，系统依然可以提供正常服务的能力
+            * Ceph通过数据多副本、纠删码来提供数据的冗余
+        + 高可扩展性是指系统可以灵活地应对集群的伸缩
+            * 一方面指集群的容量可以伸缩，集群可以任意地添加和删除存储节点和存储设备；
+            * 另一方面指系统的性能随集群的增加而线性增加
+    - Ceph的整体架构大致如下：
+        + 最底层基于`RADOS`（reliable, autonomous, distributed object store），它是一个可靠的、自组织的、可自动修复、自我管理的分布式对象存储系统
+            * 其内部包括`ceph-osd`后台服务进程和`ceph-mon`监控进程
+        + 中间层`librados`库用于本地或者远程通过网络访问`RADOS`对象存储系统
+            * 它支持多种语言，目前支持C/C++语言、Java、Python、Ruby和PHP语言的接口
+        + 最上层面向应用提供3种不同的存储接口：
+            * 块存储接口，通过`librbd`库提供了块存储访问接口。它可以为虚拟机提供虚拟磁盘，或者通过内核映射为物理主机提供磁盘空间
+            * 对象存储接口，目前提供了两种类型的API，一种是和AWS的`S3`接口兼容的API，另一种是和OpenStack的`Swift对象`接口兼容的API
+            * 文件系统接口，目前提供两种接口，一种是标准的`posix`接口，另一种通过`libcephfs`库提供文件系统访问接口
+    - Ceph客户端接口，包含三种形式的存储：*块存储*、*对象存储*、*文件系统*
+        + (块存储) `RBD`（rados block device）是通过`librbd`库对应用提供*块存储*，主要面向云平台的虚拟机提供虚拟磁盘
+            * 传统`SAN`就是块存储，通过SCSI或者FC接口给应用提供一个独立的LUN或者卷。
+            * `RBD`类似于传统的`SAN`存储，都提供数据块级别的访问
+            * 目前RBD提供了两个接口，一种是直接在用户态实现，通过QEMU Driver供KVM虚拟机使用。另一种是在操作系统内核态实现了一个内核模块
+            * 块存储用作虚拟机的硬盘，其对I/O的要求和传统的物理硬盘类似。块存储既需要有较好的随机I/O，又要求有较好的顺序I/O，而且对延迟有比较严格的要求
+        + (对象存储) `RadosGW`基于`librados`提供了和Amazon `S3`接口以及OpenStack `Swift`接口兼容的*对象存储*接口
+            * 相比于NAS存储，对象存储放弃了目录树结构，采用了扁平化组织形式（一般为三级组织结构），这有利于实现近乎无限的容量扩展
+            * 由于Amazon在云存储领域的影响力，Amazon的S3接口已经成为事实上的对象存储的标准接口
+                - 其接口分三级存储：Account/Bucket/Object（账户/桶/对象）
+            * 在云计算领域，OpenStack已经成为广泛采用的云计算管理系统，OpenStack的对象存储接口Swift也成为广泛采用的接口
+                - 其也采用分三级存储：Account/Container/Object（账户/容器/对象），每层节点数均没有限制
+        + (文件系统) `CephFS`通过在RADOS基础之上增加了MDS（MetadataServer）来提供*文件存储*
+            * 它提供了`libcephfs`库和标准的`POSIX`文件接口。
+            * CephFS类似于传统的`NAS`存储，通过NFS或者CIFS协议提供文件系统或者文件目录服务
+    - RADOS
+        + `RADOS`是Ceph存储系统的基石，是一个可扩展的、稳定的、自我管理的、自我修复的对象存储系统，是Ceph存储系统的核心
+        + 它完成了一个存储系统的核心功能，包括：
+            * `Monitor`模块为整个存储集群提供全局的配置和系统信息；
+            * 通过`CRUSH`算法实现对象的寻址过程；
+            * 完成对象的读写以及其他数据功能；
+            * 提供了数据均衡功能；
+            * 通过`Peering`过程完成一个`PG`内存达成数据一致性的过程；
+            * 提供数据自动恢复的功能；
+            * 提供克隆和快照功能；
+            * 实现了对象分层存储的功能；
+            * 实现了数据一致性检查工具`Scrub`
+        + `Monitor`
+            * Monitor是一个独立部署的daemon进程。通过组成Monitor集群来保证自己的高可用。Monitor集群通过`Paxos`算法实现了自己数据的一致性
+            * Cluster Map保存了系统的全局信息，主要包括：
+                - Monitor Map：包括集群的fsid、所有Monitor的地址和端口、current epoch
+                - OSD Map：所有OSD的列表，和OSD的状态等
+                - MDS Map：所有的MDS的列表和状态
+        + 对象存储
+            * 这里所说的对象是指`RADOS`对象，要和RadosGW的S3或者Swift接口的对象存储区分开来
+            * 对象是数据存储的基本单元，一般默认`4MB`大小
+            * 一个对象由三个部分组成：
+                - 对象标志（ID），唯一标识一个对象
+                - 对象的数据，其在本地文件系统中对应一个文件，对象的数据就保存在文件中
+                - 对象的元数据，以Key-Value（键值对）的形式，可以保存在文件对应的扩展属性中
+        + `pool`和`PG`的概念
+            * pool是一个抽象的存储池。它规定了*数据冗余*的类型以及对应的*副本*分布策略
+            * 一个pool由多个PG构成
+            * `PG（placement group）`从名字可理解为一个放置策略组，它是对象的集合，该集合里的所有对象都具有相同的放置策略：对象的副本都分布在相同的OSD列表上
+        + 对象寻址过程
+            * 对象寻址过程指的是查找对象在集群中分布的位置信息，过程分为两步：
+                - 1. 对象到PG的映射。这个过程是静态hash映射（加入pg split后实际变成了动态hash映射方式），通过对object_id，计算出hash值，用该pool的PG的总数量pg_num对hash值取模，就可以获得该对象所在的PG的id号
+                - 2. PG到OSD列表映射。这是指PG上对象的副本如何分布在OSD上。它使用Ceph自己创新的`CRUSH`算法来实现，本质上是一个伪随机分布算法
+        + 数据读写过程
+            * 写过程
+                - Client向该PG所在的主OSD发送写请求
+                - 主OSD接收到写请求后，同时向两个从OSD发送写副本的请求，并同时写入主OSD的本地存储中
+                - 主OSD接收到两个从OSD发送写成功的ACK应答，同时确认自己写成功，就向客户端返回写成功的ACK应答
+            * 在写操作的过程中，主OSD必须等待所有的从OSD返回正确应答，才能向客户端返回写操作成功的应答
+        + 数据均衡
+            * 当在集群中新添加一个OSD存储设备时，整个集群会发生数据的迁移，使得数据分布达到均衡
+            * Ceph数据迁移的*基本单位*是`PG`，即数据迁移是将PG中的所有对象作为一个整体来迁移
+            * 迁移触发的流程为：
+                - 当新加入一个OSD时，会改变系统的CRUSH Map，
+                - 从而引起对象寻址过程中的第二步(PG到OSD的哈希变动了)，PG到OSD列表的映射发生了变化，从而引发数据的迁移。
+        + `Peering`
+            * 当OSD启动，或者某个OSD失效时，该OSD上的主PG会发起一个Peering的过程
+            * Ceph的Peering过程是指一个PG内的所有副本通过PG日志来*达成数据一致*的过程
+        + `Recovery`和`Backfill`
+            * Ceph的Recovery过程是根据在Peering的过程中产生的、依据PG日志推算出的不一致对象列表来*修复*其他副本上的数据
+            * 当某个OSD长时间失效后重新加入集群，它已经无法根据PG日志来修复，就需要执行Backfill（回填）过程。Backfill过程是通过逐一对比两个PG的对象列表来修复
+        + 纠删码
+            * `纠删码（Erasure Code）`的概念早在20世纪60年代就提出来了，最近几年被广泛应用在存储领域
+            * 原理：将写入的数据分成N份原始数据块，通过这N份原始数据块计算出M份效验数据块，N+M份数据块可以分别保存在不同的设备或者节点中。可以允许最多M个数据块失效，通过N+M份中的任意N份数据，就还原出其他数据块
+        + 快照和克隆
+            * `快照（snapshot）`就是一个存储设备在某一时刻的全部*只读*镜像
+            * `克隆（clone）`是在某一时刻的全部*可写*镜像
+            * 快照和克隆的区别在于快照只能读，而克隆可写
+            * RBD的克隆实现是在基于RBD的快照基础上，在客户端librbd上实现了`Copy-on-Write（cow）`(写时复制)克隆机制
+        + `Cache Tier`
+            * (Tier /tɪə/ 层；行、列)
+            * RADOS实现了以pool为基础的*自动分层存储*机制。
+                - 它在第一层可以设置cache pool，其为高速存储设备（例如SSD设备）。
+                - 第二层为data pool，使用大容量低速存储设备（如HDD设备）可以使用EC模式来降低存储空间
+            * 通过`Cache Tier`，可以提高关键数据或者热点数据的性能，同时降低存储开销
+                - Cache Tier层为高速I/O层，保存热点数据，或称为活跃的数据
+        + `Scrub`
+            * Scrub机制用于系统检查数据的一致性。
+            * 它通过在后台定期（默认每天一次）扫描，比较一个PG内的对象分别在其他OSD上的各个副本的元数据和数据来检查是否一致
+    - 本章介绍了Ceph的系统架构，通过本章，可以对Ceph的基本架构和各个模块的组件有了整体的了解，并对一些基本概念及读写的原理、各个数据功能模块有了大致了解
+* Ceph通用模块
+    - 介绍Ceph源代码*通用库*中的一些比较关键而又比较复杂的*数据结构*
+        + `Object`和`Buffer`相关的数据结构是普遍使用的
+        + 线程池`ThreadPool`可以提高消息处理的并发能力
+        + `Finisher`提供了异步操作时来执行回调函数
+        + `Throttle`在系统的各个模块各个环节都可以看到，它用来限制系统的请求，避免瞬时大量突发请求对系统的冲击
+        + `SafteTimer`提供了定时器，为超时和定时任务等提供了相应的机制
+    - `Object`
+        + 对象Object是默认为4MB大小的数据块。一个对象就对应本地文件系统中的一个文件
+        + 在代码实现中，有`object`、`sobject`、`hobject`、`ghobject`等不同的类
+            * 结构`object_t`对应本地文件系统的一个文件
+                - `src/include/object.h`中定义(代码中的缩进风格都用的2个空格，Redis里是4个)
+            * `sobject_t`在`object_t`之上增加了`snapshot`信息，用于标识是否是快照对象
+                - 也在`src/include/object.h`中定义
+            * `hobject_t`是hash object的缩写，其在`sobject_t`基础上增加了一些字段
+                - `src/common/hobject.h`中定义
+            * `ghobject_t`在对象`hobject_t`的基础上，添加了`generation`字段和`shard_id`字段，这个用于`ErasureCode`(纠删码)模式下的`PG`
+                - 也在`src/common/hobject.h`中定义
+    - `Buffer`
+        + Buffer就是一个命名空间，在这个命名空间下定义了Buffer相关的数据结构，这些数据结构在Ceph的源代码中广泛使用
+            * `buffer::raw`类是基础类，其子类完成了Buffer数据空间的分配
+            * `buffer::ptr`类实现了Buffer内部的一段数据
+            * `buffer::list`封装了多个数据段
+        + `buffer::raw`
+            * `src/include/buffer_raw.h`中定义
+            * 类`buffer::raw`是一个原始的数据Buffer，在其基础之上添加了长度、引用计数和额外的crc校验信息
+            * 下列类都*继承*了`buffer::raw`，实现了data对应内存空间的申请：
+                - 类`raw_malloc`实现了用`malloc`函数分配内存空间的功能
+                    + `src/common/buffer.cc`中定义
+                - 类`class buffer::raw_mmap_pages`实现了通过mmap来把内存匿名映射到进程的地址空间
+                    + 貌似不再使用了，nautilus.rst版本更新记录中：drop the unused buffer::raw_mmap_pages
+                - 。。。还有其他几个继承raw的类
+                - 类`class buffer::raw_char`使用了C++的new操作符来申请内存空间
+                    + `src/common/buffer.cc`中定义
+        + `buffer::ptr`
+            * `src/include/buffer.h`中定义
+            * 类buffer::ptr就是对于buffer::raw的一个部分数据段
+        + `buffer::list`
+            * `src/include/buffer.h`中定义
+            * 类buffer::list是一个使用广泛的类，它是多个buffer::ptr的列表，也就是多个内存数据段的列表
