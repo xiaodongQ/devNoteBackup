@@ -305,6 +305,16 @@ vector<int>::iterator it = find(vec.begin(), vec.end(), 6);
 
 使用`vector.erase(迭代器)`删除成员，如果是循环注意指针陷阱
 
+* vector可使用`iter = veci.erase(iter);`方式循环删除成员，而不能用`veci.erase(iter++)`方式(list、map可以)
+    - [STL的erase()陷阱-迭代器失效总结](https://www.cnblogs.com/blueoverflow/p/4923523.html#_lab2_0_0)
+    - 对于关联容器(如`map`, `set`, `multimap`, `multiset`)，删除当前的iterator，仅仅会使当前的iterator失效，只要在`erase`时，递增当前iterator即可
+        + 这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响
+    - 对于序列式容器(如vector,deque)，删除当前的iterator会使后面所有元素的iterator都失效。
+        + 这是因为`vetor`,`deque`使用了连续分配的内存，删除一个元素导致后面所有的元素会向前移动一个位置。
+        + 还好`erase`方法可以返回下一个有效的iterator
+    - 对于`list`来说，它使用了不连续分配的内存，并且它的erase方法也会返回下一个有效的iterator，因此两种方法都可使用
+
+
 注意：remove不是vector的成员函数，而是<algorithm>中实现
 
 `remove(v.begin(), v.end(), 99);`
