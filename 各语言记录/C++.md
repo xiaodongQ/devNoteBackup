@@ -3400,3 +3400,50 @@ int initQuantApi()
         + `char* const p = greeting` 指针指向不可变，指向数据可变
     - 如果出现在星号两边，表示被指事物和指针两者都是常量
         + `const char* const p = greeting` 指针指向和指向数据都不可变
+
+## `__attribute__`
+
+* [C 语言中__attribute__的作用](https://winddoing.github.io/post/12087.html)
+    - attribute：属性，主要是用来在函数或数据声明中设置其属性，与编译器相关
+    - GNU C 的一大特色就是`__attribute__`机制
+    - `__attribute__`可以设置函数属性（Function Attribute）、变量属性（Variable Attribute）和类型属性（Type Attribute）
+    - 语法格式：
+        + `__attribute__ ((attribute-list))`
+        + 放于声明的尾部`;`之前(`struct`关键字之后 到 `;`之前)
+            * e.g. redis中定义packed为16位的sds：`struct __attribute__ ((__packed__)) sdshdr16 { uint16_t len; xxx};`
+    - 数据声明
+        + `__attribute__ ((packed))`
+            * 告诉编译器取消结构在编译过程中的优化对齐，按照实际占用字节数进行对齐，是 GCC 特有的语法
+            * 该属性可以使得变量或者结构体成员使用最小的对齐方式，即对变量是一字节对齐，对域（field）是位对齐
+            * e.g. `struct __attribute__ ((__packed__)) sc3 {char a; char *b;};`
+                - `sc3`结构体的sizeof为9
+                - 如果不加`__attribute__ ((__packed__))`，则sizeof为16
+        + `__attribute__((aligned(n)))`
+            * 内存对齐，指定内存对齐 n 字节
+            * 该属性设定一个指定大小的对齐格式（以字节 为单位）
+                - e.g. `struct S {short b[3];} __attribute__ ((aligned (8)));`
+                    + 该声明将强制编译器让变量类型为`struct S`的变量在分配空间时采用8字节对齐方式，sizeof为8
+                - e.g. `struct __attribute__ ((aligned(4))) sc5 {char a;char *b;};`
+                    + sizeof为16 (1+8 1对齐成4，4+8，然后补齐成16)
+                - e.g. `struct __attribute__ ((aligned(4))) sc6 {char a;char b[];};`
+                    + sizeof为4 (1+字符数组，直接补齐为4)
+            * 可以手动指定对齐的格式，也可以使用默认的对齐方式
+                - 如果`aligned`后面不紧跟一个指定的数字值，那么编译器将依据你的目标机器情况使用最大最有益的对齐方式
+                - e.g. `struct S {short b[3];} __attribute__ ((aligned));`
+                - 如果`sizeof(short)`的大小为2（byte），那么，S的大小就为6。取一个2的次方值，使得该值大于等于6，则该值为8，所以编译器将设置S类型的对齐方式为`8`字节
+            * `aligned`属性使被设置的对象占用更多的空间，相反的，使用`packed`可以减小对象占用的空间
+                - 注意：`attribute`属性的效力与连接器也有关，如果连接器最大只支持16字节对齐，那么定义32字节对齐也无济于事
+    - 函数声明
+        + `__attribute__((noreturn))`
+            * 告诉编译器这个函数不会返回给调用者，以便编译器在优化时去掉不必要的函数返回代码
+            * e.g. `extern void exit(int) __attribute__((noreturn));`
+        + `__attribute__((weak))`
+            * 虚函数，弱符号
+            * e.g. `int __attribute__((weak)) func(...){ ... return 0;}`
+                - func 转成弱符号类型
+                - 如果遇到强符号类型（即外部模块定义了 func, extern int func(void);），那么我们在本模块执行的 func 将会是外部模块定义的 func
+                - 如果外部模块没有定义，那么将会调用这个弱符号，也就是在本地定义的 func
+            * 链接器发现同时存在弱符号和强符号，就先选择强符号，如果发现不存在强符号，只存在弱符号，则选择弱符号
+                - weak 属性只会在静态库 (.o .a) 中生效，动态库 (.so) 中不会生效
+
+
