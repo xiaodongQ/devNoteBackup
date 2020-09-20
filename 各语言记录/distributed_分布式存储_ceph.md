@@ -354,4 +354,6 @@
             * `src/include/buffer.h`中定义
             * 类buffer::list是一个使用广泛的类，它是多个buffer::ptr的列表，也就是多个内存数据段的列表
     - 线程池(`ThreadPool`)
-        + 
+        + 线程池（ThreadPool）在分布式存储系统的实现中是必不可少的，在Ceph的代码中广泛用到
+        + `src/common/WorkQueue.h`中定义(共享提交到多个工作队列的工作的线程池)
+            * 注意：`src/crimson/os/alienstore/thread_pool.h`中也有一个`ThreadPool`定义，在命名空间`crimson::os`中：`crimson::os:ThreadPool`(用来调度来自seastar fibers的non-seastar任务，seastar是啥？)

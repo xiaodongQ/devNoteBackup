@@ -2,19 +2,20 @@
 
 
 * [分布式系统漫谈一 Google三驾马车: GFS,mapreduce,Bigtable](http://blog.sina.com.cn/s/blog_4ed630e801000bi3.html)
-    - 谈到分布式系统，就不得不提Google的三驾马车:`Google fs`,`Mapreduce`,`Bigtable`
-        + Hadoop也有按照这三篇论文的开源Java实现:Hadoop对应Mapreduce, Hadoop Distributed File System (HDFS)对应Google fs,Hbase对应Bigtable
-    - Google fs
-        + GFS是一个可扩展的分布式文件系统，用于大型的、分布式的、对大量数据进行访问的应用。它运行于廉价的普通硬件上，提供容错功能
-        + 中文相关介绍：[Google File System](https://zhuanlan.zhihu.com/p/28155582)
-        + [google论文：GFS](https://www.cnblogs.com/billowkiller/archive/2013/04/10/3012085.html)
-    - Mapreduce
-        + Mapreduce是针对分布式并行计算的一套编程模型
-        + 中文介绍：[Google MapReduce 论文详解](https://zhuanlan.zhihu.com/p/34849261)
-    - Bigtable
-        + 就像文件系统需要数据库来存储结构化数据一样，GFS也需要Bigtable来存储结构化数据
-            * BigTable 是建立在 GFS ，Scheduler ，Lock Service 和 MapReduce 之上的
-        + [Bigtable 论文详述](https://zhuanlan.zhihu.com/p/35687103)
+* 谈到分布式系统，就不得不提Google的三驾马车:`Google fs`,`Mapreduce`,`Bigtable`
+    - Hadoop也有按照这三篇论文的开源Java实现:Hadoop对应Mapreduce, Hadoop Distributed File System (HDFS)对应Google fs,Hbase对应Bigtable
+* Google fs
+    - GFS是一个可扩展的分布式文件系统，用于大型的、分布式的、对大量数据进行访问的应用。它运行于廉价的普通硬件上，提供容错功能
+    - 中文相关介绍：[Google File System](https://zhuanlan.zhihu.com/p/28155582)
+    - [google论文：GFS](https://www.cnblogs.com/billowkiller/archive/2013/04/10/3012085.html)
+* Mapreduce
+    - Mapreduce是针对分布式并行计算的一套编程模型
+    - 中文介绍：[Google MapReduce 论文详解](https://zhuanlan.zhihu.com/p/34849261)
+* Bigtable
+    - 就像文件系统需要数据库来存储结构化数据一样，GFS也需要Bigtable来存储结构化数据
+    -   - BigTable 是建立在 GFS ，Scheduler ，Lock Service 和 MapReduce 之上的
+    - [Bigtable 论文详述](https://zhuanlan.zhihu.com/p/35687103)
+        - 其他几篇论文说明也可参考：[呆呆的分布式系统杂谈](https://zhuanlan.zhihu.com/robert-ds-talks)
 * 部分了解博客(仅作了解，内容主观有争议)
     - [大数据那些事（2）：三驾马车之永垂不朽的GFS](https://zhuanlan.zhihu.com/p/24382357)
     - [大数据的那些事(3):三驾马车之坑人的MapReduce](https://zhuanlan.zhihu.com/p/24382810)
