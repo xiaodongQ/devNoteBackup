@@ -211,6 +211,8 @@
 ## Ceph源码
 
 * 《Ceph源码分析》
+    - 书中基于ceph10.2.1版本(看commit log的日期在201605左右)
+    - 本地clone最新的代码(202009)，当前版本：16.0.0
 * Ceph整体架构
     - 2012年，Ceph发布了第一个稳定版本
     - Ceph的设计目标是采用商用硬件（Commodity Hardware）来构建大规模的、具有高可用性、高可扩展性、高性能的分布式存储系统
@@ -357,3 +359,12 @@
         + 线程池（ThreadPool）在分布式存储系统的实现中是必不可少的，在Ceph的代码中广泛用到
         + `src/common/WorkQueue.h`中定义(共享提交到多个工作队列的工作的线程池)
             * 注意：`src/crimson/os/alienstore/thread_pool.h`中也有一个`ThreadPool`定义，在命名空间`crimson::os`中：`crimson::os:ThreadPool`(用来调度来自seastar fibers的non-seastar任务，seastar是啥？)
+    - `Finisher`
+        + `src/common/Finisher.h`
+        + 类Finisher用来完成回调函数Context的执行，其内部有一个FinisherThread线程来用于执行Context回调函数
+    - `Throttle`
+        + `src/common/Throttle.h`
+        + 类Throttle用来限制消费的资源数量（也常称为槽位“slot”），当请求的slot数量达到max值时，请求就会被阻塞，直到有新的槽位释放出来
+    - `SafeTimer`
+        + `src/common/Timer.h`
+        + 类SafeTimer实现了定时器的功能
