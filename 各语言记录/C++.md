@@ -3446,4 +3446,77 @@ int initQuantApi()
             * 链接器发现同时存在弱符号和强符号，就先选择强符号，如果发现不存在强符号，只存在弱符号，则选择弱符号
                 - weak 属性只会在静态库 (.o .a) 中生效，动态库 (.so) 中不会生效
 
+## std::move 和 std::forward
 
+* [C++11朝码夕解: move和forward](https://zhuanlan.zhihu.com/p/55856487)
+* C++11前的状况: 没法避免临时变量的copy
+    - C++传值默认是copy
+    - copy开销很大
+* 如下面例子, 它们都要经历至少一次复制操作
+    - func("some temporary string"); //初始化string, 传入函数, 可能会导致string的复制
+    - v.push_back(X()); //初始化了一个临时X, 然后被复制进了vector
+    - a = b + c; //b+c是一个临时值, 然后被赋值给了a
+    - x++; //x++操作也有临时变量的产生
+    - a = b + c + d; //c+d一个临时变量, b+(c+d)另一个临时变量
+* 这些临时变量在C++11里被定义为`rvalue`, `右值`, 因为没有对应的变量名存它们
+    - 同时有对应变量名的被称为`lvalue`, `左值`
+* C++11: 引入rvalue, lvalue和move
+    - 于是就引入了rvalue和lvalue的概念, 之前说的那些临时变量就是rvalue. 上面说的避免copy的操作就是`std::move`
+    - 传临时变量的时候, 可以传`T &&`, 叫`rvalue reference`(右值引用), 它能接收`rvalue`(临时变量), 之后再调用`std::move`就避免copy了，如下面的`右值引用示例`
+
+* 示例
+
+```cpp
+class A{...};
+void A::set(const string & var1, const string & var2){
+  m_var1 = var1;  //copy
+  m_var2 = var2;  //copy
+}
+
+A a1;
+// 临时生成了2个string, 传进set函数里, 复制给成员变量, 然后这两个临时string再被回收
+a1.set("temporary str1","temporary str2");
+
+// 临时变量反正都要被回收, 如果能直接把临时变量的内容, 和成员变量内容交换一下, 就能避免复制了
+    // (1)成员变量内部的指针指向"temporary str1"所在的内存
+    // (2)临时变量内部的指针指向成员变量以前所指向的内存
+    // (3)最后临时变量指向的那块内存再被回收
+// 这就是所谓的move语义
+```
+
+* 右值引用示例
+
+```cpp
+void set(string && var1, string && var2){
+  //avoid unnecessary copy!
+  m_var1 = std::move(var1);
+  m_var2 = std::move(var2);
+}
+
+A a1;
+//temporary, move! no copy!
+a1.set("temporary str1","temporary str2");
+```
+
+* 新的问题: 避免重复
+    - 像上面处理临时变量用右值引用`string &&`, 处理普通变量用const引用`const string &`，有代码重复问题
+    - `perfect forward` (完美转发)
+        + 上面说的各种情况, 包括传`const T &`, `T &&`, 都可以由`std::forward`代替
+    - forward能转发下面所有的情况(`[const] T &[&]`)，即:
+        + `const T &`
+        + `T &`
+        + `const T &&`
+        + `T &&`
+    - 如果外面传来了rvalue临时变量, 它就转发rvalue并且启用move语义
+    - 如果外面传来了lvalue, 它就转发lvalue并且启用复制. 然后它也还能保留const
+* 有了forward为什么还要用move?
+    - 首先, forward常用于template函数中, 使用的时候必须要多带一个template参数T: forward<T>, 代码略复杂
+    - 明确只需要move的情况而用forward, 代码意图不清晰, 其他人看着理解起来比较费劲
+
+```cpp
+template<typename T1, typename T2>
+void set(T1 && var1, T2 && var2){
+  m_var1 = std::forward<T1>(var1);
+  m_var2 = std::forward<T2>(var2);
+}
+```
