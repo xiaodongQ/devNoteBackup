@@ -38,6 +38,8 @@ Development notes record and backup
 │   ├── DB_Redis.md                     // Redis实践笔记及源码学习
 │   ├── DB_SQL.md                       // 通用SQL笔记
 │   ├── DB_influxDB.md                  // InfluxDB时序数据库部署和使用，包括TICK(Telegraf, InfluxDB, Chronograf, Kapacitor)栈组件
+│   ├── distributed_分布式存储_ceph.md   // 分布式存储相关笔记
+│   ├── distributed_分布式和微服务.md    // 分布式相关组件和学习笔记
 │   ├── Docker.md                       // Docker学习和实践
 │   ├── Gin开发使用.md                   // Go语言Web框架：Gin
 │   ├── Google_C++_CoreGuidelines.md    // 谷歌C++编程规范
@@ -61,8 +63,8 @@ Development notes record and backup
 │   ├── 并发编程.md                      // 进程、线程等API，竞态控制，CAS、并发无锁队列
 │   ├── 设计模式.md                      // 设计模式学习和实践笔记，包含`SOLID`、`KISS`、`YAGNI`、`DRY`、`LOD`等经典的设计思想原则和23种设计模式
 │   ├── 深入理解C++11-C++11新特性解析与应用.md
-│   ├── 分布式和微服务.md                      // 分布式相关组件和学习笔记
-│   └── 数据结构与算法.md                      // 数据结构和算法学习实践笔记
+│   ├── 四次挥手.png                     // 四次挥手图示
+│   └── 数据结构与算法.md                // 数据结构和算法学习实践笔记
 └── 开发相关笔记记录.md // 各类开发中的学习笔记记录(包括systemd、firewall-cmd、sysctl、perf、sar、mpstat等各类Linux命令；YAML、TOML语法；火焰图...等等)
 ```
 
