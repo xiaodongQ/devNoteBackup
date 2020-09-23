@@ -3448,21 +3448,28 @@ int initQuantApi()
 
 ## std::move 和 std::forward
 
+* 关于右值引用，前面讲移动构造时也有涉及，查看小节：`* 右值引用和移动语义，移动构造函数和移动赋值运算符的说明`
+
+* [《C++0x漫谈》系列之：右值引用(或“move语意与完美转发”)(上)](https://blog.csdn.net/pongba/article/details/1684519)
+    - 所谓“moveable”即是指（当源对象是临时对象时）在对象拷贝语法之下进行的实际动作是像auto_ptr那样的资源所有权转移：源对象被掏空，所有资源都被转移到目标对象中——好比一次搬家（move）
+* [《C++0x漫谈》系列之：右值引用(或“move语意与完美转发”)(下)](https://blog.csdn.net/pongba/article/details/1697636)
+
+
 * [C++11朝码夕解: move和forward](https://zhuanlan.zhihu.com/p/55856487)
-* C++11前的状况: 没法避免临时变量的copy
-    - C++传值默认是copy
-    - copy开销很大
-* 如下面例子, 它们都要经历至少一次复制操作
-    - func("some temporary string"); //初始化string, 传入函数, 可能会导致string的复制
-    - v.push_back(X()); //初始化了一个临时X, 然后被复制进了vector
-    - a = b + c; //b+c是一个临时值, 然后被赋值给了a
-    - x++; //x++操作也有临时变量的产生
-    - a = b + c + d; //c+d一个临时变量, b+(c+d)另一个临时变量
-* 这些临时变量在C++11里被定义为`rvalue`, `右值`, 因为没有对应的变量名存它们
-    - 同时有对应变量名的被称为`lvalue`, `左值`
-* C++11: 引入rvalue, lvalue和move
-    - 于是就引入了rvalue和lvalue的概念, 之前说的那些临时变量就是rvalue. 上面说的避免copy的操作就是`std::move`
-    - 传临时变量的时候, 可以传`T &&`, 叫`rvalue reference`(右值引用), 它能接收`rvalue`(临时变量), 之后再调用`std::move`就避免copy了，如下面的`右值引用示例`
+    - C++11前的状况: 没法避免临时变量的copy
+        + C++传值默认是copy
+        + copy开销很大
+    - 如下面例子, 它们都要经历至少一次复制操作
+        + func("some temporary string"); //初始化string, 传入函数, 可能会导致string的复制
+        + v.push_back(X()); //初始化了一个临时X, 然后被复制进了vector
+        + a = b + c; //b+c是一个临时值, 然后被赋值给了a
+        + x++; //x++操作也有临时变量的产生
+        + a = b + c + d; //c+d一个临时变量, b+(c+d)另一个临时变量
+    - 这些临时变量在C++11里被定义为`rvalue`, `右值`, 因为没有对应的变量名存它们
+        + 同时有对应变量名的被称为`lvalue`, `左值`
+    - C++11: 引入rvalue, lvalue和move
+        + 于是就引入了rvalue和lvalue的概念, 之前说的那些临时变量就是rvalue. 上面说的避免copy的操作就是`std::move`
+        + 传临时变量的时候, 可以传`T &&`, 叫`rvalue reference`(右值引用), 它能接收`rvalue`(临时变量), 之后再调用`std::move`就避免copy了，如下面的`右值引用示例`
 
 * 示例
 

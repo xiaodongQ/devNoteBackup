@@ -50,6 +50,10 @@ boost的TR1：
     - [yoko blog](https://pengrl.com/)
         + 一些Go的文章
         + 实现的基础库：[q191201771/naza](https://github.com/q191201771/naza)
+    - [《C++0x漫谈》](https://blog.csdn.net/pongba/article/details/1684519)
+        + C++，看《C++0x漫谈》系列看到的博主，质量也不错，博主在微软亚洲研究院工作博客中有些实践思考可以看下
+        + 新地址：[刘未鹏 | Mind Hacks](http://mindhacks.cn/)
+        + [《C++0x漫谈》系列之：右值引用(或“move语意与完美转发”)(上)](https://blog.csdn.net/pongba/article/details/1684519)
 * 官方
     - [golang.org](https://golang.org/)
         + go.dev发布之后，golang.org官网将更加聚焦go开源项目本身的开发、语言演化以及Go版本发布
