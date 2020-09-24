@@ -459,3 +459,7 @@ go install github.com/go-delve/delve/cmd/dlv
     },
 ```
 
+## 离线安装
+
+* 下载对应的插件文件(.vsix文件)，ctrl+shift+p执行："Install from VSIX"
+    - download the .vsix that matches your OS and run the "Install from VSIX" command in VS Code.
