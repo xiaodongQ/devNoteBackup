@@ -756,6 +756,11 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
     - 当进程通过 malloc() 申请内存后，内存并不会立即分配，而是在*首次访问*时，才通过`缺页异常`陷入内核中分配内存
     - 由于进程的虚拟地址空间比物理内存大很多，Linux 还提供了一系列的机制，应对内存不足的问题，比如缓存的回收、交换分区 Swap 以及 OOM 等
 
+* [16 | 基础篇：怎么理解内存中的Buffer和Cache？](https://time.geekbang.org/column/article/74633)
+    - `Buffer` 和 `Cache` 可能不太好区分。
+        + 从字面上来说，`Buffer`是缓冲区，而`Cache`是缓存，两者都是数据在内存中的临时存储。
+        + 那么，这两种“临时存储”有什么区别？
+
 
 ---
 
