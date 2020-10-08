@@ -486,6 +486,47 @@ hash_map ≈ unordered_map
 
 map的内部实现是二叉平衡树(红黑树)；hash_map内部是一个hash_table
 
+## STL 相关算法
+
+* `std::find`
+    - [std::find, std::find_if, std::find_if_not](https://zh.cppreference.com/w/cpp/algorithm/find)
+    - 定义于头文件 `<algorithm>`
+    - `find`
+        + `template< class InputIt, class T >`
+        + `InputIt find( InputIt first, InputIt last, const T& value );` (C++20前)
+        + 返回指向首个满足条件(此处条件为等于value)的迭代器，或若找不到这种元素则为 last
+            * e.g. `vector<string> vec;`, `auto iter = find(vec.begin(), vec.end(), "c");`
+    - `find_if` / `find_if_not`
+        + `template< class InputIt, class UnaryPredicate >`
+        + `InputIt find_if( InputIt first, InputIt last, UnaryPredicate p );`
+        + 返回指向首个满足条件的迭代器，或若找不到这种元素则为 last
+            * 此处条件为谓词p，其返回值为一个bool类型的值
+            * predicate翻译成了谓词，可以有多种形式
+                - 函数(function)谓词
+                    + e.g. `bool isLarger (const std::string &s1, const std::string &s2) {return s1.size() > s2.size();}`
+                    + `std::stable_sort(sv.begin(), sv.end(), isLarger);`
+                - 函数指针(function pointer)谓词
+                    + 建立一个函数指针, 传入算法, 使用指针代替函数名, 用法类似函数谓词
+                    + e.g. `bool (*pf) (const std::string &s1, const std::string &s2);`
+                    + `pf = &isLarger;`
+                    + `std::stable_sort(sv.begin(), sv.end(), *pf);`
+                - Lambda表达式(lambda expression)谓词
+                    + Lambda表达式格式: `[capture list] (parameter list) -> return type { function body }`
+                    + e.g. `std::stable_sort(sv.begin(), sv.end(), [](const std::string& s1, const std::string& s2){ return s1.size()>s2.size(); });`
+                - 函数对象(Function Object)谓词
+                    + 类中重载函数的调用`()`, 使类可以被调用, 并且传入算法谓词中, 进行使用
+                    + `bool operator() (const std::string& a, const std::string& b) { return a.size() > b.size();}`
+                - 库定义的函数对象(Library-Defined Function Object)谓词
+                    + 使用标准库定义的函数对象, 充当算法中的谓词, 包含在`#include<functional>`,包含基本的算法和逻辑操作
+                    + e.g. `std::stable_sort(sv.begin(), sv.end(), std::less<std::string>());`
+                - [C++ - 算法(algorithm) 的 谓词(predicate) 详解](https://blog.csdn.net/caroline_wendy/article/details/15378055)
+
+* `std::copy`
+    - [std::copy, std::copy_if](https://zh.cppreference.com/w/cpp/algorithm/copy)
+    - 定义于头文件 `<algorithm>`
+    - `template< class InputIt, class OutputIt >`
+    - `OutputIt copy( InputIt first, InputIt last, OutputIt d_first );`
+
 ### auto
 
 C++11中引入的auto主要有两种用途：自动类型推断和返回值占位。
