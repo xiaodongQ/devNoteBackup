@@ -524,8 +524,16 @@ map的内部实现是二叉平衡树(红黑树)；hash_map内部是一个hash_ta
 * `std::copy`
     - [std::copy, std::copy_if](https://zh.cppreference.com/w/cpp/algorithm/copy)
     - 定义于头文件 `<algorithm>`
-    - `template< class InputIt, class OutputIt >`
-    - `OutputIt copy( InputIt first, InputIt last, OutputIt d_first );`
+    - `copy`
+        + `template< class InputIt, class OutputIt >`
+        + `OutputIt copy( InputIt first, InputIt last, OutputIt d_first );`
+        + 复制 [first, last) 所定义的范围中的元素到始于 d_first 的另一范围
+* `insert`
+    - vector
+        + 在 pos 前插入 value
+        + iterator insert( iterator pos, const T& value ); (C++11 前)
+        + iterator insert( const_iterator pos, const T& value ); (C++11 起)
+        + iterator insert( const_iterator pos, InputIt first, InputIt last ); (`template< class InputIt >`)
 
 ### auto
 
