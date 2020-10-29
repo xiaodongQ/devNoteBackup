@@ -145,6 +145,8 @@ plugins=(git autojump)
 # 提示
 PROMPT='[%{$fg_bold[red]%}%n@%M ➜ %{$fg_bold[green]%}%p%{$fg[cyan]%}%d %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%}% %{$reset_color%}]$ '
 
+# 可选 PROMPT="[%F{135}%n%f@%F{166}%m%f %F{118}% %d%f]$ "
+
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
