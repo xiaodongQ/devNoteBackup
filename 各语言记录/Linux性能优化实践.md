@@ -938,6 +938,43 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
     - 既然 Swap 是为了回收内存，那么 Linux 到底在什么时候需要回收内存呢？
         + 有新的大块内存分配请求，但是剩余内存不足。这个时候系统就需要回收一部分内存（比如前面提到的缓存），进而尽可能地满足新内存请求。这个过程通常被称为`直接内存回收`
         + 除了直接内存回收，还有一个专门的内核线程用来*定期回收内存*，也就是 `kswapd0`
+        + 为了衡量内存的使用情况，kswapd0 定义了三个内存阈值（`watermark`，也称为水位），分别是
+            * `页最小阈值`（pages_min）、`页低阈值`（pages_low）和`页高阈值`（pages_high）。
+            * `剩余内存`，则使用 pages_free 表示
+            * kswapd0 定期扫描内存的使用情况，并根据剩余内存落在这三个阈值的空间位置，进行内存的回收操作
+        + 一旦剩余内存小于`页低阈值`，就会触发内存的回收。这个页低阈值，其实可以通过内核选项 `/proc/sys/vm/min_free_kbytes` 来间接设置
+            * min_free_kbytes 设置了页最小阈值，而其他两个阈值，都是根据页最小阈值计算生成的
+            * 页低阈值 `pages_low = pages_min*5/4`
+            * 页高阈值 `pages_high = pages_min*3/2`
+    - `NUMA` 与 `Swap`
+        + 很多情况下，你明明发现了Swap升高，可是在分析系统的内存使用时，却很可能发现，系统剩余内存还多着呢。为什么剩余内存很多的情况下，也会发生 Swap 呢？
+            * 这正是处理器的 `NUMA` （Non-Uniform Memory Access）架构导致的
+            * 在 NUMA 架构下，多个处理器被划分到不同 Node 上，且每个 Node 都拥有自己的本地内存空间
+            * 而同一个 Node 内部的内存空间，实际上又可以进一步分为不同的内存域（Zone），比如直接内存访问区（DMA）、普通内存区（NORMAL）、伪内存区（MOVABLE）等
+        + 可以通过 `numactl` 命令，来查看处理器在 Node 的分布情况，以及每个 Node 的内存使用情况
+        + 提到的三个内存阈值（页最小阈值、页低阈值和页高阈值），都可以通过内存域在 proc 文件系统中的接口`/proc/zoneinfo`来查看
+            * `cat /proc/zoneinfo`
+            * 这个输出中有大量指标，解释一下比较重要的几个
+                - pages 处的 min、low、high，就是上面提到的三个内存阈值，而 free 是剩余内存页数，它跟后面的 nr_free_pages 相同
+                - nr_zone_active_anon 和 nr_zone_inactive_anon，分别是活跃和非活跃的匿名页数
+                - nr_zone_active_file 和 nr_zone_inactive_file，分别是活跃和非活跃的文件页数
+        + 当然，某个 Node 内存不足时，系统可以从其他 Node 寻找空闲内存，也可以从本地内存中回收内存。具体选哪种模式，可以通过 `/proc/sys/vm/zone_reclaim_mode` 来调整
+            * 查看默认为0，表示既可以从其他 Node 寻找空闲内存，也可以从本地回收内存
+            * 1、2、4 都表示只回收本地内存，2 表示可以回写脏数据回收内存，4 表示可以用 Swap 方式回收内存
+    - `swappiness`
+        + 到这里，我们就可以理解内存回收的机制了。这些回收的内存既包括了`文件页`，又包括了`匿名页`
+            * 对文件页的回收，当然就是直接回收缓存，或者把脏页写回磁盘后再回收
+            * 而对匿名页的回收，其实就是通过 Swap 机制，把它们写入磁盘后再释放内存
+        + 既然有两种不同的内存回收机制，那么在实际回收内存时，到底该先回收哪一种呢？
+            * Linux 提供了一个 `/proc/sys/vm/swappiness` 选项，用来调整使用 Swap 的积极程度
+                - 看自己安装的虚拟机上，设置的是`30`
+            * swappiness 的范围是 `0-100`，数值越大，越积极使用 Swap，也就是更倾向于回收匿名页；数值越小，越消极使用 Swap，也就是更倾向于回收文件页
+            * 虽然 swappiness 的范围是 0-100，不过要注意，这并不是内存的百分比，而是调整 Swap 积极程度的权重，即使你把它设置成 0，当剩余内存 + 文件页小于页高阈值时，还是会发生 Swap
+        + 关于swappiness设置为0，`swappiness=0`，评论中有该注意项，3.5及之后的内核版本表示不用swap：
+            * Kernel version 3.5 and newer: disables swapiness. 
+            * Kernel version older than 3.5: avoids swapping processes out of physical memory for as long as possible.
+
+
 * [22 | 答疑（三）：文件系统与磁盘的区别是什么？](https://time.geekbang.org/column/article/76675)
     - (包含bcc工具安装)
     - OOM 发生时，可以在 `dmesg` 中看到 Out of memory 的信息，从而知道是哪些进程被 OOM 杀死了
