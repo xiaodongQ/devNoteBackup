@@ -536,3 +536,23 @@ sort test.csv (可>输出到新文件)
 ### 正则表达式
 
 非：  volume:[^0] 匹配"volume:"后接非0的行
+
+
+### shell文件包含
+
+* 脚本内容中包含
+    - `. xdtest.sh` 或者 `source xdtest.sh`
+
+### shell默认值
+
+* 形式一：`${a-defaultvalue}`
+    - a如果没有定义，则表达式返回默认值，否则返回a的值
+    - e.g.
+        + `ret1=${a-"/usr/local"}`，`echo "$ret1"`则输出`/usr/local`(a未定义)
+        + 若有`a=""`，`echo "$ret1"`则输出空
+* 形式二：`${a:-defaultvalue}` (多了一个`:`，相对上面多了一种空串的情况)
+    - a没有定义或者a为空字符串，则表达式返回默认值，否则返回a的值
+    - e.g.
+        + `ret1=${a-"/usr/local"}`，`echo "$ret1"`则输出`/usr/local`(a未定义)
+        + 若有`a=""`，`echo "$ret1"`则输出`/usr/local`(a为空)
+        + 若有`a="123"`，`echo "$ret1"`则输出`123`(a非空)
