@@ -531,6 +531,9 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
             * 继续分析。既然是网络接收的软中断，第一步应该就是观察系统的网络接收情况。 使用`sar`
                 - `sar`不仅可以观察网络收发的吞吐量（BPS，每秒收发的字节数），还可以观察网络收发的 PPS，即每秒收发的网络帧数。
                 - `sar -n DEV 1`
+                    + `-n`显示网络，格式为：`-n { keyword [,...] | ALL }`
+                        * 关键字可以为`DEV`, `EDEV`, `NFS`, `NFSD`, `TCP`, `UDP`等等，不同关键字显示的结果项不同
+                        * 此处关键字`DEV`，结果项包含下面的列
                     + `rxpck/s` 和 `txpck/s`：表示每秒接收、发送的网络帧数，也就是 PPS
                     + `rxkB/s` 和 `txkB/s`：表示每秒接收、发送的千字节数，也就是 BPS
                 - 简单计算(enp0s3网卡)每个包的大小(收到的字节数/包的数量)： `4567.47 * 1000 / 77949.70 = 58.59` 字节(Byte)
@@ -973,7 +976,65 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
         + 关于swappiness设置为0，`swappiness=0`，评论中有该注意项，3.5及之后的内核版本表示不用swap：
             * Kernel version 3.5 and newer: disables swapiness. 
             * Kernel version older than 3.5: avoids swapping processes out of physical memory for as long as possible.
-
+* [20 | 案例篇：为什么系统的Swap变高了？（下）](https://time.geekbang.org/column/article/75973)
+    - 回顾
+        + 开启 Swap 后，可以设置 `/proc/sys/vm/min_free_kbytes`，来调整系统定期回收内存的阈值，也可以设置 `/proc/sys/vm/swappiness`，来调整文件页和匿名页的回收倾向
+    - 当 Swap 使用升高时，要如何定位和分析呢？
+    - 下面示例操作中，若没有Swap则要进行配置
+    - 要开启 Swap，首先要清楚，Linux 本身支持两种类型的 Swap，即 `Swap 分区`和 `Swap 文件`
+        + 以 Swap 文件为例(配置Swap为8GB)
+            * 创建Swap文件：`fallocate -l 8G /mnt/swapfile`
+            * 修改权限只有根用户可以访问：`chmod 600 /mnt/swapfile`
+            * 配置Swap文件：`mkswap /mnt/swapfile`
+            * 开启Swap：`swapon /mnt/swapfile`
+            * (自己在虚拟机里尝试10M的Swap，最后一步失败了)
+                - swapon: /mnt/swapfile：swapon 失败: 无效的参数
+        + 执行`free`确认配置成功
+    - 示例
+        + 运行下面的 dd 命令，模拟大文件的读取：
+            * `dd if=/dev/sda1 of=/dev/null bs=1G count=2048`
+        + 在第二个终端中运行 `sar` 命令，查看内存各个指标的变化情况
+            * `sar -r -S 1`
+            * `-r`表示显示内存使用情况，`-S`表示显示Swap使用情况
+        + `sar -r -S 1`结果中
+            * kbcommit，表示当前系统负载需要的内存。它实际上是为了保证系统内存不溢出，对需要内存的估计值。%commit，就是这个值相对总内存的百分比。
+            * kbactive，表示活跃内存，也就是最近使用过的内存，一般不会被系统回收。
+            * kbinact，表示非活跃内存，也就是不常访问的内存，有可能会被系统回收
+        + 刚开始，剩余内存（kbmemfree）不断减少，而缓冲区（kbbuffers）则不断增大，由此可知，剩余内存不断分配给了缓冲区
+        + 一段时间后，剩余内存已经很小，而缓冲区占用了大部分内存。这时候，Swap 的使用开始逐渐增大，缓冲区和剩余内存则只在小范围内波动
+        + 用前面讲过的`cachetop`查看进程缓存的情况
+            * 通过 cachetop 的输出，可以看到，`dd`进程的读写请求的命中率，和未命中的缓存页数（MISSES）。
+            * 这说明，正是案例开始时运行的 dd，导致了缓冲区使用升高
+        + 进一步查看`/proc/zoneinfo`：`watch -d grep -A 15 'Normal' /proc/zoneinfo`
+            * `-A` 表示仅显示Normal行以及之后的15行输出
+            * 剩余内存（pages_free）在一个小范围内不停地波动。当它小于页低阈值（pages_low) 时，又会突然增大到一个大于页高阈值（pages_high）的值
+        + 系统回收内存时，有时候会回收更多的文件页，有时候又回收了更多的匿名页
+            * 可通过`swappiness`调整不同类型内存回收的配置选项
+            * e.g. swappiness 显示的是默认值 60，这是一个相对中和的配置，所以系统会根据实际运行情况，选择合适的回收类型，比如回收不活跃的匿名页，或者不活跃的文件页
+        + 最后，关闭Swap：`swapoff -a`
+            * 实际上，关闭 Swap 后再重新打开，也是一种常用的 Swap 空间清理方法：`swapoff -a && swapon -a`
+    - 通常，降低 Swap 的使用，可以提高系统的整体性能。要怎么做呢？几种常见的降低方法
+        + 禁止 Swap，现在服务器的内存足够大，所以除非有必要，禁用 Swap 就可以了。随着云计算的普及，大部分云平台中的虚拟机都默认禁止 Swap
+        + 如果实在需要用到 Swap，可以尝试降低 swappiness 的值，减少内存回收时 Swap 的使用倾向
+        + 响应延迟敏感的应用，如果它们可能在开启 Swap 的服务器中运行，你还可以用库函数 `mlock()` 或者 `mlockall()` 锁定内存，阻止它们的内存换出
+* [21 | 套路篇：如何“快准狠”找到系统内存的问题？](https://time.geekbang.org/column/article/76460)
+    - ![内存性能指标](https://static001.geekbang.org/resource/image/e2/36/e28cf90f0b137574bca170984d1e6736.png)
+    - 缺页异常
+        + 前面讲过，系统调用内存分配请求后，并不会立刻为其分配物理内存，而是在请求首次访问时，通过`缺页异常`来分配。缺页异常又分为下面两种场景
+            * 可以直接从物理内存中分配时，被称为`次缺页异常`
+            * 需要磁盘 I/O 介入（比如 Swap）时，被称为`主缺页异常`
+        + 显然，`主缺页异常`升高，就意味着需要磁盘 I/O，那么内存访问也会慢很多
+    - 如何迅速分析内存的性能瓶颈，具体的分析思路主要有这几步
+        + 先用 `free` 和 `top`，查看系统整体的内存使用情况
+        + 再用 `vmstat` 和 `pidstat`，查看一段时间的趋势，从而判断出内存问题的类型
+        + 最后进行详细分析，比如内存分配分析、缓存/缓冲区分析、具体进程的内存使用分析等
+    - ![分析过程流程图](https://static001.geekbang.org/resource/image/d7/fe/d79cd017f0c90b84a36e70a3c5dccffe.png)
+    - 常见的优化思路有这么几种
+        + 最好禁止 Swap。如果必须开启 Swap，降低 swappiness 的值，减少内存回收时 Swap 的使用倾向
+        + 减少内存的动态分配。比如，可以使用内存池、大页（HugePage）等
+        + 尽量使用缓存和缓冲区来访问数据。比如，可以使用堆栈明确声明内存空间，来存储需要缓存的数据；或者用 Redis 这类的外部缓存组件，优化数据的访问
+        + 使用 `cgroups` 等方式限制进程的内存使用情况。这样，可以确保系统内存不会被异常进程耗尽
+        + 通过 `/proc/pid/oom_adj`，调整核心应用的 oom_score。这样，可以保证即使内存紧张，核心应用也不会被 OOM 杀死
 
 * [22 | 答疑（三）：文件系统与磁盘的区别是什么？](https://time.geekbang.org/column/article/76675)
     - (包含bcc工具安装)
