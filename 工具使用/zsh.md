@@ -59,8 +59,11 @@ via curl：
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 ```
 
-* 发现链接连不上了，手动复制脚本内容到新增文件install.sh，然后`sh -c ./install.sh`
-    - [install.sh](https://github.com/ohmyzsh/ohmyzsh/blob/master/tools/install.sh)
+* 执行报错了：Failed to connect to raw.githubusercontent.com port 443: Connection refused
+    - 在[ipaddress](https://www.ipaddress.com/)中查询`raw.githubuercontent.com`的真实IP(本机查得`199.232.68.133`)，修改hosts，`vi /etc/hosts`，添加一行绑定host：`199.232.68.133 raw.githubusercontent.com`，再次执行`curl`即可
+    - 参考：[报错Failed to connect to raw.githubusercontent.com port](https://www.cnblogs.com/Dylansuns/p/12309847.html)
+    - 还不行则：手动复制脚本内容到新增文件install.sh，然后`sh -c ./install.sh`
+        + [install.sh](https://github.com/ohmyzsh/ohmyzsh/blob/master/tools/install.sh)
 
 * 若提示要安装zsh，则`yum install zsh` (CentOS)
 * zsh中`history`显示命令历史的时间，可用`history -i`，不过vi打开文件看不到时间，可配合`less`在终端查看

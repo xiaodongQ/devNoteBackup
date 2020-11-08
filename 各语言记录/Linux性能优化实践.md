@@ -1194,7 +1194,8 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
             * 查看`slabtop`
         + `find / -name` 这个命令是全盘扫描（既包括内存文件系统又包含本地的xfs），所以 `inode_cache` & `dentry` & `proc_inode_cache` 会升高
         + 执行过了一次后再次执行find 就几乎没有变化了，执行速度也快了很多，也就是下次的find大部分是依赖cache的结果
-
+* [24 | 基础篇：Linux 磁盘I/O是怎么工作的（上）](https://time.geekbang.org/column/article/77010)
+    - 
 
 
 
