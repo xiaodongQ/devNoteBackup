@@ -1281,7 +1281,7 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
             * 它提供了每个磁盘的使用率、IOPS、吞吐量等各种常见的性能指标
             * 这些指标实际上来自 `/proc/diskstats`
             * `iostat -d -x 1`
-                + `-d -x`表示显示所有磁盘I/O的指标
+                + `-d -x`表示显示所有磁盘I/O的指标，`-d`表示显示I/O性能指标，`-x`表示显示扩展统计（即所有I/O指标）
                 + %util ，就是前面提到的磁盘 I/O 使用率；
                 + r/s+ w/s ，就是 IOPS；
                 + rkB/s+wkB/s ，就是吞吐量；
@@ -1297,6 +1297,27 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
             * `pidstat -d 1`
             * `iotop`
                 + 它是一个类似于 top 的工具，可以按照 I/O 大小对进程排序，然后找到 I/O 较大的那些进程
+* [26 | 案例篇：如何找出狂打日志的“内鬼”？](https://time.geekbang.org/column/article/77885)
+    - 通过`top`，`ostat -x -d 1`，`pidstat -d 1`找到异常进程后，使用`strace`分析系统调用
+    - 不过，示例中的`write()` 调用中只能看到文件的描述符编号，文件名和路径还是未知的
+    - 使用工具：`lsof`
+        + 它专门用来查看进程打开文件列表，不过，这里的“文件”不只有普通文件，还包括了目录、块设备、动态库、网络套接字等
+        + `lsof -p 18940`
+        + 结果中，FD 表示文件描述符号，TYPE 表示文件类型，NAME 表示文件路径，具体取值可`man lsof`
+* [27 | 案例篇：为什么我的磁盘I/O延迟很高？](https://time.geekbang.org/column/article/78409)
+    - 综合 `strace`、`pidstat` 和 `iostat` 这三个结果来分析，找到了造成瓶颈的进程，但`strace`跟踪这个进程，却没有找到任何`write`系统调用
+    - 文件写，明明应该有相应的 write 系统调用，但用现有工具却找不到痕迹，这时就该想想换工具的问题了
+        + 其实是子线程的操作，直接`strace -p`找不到子线程的系统调用
+        + 可以在`strace -p PID`后加上`-f`，多进程和多线程都可以跟踪，`strace -fp pid`
+        + 另外`pidstat -t`也可查看线程(`-t`选项)
+    - 介绍一个新工具：`filetop`
+        + 它是 bcc 软件包的一部分，基于 Linux 内核的 eBPF（extended Berkeley Packet Filters）机制，主要跟踪内核中文件的读写情况，并输出线程 ID（TID）、读写大小、读写类型以及文件名称
+        + 执行：`filetop -C` (/usr/share/bcc/tools添加到了PATH中)
+            * `-C` 选项表示输出新内容时不清空屏幕
+        + `filetop` 只给出了文件名称，却没有文件路径
+    - 再介绍一个好用的工具：`opensnoop`
+        + 它同属于 bcc 软件包，可以动态跟踪内核中的 open 系统调用。这样，就可以找出写文件的路径
+        + 直接执行：`opensnoop`
 
 
 ---
