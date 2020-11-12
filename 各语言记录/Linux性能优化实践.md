@@ -1489,6 +1489,130 @@ Tasks: 247 total,   1 running,  79 sleeping,   0 stopped, 115 zombie
                     + 然后添加帧头和帧尾，放到发包队列中。
                     + 这一切完成后，会有软中断通知驱动程序：发包队列中有新的网络帧需要发送
                 - 最后，驱动程序通过 DMA ，从发包队列中读出网络帧，并通过物理网卡把它发送出去
+* [34 | 关于 Linux 网络，你必须知道这些（下）](https://time.geekbang.org/column/article/81057)
+    - 性能指标
+        + 我们通常用`带宽`、`吞吐量`、`延时`、`PPS`（Packet Per Second）等指标衡量网络的性能
+            * 带宽，表示链路的最大传输速率，单位通常为 b/s （比特 / 秒）
+            * 吞吐量，表示单位时间内成功传输的数据量，单位通常为 b/s（比特 / 秒）或者 B/s（字节 / 秒）
+                - 吞吐量受带宽限制，而吞吐量 / 带宽，也就是该网络的使用率
+            * 延时，表示从网络请求发出后，一直到收到远端响应，所需要的时间延迟
+            * PPS，是 Packet Per Second（包 / 秒）的缩写，表示以网络包为单位的传输速率
+                - PPS 通常用来评估网络的转发能力，
+                - 比如硬件交换机，通常可以达到线性转发（即 PPS 可以达到或者接近理论最大值）
+                - 而基于 Linux 服务器的转发，则容易受网络包大小的影响
+        + 除了这些指标，网络的`可用性`（网络能否正常通信）、`并发连接数`（TCP 连接数量）、`丢包率`（丢包百分比）、`重传率`（重新传输的网络包比例）等也是常用的性能指标
+    - 网络配置
+        + 分析网络问题的第一步，通常是查看网络接口的配置和状态
+        + 可以使用 `ifconfig` 或者 `ip` 命令，来查看网络的配置
+            * ifconfig 和 ip 分别属于软件包 net-tools 和 iproute2，
+            * iproute2 是 net-tools 的下一代。通常情况下它们会在发行版中默认安装
+            * `ip` 工具提供了更丰富的功能和更易用的接口
+        + 示例
+            * `ifconfig eth0`
+            * `ip -s addr show dev eth0`
+        + 有几个跟网络性能密切相关的指标，需要特别关注一下
+            * 第一，网络接口的状态标志。
+                - `ifconfig` 输出中的 `RUNNING` ，或 `ip` 输出中的 `LOWER_UP` ，都表示物理网络是连通的，即网卡已经连接到了交换机或者路由器中。
+                - 如果你看不到它们，通常表示网线被拔掉了
+            * 第二，MTU 的大小。
+                - MTU 默认大小是 1500，根据网络架构的不同（比如是否使用了 VXLAN 等叠加网络），可能需要调大或者调小 MTU 的数值
+            * 第三，网络接口的 IP 地址、子网以及 MAC 地址
+            * 第四，网络收发的字节数、包数、错误数以及丢包情况
+                - 特别是 `TX`(接收) 和 `RX`(发送) 部分的 `errors`、`dropped`、`overruns`、`carrier` 以及 `collisions` 等指标不为 0 时，通常表示出现了网络 I/O 问题 (下面的mac下执行结果里貌似没有这些信息)
+                - `errors` 表示发生错误的数据包数，比如校验错误、帧同步错误等
+                - `dropped` 表示丢弃的数据包数，即数据包已经收到了 Ring Buffer，但因为内存不足等原因丢包
+                - `overruns` 表示超限数据包数，即网络 I/O 速度过快，导致 `Ring Buffer` 中的数据包来不及处理（队列满）而导致的丢包
+                - `carrier` 表示发生 carrirer 错误的数据包数，比如双工模式不匹配、物理电缆出现问题等
+                - `collisions` 表示碰撞数据包数
+
+
+```sh
+# mac上ifconfig的结果(截取)
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+    options=400<CHANNEL_IO>
+    ether f4:5c:89:ba:b4:63 
+    inet6 fe80::44c:fb2a:f8fc:6886%en0 prefixlen 64 secured scopeid 0x4 
+    inet 192.168.0.102 netmask 0xffffff00 broadcast 192.168.0.255
+    nd6 options=201<PERFORMNUD,DAD>
+    media: autoselect
+    status: active
+```
+
+```sh
+# 链接中的示例结果复制
+$ ifconfig eth0
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST> mtu 1500
+      inet 10.240.0.30 netmask 255.240.0.0 broadcast 10.255.255.255
+      inet6 fe80::20d:3aff:fe07:cf2a prefixlen 64 scopeid 0x20<link>
+      ether 78:0d:3a:07:cf:3a txqueuelen 1000 (Ethernet)
+      RX packets 40809142 bytes 9542369803 (9.5 GB)
+      RX errors 0 dropped 0 overruns 0 frame 0
+      TX packets 32637401 bytes 4815573306 (4.8 GB)
+      TX errors 0 dropped 0 overruns 0 carrier 0 collisions 0
+​
+$ ip -s addr show dev eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+  link/ether 78:0d:3a:07:cf:3a brd ff:ff:ff:ff:ff:ff
+  inet 10.240.0.30/12 brd 10.255.255.255 scope global eth0
+      valid_lft forever preferred_lft forever
+  inet6 fe80::20d:3aff:fe07:cf2a/64 scope link
+      valid_lft forever preferred_lft forever
+  RX: bytes packets errors dropped overrun mcast
+   9542432350 40809397 0       0       0       193
+  TX: bytes packets errors dropped carrier collsns
+   4815625265 32637658 0       0       0       0
+```
+
+* 套接字信息
+    - ifconfig 和 ip 只显示了`网络接口`收发数据包的统计信息，实际的性能问题中，`网络协议栈`中的统计信息也需要关注
+    - 可以用 `netstat` 或者 `ss` ，来查看*套接字*、*网络栈*、*网络接口*以及*路由表*的信息
+        + `ss` 查询网络的连接信息，比 `netstat` 提供了更好的性能（速度更快）
+    - `netstat -nlp | head -n 3`
+        + `-l` 表示只显示监听套接字
+        + `-n` 表示显示数字地址和端口(而不是名字)
+        + `-p` 表示显示进程信息
+        + `head -n 3`此处只显示前3行
+    - `ss -ltnp | head -n 3`
+        + `-l` 表示只显示监听套接字
+        + `-t` 表示只显示 TCP 套接字
+        + `-n` 表示显示数字地址和端口(而不是名字)
+        + `-p` 表示显示进程信息
+    - netstat 和 ss 的输出也是类似的都展示了*套接字的状态*、*接收队列*、*发送队列*、*本地地址*、*远端地址*、*进程 PID* 和*进程名称*等
+    - 其中，*接收队列（Recv-Q）*和*发送队列（Send-Q）*需要特别关注，它们通常应该是 0。当发现它们不是 0 时，说明有网络包的堆积发生
+    - 还要注意，在不同套接字状态下，它们的含义不同
+        + 当套接字处于连接状态（Established）时
+            * Recv-Q 表示套接字缓冲还没有被应用程序取走的字节数（即接收队列长度）
+            * 而 Send-Q 表示还没有被远端主机确认的字节数（即发送队列长度）
+        + 当套接字处于监听状态（Listening）时
+            * Recv-Q 表示`全连接队列`的长度
+            * 而 Send-Q 表示全连接队列的最大长度
+    - `全连接` 和 `半连接`
+        + 所谓`全连接`，是指服务器收到了客户端的 ACK，完成了 TCP 三次握手，然后就会把这个连接挪到`全连接`队列中
+            * 这些`全连接`中的套接字，还需要被 `accept()` 系统调用取走，服务器才可以开始真正处理客户端的请求
+        + 与`全连接`队列相对应的，还有一个`半连接`队列。
+        + 所谓`半连接`是指还没有完成 TCP 三次握手的连接，连接只进行了一半。
+            * 服务器收到了客户端的 SYN 包后，就会把这个连接放到`半连接`队列中，然后再向客户端发送 `SYN+ACK` 包
+            * 关于*半连接队列*，本笔记中的：`* [09 | 如何提升TCP三次握手的性能？]` 小节也有，介绍了服务端TCP性能优化
+* 协议栈统计信息
+    - 使用 `netstat` 或 `ss` ，也可以查看协议栈的信息
+    - 示例
+        + `netstat -s`
+        + `ss -s`
+    - `ss` 只显示已经连接、关闭、孤儿套接字等简要统计
+    - 而 `netstat` 则提供的是更详细的网络协议栈信息
+        + 如 TCP 协议的主动连接、被动连接、失败重试、发送和接收的分段数量等各种信息
+* 网络吞吐和 PPS
+    - 给`sar`增加`-n`参数就可以查看网络的统计信息，比如网络接口（`DEV`）、网络接口错误（`EDEV`）、`TCP`、`UDP`、`ICMP`等等
+        + e.g. `sar -n DEV 1`
+    - 带宽(Bandwidth) 可以用 `ethtool` 来查询
+        + 它的单位通常是 Gb/s 或者 Mb/s，不过注意这里小写字母 `b` ，*表示比特而不是字节*
+        + e.g. `ethtool eth0 | grep Speed`
+* 连通性和延时
+    - 通常使用 `ping` ，来测试远程主机的连通性和延时，而这基于 `ICMP` 协议
+        + e.g. `ping -c3 114.114.114.114`
+    - ping 的输出，可以分为两部分
+        + 第一部分，是每个 ICMP 请求的信息，包括 ICMP 序列号（icmp_seq）、TTL（生存时间，或者跳数）以及往返延时
+        + 第二部分，则是多次 ICMP 请求的汇总
 
 
 ---
