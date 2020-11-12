@@ -286,6 +286,26 @@ const std::string STR("Here is a string.")
 在这种情况，要注意声明和定义的区别，在类中的变量都是声明。对于static变量，如果需要定义，需要在类外定义个变量（不要放在头文件）：
 `const int ClassName::MAX;`, cpp文件中进行定义
 
+### 类中静态变量初始化
+
+* 静态成员变量初始化
+
+```cpp
+//.h
+class Test
+{
+private:
+    // 记得初始化static变量
+    static CConfig* m_pSingle;
+};
+```
+
+```cpp
+//.cpp
+// 需要在cp中进行定义，否则会报错：undefined reference to `Test::m_pSingle`
+Test* Test::m_pSingle = NULL;
+```
+
 ## vector
 
 ### 查找
