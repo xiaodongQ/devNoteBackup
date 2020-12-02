@@ -76,6 +76,84 @@ else
 fi
 ```
 
+### 数组
+
+* [Shell数组：shell数组的定义、数组长度](http://c.biancheng.net/cpp/view/7002.html)
+* 在Shell中，用括号`()`来表示数组，数组元素用“空格”符号(` `)分割开
+* 定义形式如下
+
+```sh
+# 数组定义
+array_name=(value0 value1 value2 value3)
+
+# 或者
+array_name=(
+value0
+value1
+value2
+value3
+)
+
+# 还可以单独定义数组的各个分量
+# 可以不使用连续的下标，而且下标的范围没有限制
+array_name[0]=value0
+array_name[2]=value2
+```
+
+* 读取数组
+    - 读取数组元素值的一般格式：`${array_name[index]}`
+        + e.g. `valuen=${array_name[2]}` (下标从0开始)
+    - 使用 `@` 或 `*` 可以获取数组中的所有元素
+        + `${array_name[*]}`
+        + `${array_name[@]}`
+* 获取数组长度
+    - 获取数组长度的方法与获取字符串长度的方法相同
+        + `length=${#array_name[@]}` (`()`里多了一个`#`)
+        + 或者 `length=${#array_name[*]}`
+    - 获取数组单个元素的长度
+        + `lengthn=${#array_name[n]}`
+
+### awk
+
+* 利用`awk`计算所有tar文件的总大小
+    - `tar_file=($(ls -tr *.tar.gz))`
+    - `tar_file_size=$(echo ${tar_file[@]} | xargs stat -c %s)`
+        + 其中`tar_file`为一个数组，`${tar_file[@]}`表示数组所有元素
+        + `tar_file_size`为所有元素的大小组成的数组
+        + `stat -c ` 后面接格式标志，可获取不同信息
+            * `%s` 获取字节大小
+            * `%y` 修改时间
+            * `man stat` 查看各个格式标志
+    - `total_size=$(echo ${tar_file_size[@]} | awk '{for(i=0;i<NF;i++) sum+=$i; print sum}')`
+        + 通过`awk`计算求和
+        + 注意此处作为`awk`的参数，for后面只有一层括号`()`
+            * 一般shell中两层 `for((i=0; i<5; i++))`
+
+### expr
+
+* [Linux expr命令](https://www.runoob.com/linux/linux-comm-expr.html)
+* `expr` 命令是一个手工命令行计数器，用于在UNIX/LINUX下求表达式变量的值，一般用于整数值，也可用于字符串
+    - 计算字串长度
+        + `expr length “this is a test”`
+            * 结果：`14` (即`this is a test`的长度)
+    - 抓取字串
+        + `expr substr “this is a test” 3 5`
+            * 结果：`is is` (从下标3开始，取5个字符)
+            * 注意，下标是从`1`开始算(而不是`0`)
+    - 抓取第一个字符数字串出现的位置
+        + `expr index "sarasara"  a`
+            * 结果：`2`
+            * 下标从`1`开始算
+    - 整数运算
+        + `expr 14 % 9`
+            * 结果：`5`，求余
+        + `expr 10 + 10`
+        + `expr 30 / 3 / 2`
+        + `expr 30 \* 3`
+            * 使用乘号时，必须用反斜线屏蔽其特定含义
+            * 因为shell可能会误解显示星号的意义
+            * `expr 30 * 3`会报语法错误：`expr: Syntax error`
+
 ### shell中各种括号的作用和区别
 
 [shell 中各种括号的作用()、(())、[]、[[]]、{}](https://www.runoob.com/w3cnote/linux-shell-brackets-features.html)
@@ -382,6 +460,30 @@ fi
 
 * 每个文件必须有一个顶层的注释，其中包含内容的简要概述
 
+## 通配符
+
+* [`Shell脚本中$0、$?、$!、$$、$*、$#、$@`](https://www.cnblogs.com/zhangjiansheng/p/8318042.html)
+* `$@`
+    - 所有参数列表
+    - 若用括号括起来：`"$@"`，则表示`"$1" "$2" … "$n"` 形式
+* `$*`
+    - 所有参数列表
+    - 若用括号括起来：`"$*"`，则表示`"$1 $2 … $n"` 形式
+    - 相对于`"$@"`每个参数都单独用`"`，此处用一个`"`把所有参数都括起来
+* `$?`
+    - 最后运行的命令的结束代码
+    - Shell函数可通过return返回数值，此时可通过`$?`获取
+* `$#`
+    - Shell的参数个数(不含Shell命令自身，e.g. `./test.sh`，`$#`为0)
+* `$0`
+    - Shell本身
+* `$1`
+    - 是传递给该Shell脚本的第一个参数
+* `$$`
+    - Shell本身的PID
+* `$!`
+    - Shell最后运行的后台进程的PID
+
 
 ## `bc` 使用 bc 命令实现高级数学运算
 
@@ -556,3 +658,9 @@ sort test.csv (可>输出到新文件)
         + `ret1=${a-"/usr/local"}`，`echo "$ret1"`则输出`/usr/local`(a未定义)
         + 若有`a=""`，`echo "$ret1"`则输出`/usr/local`(a为空)
         + 若有`a="123"`，`echo "$ret1"`则输出`123`(a非空)
+
+### 字符串判断
+
+* `[ -z STRING ]` 如果STRING的长度为0则返回为真
+* `[ -n STRING ]` 如果STRING的长度非0则返回为真
+* [Shell脚本IF条件判断和判断条件总结](https://www.jb51.net/article/56553.htm)

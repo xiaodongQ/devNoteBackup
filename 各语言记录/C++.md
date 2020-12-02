@@ -506,6 +506,16 @@ hash_map ≈ unordered_map
 
 map的内部实现是二叉平衡树(红黑树)；hash_map内部是一个hash_table
 
+## set
+
+* `insert`
+    - 声明
+        + `std::pair<iterator, bool> insert(const value_type &value);`
+        + 返回值类型`std::pair<iterator, bool>`中，first为指向那个插入元素的迭代器，second为是否插入成功
+    - 插入set并接收返回值：`std::pair<std::set<int>::iterator, bool> ret = set1.insert(5);`
+        + 其中set1定义：`std::set<int> set1`
+    - 判断是否插入成功：`if (!ret.second) { cout << "error" << endl; }`
+
 ## STL 相关算法
 
 * `std::find`
