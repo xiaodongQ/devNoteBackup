@@ -68,6 +68,13 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 * 若提示要安装zsh，则`yum install zsh` (CentOS)
 * zsh中`history`显示命令历史的时间，可用`history -i`，不过vi打开文件看不到时间，可配合`less`在终端查看
 
+### 设置
+
+* 禁用自动更新：更改`~/.zshrc`，把`# DISABLE_AUTO_UPDATE="true"`中的注释取消即可
+* 若直接执行`chsh`没有权限(非root)，可以在`.bashrc`中添加
+    - `export ZSH_DISABLE_COMPFIX=true`
+    - `exec zsh执行程序的路径`
+
 ### PS提示显示
 
 把 c 改为 d，c 表示当前目录，d 表示绝对路径，另外在末尾增加了一个「 > 」
