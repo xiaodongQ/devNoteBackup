@@ -2245,8 +2245,8 @@ std::advance(splitIter,splitPos);
         + 不可重载：
             * `.` 成员访问运算符
             * `.*` `->*` 成员指针访问运算符
-                - [指针到成员运算符：.* 和 ->*](https://docs.microsoft.com/zh-cn/cpp/cpp/pointer-to-member-operators-dot-star-and-star?view=vs-2019)
-                - 指针到成员运算符 .* 和 ->*返回表达式左侧指定对象的特定类成员的值
+                - `指针到成员运算符：.* 和 ->*`: (https://docs.microsoft.com/zh-cn/cpp/cpp/pointer-to-member-operators-dot-star-and-star?view=vs-2019)
+                - 指针到成员运算符 `.*` 和 `->*`返回表达式左侧指定对象的特定类成员的值
                     + 右侧必须指定该类的成员
                     + 仅指向指定的类成员而不是类对象
                 - 如类`Testpm`中有一个成员函数`m_func1()`和成员变量`int m_num;`
@@ -3598,7 +3598,7 @@ a1.set("temporary str1","temporary str2");
     - 如果外面传来了rvalue临时变量, 它就转发rvalue并且启用move语义
     - 如果外面传来了lvalue, 它就转发lvalue并且启用复制. 然后它也还能保留const
 * 有了forward为什么还要用move?
-    - 首先, forward常用于template函数中, 使用的时候必须要多带一个template参数T: forward<T>, 代码略复杂
+    - 首先, forward常用于template函数中, 使用的时候必须要多带一个template参数T: `forward<T>`, 代码略复杂
     - 明确只需要move的情况而用forward, 代码意图不清晰, 其他人看着理解起来比较费劲
 
 ```cpp
@@ -3608,3 +3608,893 @@ void set(T1 && var1, T2 && var2){
   m_var2 = std::forward<T2>(var2);
 }
 ```
+
+## Effective C++笔记
+
+微信阅读笔记导出
+
+《Effective C++：改善程序与设计的55个具体做法（第三版）中文版》 --斯考特·梅耶
+
+### 导读
+
+以by value传递用户自定义类型通常是个坏主意，Pass-by-reference-to-const往往是比较好的选择；详见条款20
+ 
+对于references我使用类似习惯：rw可能是个reference to Widget，ra则是个reference to Airplane。
+ 
+TR1（"Technical Report 1"）是一份规范，描述加入C++标准程序库的诸多新机能。
+ 
+大多数TR1机能是以Boost的工作为基础。在编译器厂商于其C++程序库中含入TR1之前，对那些搜寻TR1实现品的开发人员而言，Boost网站可能是第一个逗留点
+ 
+Boost提供比TR1更多的东西，所以无论如何值得了解它
+
+### 条款02：尽量以const，enum，inline替换＃define Prefer consts，enums，and inlines to＃defines.
+ 
+条款02：尽量以const，enum，inline替换＃define
+ 
+这个条款或许改为“宁可以编译器替换预处理器”比较好，因为或许＃define不被视为语言的一部分。
+
+若要在头文件内定义一个常量的（不变的）`char*-based`字符串，你必须写const两次
+ 
+string对象通常比其前辈`char*-based`合宜
+ 
+ 
+可以获得宏带来的效率以及一般函数的所有可预料行为和类型安全性（type safety）——只要你写出template inline函数
+ 
+ 
+这里不需要在函数本体中为参数加上括号，也不需要操心参数被核算（求值）多次……等等
+ 
+ 
+对于单纯常量，最好以const对象或enums替换＃defines。■ 对于形似函数的宏（macros），最好改用inline函数替换＃defines。
+
+### 条款03：尽可能使用const Use const whenever possible.
+ 
+条款03：尽可能使用const
+ 
+ 
+如果关键字 const出现在星号左边，表示被指物是常量；如果出现在星号右边，表示指针自身是常量
+ 
+ 
+下列两个函数接受的参数类型是一样的
+ 
+ 
+令函数返回一个常量值，往往可以降低因客户错误而造成的意外，而又不至于放弃安全性和高效性
+ 
+ 
+将某些东西声明为 const可帮助编译器侦测出错误用法。const可被施加于任何作用域内的对象、函数参数、函数返回类型、成员函数本体
+ 
+ 
+当 const和non-const成员函数有着实质等价的实现时，令non-const版本调用const版本可避免代码重复
+
+### 条款04：确定对象被使用前已先被初始化 Make sure that objects are initialized before they're used.
+ 
+条款04：确定对象被使用前已先被初始化
+ 
+ 
+在某些语境下x保证被初始化（为0），但在其他语境中却不保证
+ 
+ 
+p的成员变量有时候被初始化（为 0），有时候不会
+ 
+ 
+更可能的情况是读入一些“半随机”bits，污染了正在进行读取动作的那个对象，最终导致不可测知的程序行为，以及许多令人不愉快的调试过程
+ 
+ 
+而最佳处理办法就是：永远在使用对象之前先将它初始化
+ 
+ 
+对于无任何成员的内置类型，你必须手工完成此事
+ 
+ 
+至于内置类型以外的任何其他东西，初始化责任落在构造函数（constructors）身上
+ 
+ 
+重要的是别混淆了赋值（assignment）和初始化（initialization）
+ 
+ 
+C++规定，对象的成员变量的初始化动作发生在进入构造函数本体之前
+ 
+在ABEntry构造函数内，theName，theAddress和thePhones都不是被初始化，而是被赋值
+ 
+ABEntry构造函数的一个较佳写法是，使用所谓的member initialization list（成员初值列）替换赋值动作
+ 
+通常效率较高
+ 
+如果成员变量是const或 references，它们就一定需要初值，不能被赋值
+ 
+为避免需要记住成员变量何时必须在成员初值列中初始化，何时不需要，最简单的做法就是：总是使用成员初值列
+ 
+为内置型对象进行手工初始化，因为C++不保证初始化它们
+ 
+构造函数最好使用成员初值列（member initialization list），而不要在构造函数本体内使用赋值操作（assignment）
+ 
+初值列列出的成员变量，其排列次序应该和它们在class中的声明次序相同
+ 
+ 为免除“跨编译单元之初始化次序”问题，请以local static对象替换non-local static对象
+
+### 条款05：了解C++默默编写并调用哪些函数 Know what functions C++silently writes and calls.
+ 
+条款05：了解C++默默编写并调用哪些函数
+ 
+ 
+如果你自己没声明，编译器就会为它声明（编译器版本的）一个copy构造函数、一个copy assignment操作符和一个析构函数。此外如果你没有声明任何构造函数，编译器也会为你声明一个default构造函数
+ 
+ 
+所有这些函数都是public且inline 
+ 
+ 
+编译器可以暗自为class创建default构造函数、copy构造函数、copy assignment 操作符，以及析构函数
+
+### 条款06：若不想使用编译器自动生成的函数，就该明确拒绝 Explicitly disallow the use of compiler-generated functions you do not want.
+ 
+条款06：若不想使用编译器自动生成的函数，就该明确拒绝
+ 
+ 
+为驳回编译器自动（暗自）提供的机能，可将相应的成员函数声明为private并且不予实现。使用像Uncopyable这样的base class也是一种做法。
+
+### 条款07：为多态基类声明virtual析构函数 Declare destructors virtual in polymorphic base classes.
+ 
+条款07：为多态基类声明virtual析构函数
+ 
+ 
+实际执行时通常发生的是对象的derived 成分没被销毁
+ 
+ 
+然而其base class成分（也就是TimeKeeper这一部分）通常会被销毁，于是造成一个诡异的“局部销毁”对象
+ 
+ 
+任何 class 只要带有 virtual 函数都几乎确定应该也有一个 virtual析构函数
+ 
+ 
+当class不企图被当作base class，令其析构函数为virtual往往是个馊主意
+ 
+ 
+这份信息通常是由一个所谓vptr（virtual table pointer）指针指出
+ 
+ 
+vptr指向一个由函数指针构成的数组，称为vtbl（virtual table）；每一个带有virtual函数的class都有一个相应的vtbl
+ 
+ 
+Point对象不再能够塞入一个64-bit缓存器，而C++的Point对象也不再和其他语言（如 C）内的相同声明有着一样的结构（因为其他语言的对应物并没有 vptr），因此也就不再可能把它传递至（或接受自）其他语言所写的函数
+ 
+ 
+许多人的心得是：只有当class内含至少一个virtual函数，才为它声明virtual析构函数
+ 
+ 
+polymorphic（带多态性质的）base classes 应该声明一个 virtual 析构函数。如果class带有任何virtual函数，它就应该拥有一个virtual析构函数
+ 
+ 
+Classes 的设计目的如果不是作为 base classes 使用，或不是为了具备多态性（polymorphically），就不该声明virtual析构函数
+
+### 条款08：别让异常逃离析构函数 Prevent exceptions from leaving destructors.
+ 
+如果程序遭遇一个“于析构期间发生的错误”后无法继续执行，“强迫结束程序”是个合理选项
+ 
+ 
+析构函数绝对不要吐出异常。如果一个被析构函数调用的函数可能抛出异常，析构函数应该捕捉任何异常，然后吞下它们（不传播）或结束程序
+ 
+ 
+如果客户需要对某个操作函数运行期间抛出的异常做出反应，那么 class 应该提供一个普通函数（而非在析构函数中）执行该操作
+
+### 条款09：绝不在构造和析构过程中调用virtual函数 Never call virtual functions during construction or destruction.
+ 
+条款09：绝不在构造和析构过程中调用virtual函数
+
+### 条款10：令operator=返回一个 reference to`*this` Have assignment operators return a reference to`*this`.
+ 
+条款10：令operator=返回一个 reference to`*this` 
+
+### 条款11：在operator=中处理“自我赋值” Handle assignment to self in operator=.
+ 
+条款11：在operator=中处理“自我赋值”
+
+### 条款12：复制对象时勿忘其每一个成分 Copy all parts of an object.
+ 
+条款12：复制对象时勿忘其每一个成分
+ 
+ 
+一旦发生继承，可能会造成此一主题最暗中肆虐的一个潜藏危机。
+ 
+ 
+不要尝试以某个copying函数实现另一个copying函数。
+
+### 条款13：以对象管理资源 Use objects to manage resources.
+ 
+为确保createInvestment返回的资源总是被释放，我们需要将资源放进对象内，当控制流离开f，该对象的析构函数会自动释放那些资源
+ 
+ 
+把资源放进对象内，我们便可倚赖 C++的“析构函数自动调用机制”确保资源被释放。
+ 
+ 
+“资源取得时机便是初始化时机”（Resource Acquisition Is Initialization；RAII）
+ 
+ 
+auto_ptr的替代方案是“引用计数型智慧指针”（reference-counting smart pointer；RCSP）。所谓RCSP也是个智能指针
+ 
+ 
+TR1的tr1：：shared_ptr（见条款54）就是个RCSP
+ 
+ 
+为防止资源泄漏，请使用RAII对象，它们在构造函数中获得资源并在析构函数中释放资源
+ 
+ 
+两个常被使用的RAII classes分别是tr1：：shared_ptr和auto_ptr。前者通常是较佳选择，因为其copy行为比较直观
+
+### 条款14：在资源管理类中小心copying行为 Think carefully about copying behavior in resource-managing classes.
+ 
+如果复制动作对RAII class并不合理，你便应该禁止之。条款6告诉你怎么做：将copying操作声明为private
+ 
+ 
+ 对底层资源祭出“引用计数法”（reference-count）
+
+### 条款15：在资源管理类中提供对原始资源的访问 Provide access to raw resources in resource-managing classes.
+ 
+这时候你需要一个函数可将RAII class对象（本例为tr1：：shared_ptr）转换为其所内含之原始资源（本例为底部之`Investment*`）。有两个做法可以达成目标：显式转换和隐式转换
+ 
+ 
+tr1：：shared_ptr和auto_ptr都提供一个get成员函数，用来执行显式转换，也就是它会返回智能指针内部的原始指针（的复件）
+ 
+ 
+通常显式转换函数如get是比较受欢迎的路子，因为它将“非故意之类型转换”的可能性最小化了
+ 
+ 
+APIs往往要求访问原始资源（raw resources），所以每一个RAII class应该提供一个“取得其所管理之资源”的办法
+
+###条款16：成对使用new和delete时要采取相同形式 Use the same form in corresponding uses of new and delete.
+ 
+为避免诸如此类的错误，最好尽量不要对数组形式做 typedefs动作
+
+### 条款17：以独立语句将newed对象置入智能指针 Store newed objects in smart pointers in standalone statements.
+ 
+条款17：以独立语句将newed对象置入智能指针
+ 
+ 
+C++编译器以什么样的次序完成这些事情呢？弹性很大
+ 
+ 
+避免这类问题的办法很简单：使用分离语句，分别写出 （1） 创建Widge，（2） 将它置入一个智能指针内，然后再把那个智能指针传给processWidget：
+ 
+ 
+以独立语句将 newed对象存储于（置入）智能指针内。如果不这样做，一旦异常被抛出，有可能导致难以察觉的资源泄漏
+
+### 条款18：让接口容易被正确使用，不易被误用 Make interfaces easy to use correctly and hard to use incorrectly.
+ 
+但它的客户很容易犯下至少两个错误。第一，他们也许会以错误的次序传递参数
+ 
+ 
+比较安全的解法是预先定义所有有效的Months
+ 
+ 
+很少有其他性质比得上“一致性”更能导致“接口容易被正确使用”，也很少有其他性质比得上“不一致性”更加剧接口的恶化
+ 
+ 
+许多时候，较佳接口的设计原则是先发制人，就令factory函数返回一个智能指针
+ 
+ 
+好的接口很容易被正确使用，不容易被误用。你应该在你的所有接口中努力达成这些性质
+
+### 条款20：宁以pass-by-reference-to-const替换pass-by-value Prefer pass-by-reference-to-const to pass-by-value.
+ 
+条款20：宁以pass-by-reference-to-const替换pass-by-value
+ 
+ 
+没有任何构造函数或析构函数被调用，因为没有任何新对象被创建
+ 
+ 
+当一个derived class对象以by value方式传递并被视为一个base class对象，base class的copy构造函数会被调用，而“造成此对象的行为像个derived class对象”的那些特化性质全被切割掉了，仅仅留下一个base class对象
+ 
+ 
+一般而言，你可以合理假设“pass-by-value并不昂贵”的唯一对象就是内置类型和STL 的迭代器和函数对象
+ 
+ 
+至于其他任何东西都请遵守本条款的忠告，尽量以pass-by-reference-to-const替换pass-by-value
+ 
+ 
+以上规则并不适用于内置类型，以及 STL 的迭代器和函数对象。对它们而言，pass-by-value往往比较适当。
+
+### 条款21：必须返回对象时，别妄想返回其reference Don't try to return a reference when you must return an object.
+ 
+条款21：必须返回对象时，别妄想返回其reference
+ 
+ 
+更严重的是：这个函数返回一个reference指向result，但result是个local对象，而local对象在函数退出前被销毁了
+ 
+ 
+绝不要返回pointer或reference指向一个local stack对象，或返回reference指向一个heap-allocated对象，或返回pointer或reference指向一个local static对象而有可能同时需要多个这样的对象
+
+### 条款22：将成员变量声明为private Declare data members private.
+ 
+条款22：将成员变量声明为private
+ 
+ 
+条款23会告诉你，某些东西的封装性与“当其内容改变时可能造成的代码破坏量”成反比
+ 
+ 
+假设我们有一个 public 成员变量，而我们最终取消了它。多少代码可能会被破坏呢？唔，所有使用它的客户码都会被破坏，而那是一个不可知的大量
+ 
+ 
+一旦你将一个成员变量声明为public或protected而客户开始使用它，就很难改变那个成员变量所涉及的一切
+ 
+ 
+这可赋予客户访问数据的一致性、可细微划分访问控制、允诺约束条件获得保证，并提供class作者以充分的实现弹性
+ 
+ 
+protected并不比public更具封装性
+
+### 条款23：宁以non-member、non-friend替换member函数 Prefer non-member non-friend functions to member functions.
+ 
+条款23：宁以non-member、non-friend替换member函数
+ 
+ 
+面向对象守则要求数据应该尽可能被封装，然而与直观相反地，member函数clearEverything带来的封装性比non-member函数clearBrowser低
+ 
+ 
+如果要你在一个member函数（它不只可以访问class内的private数据，也可以取用private函数、enums、typedefs等等）和一个non-member，non-friend函数（它无法访问上述任何东西）之间做抉择，而且两者提供相同机能
+ 
+ 
+导致较大封装性的是non-member non-friend函数，因为它并不增加“能够访问class内之private成分”的函数数量
+ 
+ 
+更受欢迎的原因：它导致WebBrowser class有较大的封装性
+ 
+ 
+在C++，比较自然的做法是让clearBrowser成为一个non-member函数并且位于WebBrowser所在的同一个namespace（命名空间）内
+ 
+ 
+这允许客户只对他们所用的那一小部分系统形成编译相依
+ 
+ 
+将所有便利函数放在多个头文件内但隶属同一个命名空间，意味客户可以轻松扩展这一组便利函数。他们需要做的就是添加更多non-member non-friend函数到此命名空间内
+
+### 条款24：若所有参数皆需类型转换，请为此采用non-member函数 Declare non-member functions when type conversions should apply to all parameters.
+ 
+条款24：若所有参数皆需类型转换，请为此采用non-member函数
+
+### 条款26：尽可能延后变量定义式的出现时间 Postpone variable definitions as long as possible.
+ 
+条款26：尽可能延后变量定义式的出现时间
+ 
+ 
+通过default构造函数构造出一个对象然后对它赋值”比“直接在构造时指定初值”效率差
+ 
+ 
+更受欢迎的做法是以password作为encrypted的初值，跳过毫无意义的default构造过程
+ 
+ 
+如果变量只在循环内使用，那么把它定义于循环外并在每次循环迭代时赋值给它比较好，还是该把它定义于循环内？
+ 
+ 
+如果classes的一个赋值成本低于一组构造+析构成本，做法A大体而言比较高效。尤其当n值很大的时候。否则做法B或许较好
+ 
+ 
+除非知道赋值成本比构造+析构低和效率高度敏感时，否则在循环里定义
+因此除非 （1） 你知道赋值成本比“构造+析构”成本低，（2） 你正在处理代码中效率高度敏感（performance-sensitive）的部分，否则你应该使用做法B
+ 
+ 
+因此除非 （1） 你知道赋值成本比“构造+析构”成本低，（2） 你正在处理代码中效率高度敏感（performance-sensitive）的部分，否则你应该使用做法B
+
+### 条款27：尽量少做转型动作 Minimize casting.
+ 
+C++还提供四种新式转型（常常被称为new-style或C++-style casts）
+ 
+ 
+但它无法将const转为non-const——这个只有const_cast才办得到
+ 
+ 
+旧式转型仍然合法，但新式转型较受欢迎
+ 
+ 
+第一，它们很容易在代码中被辨识出来
+ 
+ 
+第二，各转型动作的目标愈窄化，编译器愈可能诊断出错误的运用
+ 
+ 
+如果可以，尽量避免转型，特别是在注重效率的代码中避免 dynamic_casts
+ 
+ 
+宁可使用C++-style（新式）转型，不要使用旧式转型。前者很容易辨识出来，而且也比较有着分门别类的职掌。
+
+### 条款28：避免返回handles指向对象内部成分 Avoid returning"handles"to object internals.
+ 
+而返回一个“代表对象内部数据”的handle，随之而来的便是“降低对象封装性”的风险
+ 
+ 
+更明确地说，它可能导致dangling handles（空悬的号码牌）：这种handles所指东西（的所属对象）不复存在
+ 
+ 
+避免返回handles（包括references、指针、迭代器）指向对象内部
+
+### 条款29：为“异常安全”而努力是值得的 Strive for exception-safe code.
+ 
+"copy-and-swap" 策略是对对象状态做出“全有或全无”改变的一个很好办法，但一般而言它并不保证整个函数有强烈的异常安全性
+
+### 条款30：透彻了解inlining的里里外外 Understand the ins and outs of inlining.
+ 
+inline函数背后的整体观念是，将“对此函数的每一个调用”都以函数本体替换之
+ 
+ 
+在一台内存有限的机器上，过度热衷inlining会造成程序体积太大（对可用空间而言）
+ 
+ 
+即使拥有虚内存，inline造成的代码膨胀亦会导致额外的换页行为（paging），降低指令高速缓存装置的击中率（instruction cache hit rate），以及伴随这些而来的效率损失。
+ 
+ 
+记住，inline只是对编译器的一个申请，不是强制命令。这项申请可以隐喻提出，也可以明确提出
+ 
+ 
+明确声明inline函数的做法则是在其定义式前加上关键字inline
+ 
+ 
+Inline函数通常一定被置于头文件内，因为大多数建置环境（build environments）在编译过程中进行 inlining
+ 
+ 
+将大多数inlining限制在小型、被频繁调用的函数身上
+
+### 条款31：将文件间的编译依存关系降至最低 Minimize compilation dependencies between files.
+ 
+条款31：将文件间的编译依存关系降至最低
+ 
+ 
+如果这些头文件中有任何一个被改变，或这些头文件所倚赖的其他头文件有任何改变，那么每一个含入Person class的文件就得重新编译，任何使用Person class的文件也必须重新编译
+ 
+ 
+标准头文件不太可能成为编译瓶颈，特别是如果你的建置环境允许你使用预编译头文件（precompiled headers）
+ 
+ 
+如果使用 object references 或 object pointers 可以完成任务，就不要使用objects
+ 
+ 
+如果能够，尽量以 class 声明式替换 class 定义式
+ 
+ 
+如果能够将“提供 class 定义式”（通过＃include 完成）的义务从“函数声明所在”之头文件移转到“内含函数调用”之客户文件，便可将“并非真正必要之类型定义”与客户端之间的编译依存性去除掉
+ 
+ 
+为声明式和定义式提供不同的头文件
+ 
+ 
+为了促进严守上述准则，需要两个头文件，一个用于声明式，一个用于定义式
+ 
+ 
+不幸的是支持这个关键字的编译器目前非常少
+ 
+ 
+此函数扮演“真正将被具现化”的那个derived classes的构造函数角色。这样的函数通常称为 factory（工厂）函数（见条款13）或 virtual 构造函数。它们返回指针（或更为可取的智能指针
+ 
+ 
+这样的函数又往往在 Interface class 内被声明为static
+ 
+ 
+Handle classes和Interface classes解除了接口和实现之间的耦合关系，从而降低文件间的编译依存性（compilation dependencies）
+ 
+ 
+然而，如果只因为若干额外成本便不考虑Handle classes和Interface classes，将是严重的错误
+ 
+ 
+支持“编译依存性最小化”的一般构想是：相依于声明式，不要相依于定义式。基于此构想的两个手段是Handle classes和Interface classes
+
+### 条款32：确定你的public继承塑模出is-a关系 Make sure public inheritance models"is-a."
+ 
+在C++领域中，任何函数如果期望获得一个类型为Person （或 pointer-to-Person或reference-to-Person）的实参，都也愿意接受一个Student对象（或pointer-to-Student或reference-to-Student）
+ 
+ 
+这个论点只对public继承才成立
+
+### 条款33：避免遮掩继承而来的名称 Avoid hiding inherited names.
+ 
+C++的名称遮掩规则（name-hiding rules）所做的唯一事情就是：遮掩名称
+ 
+ 
+至于名称是否应和相同或不同的类型，并不重要
+ 
+ 
+编译器的做法是查找各作用域，看看有没有某个名为 mf2的声明式。首先查找local 作用域
+ 
+ 
+在那儿没找到任何东西名为mf2。于是查找其外围作用域
+ 
+ 
+还是没找到任何东西名为mf2，于是再往外围移动，本例为base class
+ 
+ 
+如果Base内还是没有mf2，查找动作便继续下去，首先找内含Base的那个namespace（s） 的作用域（如果有的话），最后往global作用域找去
+ 
+ 
+如果你继承base class并加上重载函数，而你又希望重新定义或覆写（推翻）其中一部分，那么你必须为那些原本会被遮掩的每个名称引入一个using声明式，否则某些你希望继承的名称会被遮掩
+ 
+ 
+derived classes内的名称会遮掩base classes内的名称
+ 
+ 
+为了让被遮掩的名称再见天日，可使用 using 声明式或转交函数（forwarding functions）
+
+### 条款34：区分接口继承和实现继承 Differentiate between inheritance of interface and inheritance of implementation.
+ 
+函数接口（function interfaces）继承和函数实现（function implementations）继承
+ 
+ 
+声明一个pure virtual函数的目的是为了让derived classes只继承函数接口
+ 
+ 
+impure virtual函数会提供一份实现代码，derived classes可能覆写（override）它
+ 
+ 
+声明简朴的（非纯）impure virtual函数的目的，是让derived classes继承该函数的接口和缺省实现
+ 
+ 
+但是，允许impure virtual函数同时指定函数声明和函数缺省行为，却有可能造成危险
+ 
+ 
+这是个典型的面向对象设计。两个classes共享一份相同性质（也就是它们实现fly的方式），所以共同性质被搬到base class中，然后被这两个classes继承
+ 
+ 
+。此间技俩在于切断“virtual函数接口”和其“缺省实现”之间的连接
+ 
+ 
+irplane：：defaultFly是个non-virtual函数，这一点也很重要。因为没有任何一个derived class应该重新定义此函数
+ 
+ 
+他们关心因过度雷同的函数名称而引起的class命名空间污染问题。但是他们也同意，接口和缺省实现应该分开
+ 
+ 
+可以利用“pure virtual函数必须在derived classes中重新声明，但它们也可以拥有自己的实现”这一事实
+ 
+ 
+声明non-virtual函数的目的是为了令derived classes继承函数的接口及一份强制性实现
+ 
+ 
+如果你确实履行，应该能够避免经验不足的class设计者最常犯的两个错误。
+ 
+ 
+第一个错误是将所有函数声明为non-virtual。这使得derived classes没有余裕空间进行特化工作
+ 
+ 
+实际上任何class如果打算被用来当做一个base class，都会拥有若干virtual函数
+ 
+ 
+另一个常见错误是将所有成员函数声明为virtual
+ 
+ 
+简朴的（非纯）impure virtual函数具体指定接口继承及缺省实现继承
+
+### 条款35：考虑virtual函数以外的其他选择 Consider alternatives to virtual functions.
+ 
+条款35：考虑virtual函数以外的其他选择
+ 
+ 
+，你可能因此没有认真考虑其他替代方案。为了帮助你跳脱面向对象设计路上的常轨，让我们考虑其他一些解法
+ 
+ 
+藉由Non-Virtual Interface手法实现Template Method模式
+ 
+ 
+这一基本设计，也就是“令客户通过public non-virtual成员函数间接调用private virtual函数”
+ 
+ 
+称为non-virtual interface（NVI）手法。它是所谓Template Method设计模式（与C++templates并无关联）的一个独特表现形式
+ 
+ 
+我把这个non-virtual函数（healthValue）称为virtual函数的外覆器（wrapper）
+ 
+ 
+NVI手法的一个优点隐身在上述代码注释“做一些事前工作”和“做一些事后工作”之中
+ 
+ 
+事前工作”可以包括锁定互斥器（locking a mutex）、制造运转日志记录项（log entry）、验证class约束条件、验证函数先决条件等等
+ 
+ 
+“事后工作”可以包括互斥器解除锁定（unlocking a mutex）、验证函数的事后条件、再次验证class约束条件等等
+ 
+ 
+藉由Function Pointers实现Strategy模式
+ 
+ 
+每个人物的构造函数接受一个指针，指向一个健康计算函数，而我们可以调用该函数进行实际计算
+ 
+ 
+这个做法是常见的 Strategy 设计模式的简单应用
+ 
+ 
+一般而言，唯一能够解决“需要以non-member函数访问class的non-public成分”的办法就是：弱化 class 的封装
+ 
+ 
+标准库std有
+藉由tr1：：function完成Strategy模式
+ 
+ 
+藉由tr1：：function完成Strategy模式
+ 
+ 
+如果我们不再使用函数指针（如前例的 healthFunc），而是改用一个类型为tr1：：function的对象
+ 
+ 
+那个签名代表的函数是“接受一个 reference 指向 const GameCharacter，并返回int”
+
+### 条款36：绝不重新定义继承而来的non-virtual函数 Never redefine an inherited non-virtual function.
+ 
+条款36：绝不重新定义继承而来的non-virtual函数
+ 
+ 
+如果mf是个non-virtual函数而D定义有自己的mf版本，那就不是如此
+ 
+ 
+静态绑定（statically bound，见条款37）
+ 
+ 
+由于pB被声明为一个pointer-to-B，通过 pB 调用的non-virtual函数永远是B所定义的版本，即使pB指向一个类型为“B派生之 class”的对象，
+ 
+ 
+但另一方面，virtual函数却是动态绑定（dynamically bound，见条款37），所以它们不受这个问题之苦
+ 
+ 
+不论哪一个观点，结论都相同：任何情况下都不该重新定义一个继承而来的non-virtual函数
+
+### 条款37：绝不重新定义继承而来的缺省参数值 Never redefine a function's inherited default parameter value.
+ 
+条款37：绝不重新定义继承而来的缺省参数值
+ 
+ 
+对象的所谓静态类型（static type），就是它在程序中被声明时所采用的类型
+ 
+ 
+virtual函数是动态绑定，而缺省参数值却是静态绑定
+ 
+ 
+意思是你可能会在“调用一个定义于derived class内的virtual函数”的同时，却使用base class为它所指定的缺省参数值
+ 
+ 
+为什么 C++坚持以这种乖张的方式来运作呢？答案在于运行期效率
+
+### 条款38：通过复合塑模出has-a或“根据某物实现出” Model"has-a"or"is-implemented-in-terms-of"through composition.
+ 
+条款38：通过复合塑模出has-a或“根据某物实现出”
+ 
+ 
+程序中的对象其实相当于你所塑造的世界中的某些事物，例如人、汽车、一张张视频画面等等。这样的对象属于应用域（application domain）部分
+ 
+ 
+其他对象则纯粹是实现细节上的人工制品，像是缓冲区（buffers）、互斥器（mutexes）、查找树（search trees）等等。这些对象相当于你的软件的实现域（implementation domain）
+ 
+ 
+当复合发生于应用域内的对象之间，表现出has-a的关系；当它发生于实现域内则是表现is-implemented-in-terms-of的关系
+ 
+ 
+sets通常以平衡查找树（balanced search trees）实现而成，使它们在查找、安插、移除元素时保证拥有对数时间（logarithmic-time）效率
+ 
+ 
+其中一种便是在底层采用linked lists
+
+### 条款39：明智而审慎地使用private继承 Use private inheritance judiciously.
+ 
+条款39：明智而审慎地使用private继承 
+ 
+ 
+条款32曾经论证过C++如何将public继承视为is-a关系
+ 
+ 
+显然private继承并不意味is-a关系。那么它意味什么？
+ 
+ 
+如果classes之间的继承关系是private，编译器不会自动将一个derived class对象（例如Student）转换为一个base class对象（例如 Person）
+ 
+ 
+第二条规则是，由private base class继承而来的所有成员，在derived class中都会变成private属性，纵使它们在base class中原本是protected或public属性
+ 
+ 
+rivate 继承意味 implemented-in-terms-of （根据某物实现出）
+ 
+ 
+rivate继承纯粹只是一种实现技术（这就是为什么继承自一个private base class的每样东西在你的class内都是private：因为它们都只是实现枝节而已）
+ 
+ 
+private 继承意味只有实现部分被继承，接口部分应略去
+ 
+ 
+如果D以private形式继承B，意思是D对象根据B对象实现而得，再没有其他意涵了
+ 
+ 
+你如何在两者之间取舍？答案很简单：尽可能使用复合，必要时才使用private继承
+ 
+ 
+只要在Widget内声明一个嵌套式private class，后者以 public 形式继承 Timer并重新定义 onTick，然后放一个这种类型的对象于Widget内
+ 
+ 
+WidgetTimer是Widget内部的一个 private 成员并继承 Timer，Widget 的 derived classes 将无法取用WidgetTimer，因此无法继承它或重新定义它的virtual函数
+ 
+ 
+但如果WidgetTimer移出Widget之外而Widget内含指针指向一个WidgetTimer，Widget可以只带着一个简单的WidgetTimer声明式，不再需要＃include 任何与 Timer 有关的东西
+ 
+ 
+在大多数编译器中sizeof（Empty）获得1，因为面对“大小为零之独立（非附属）对象”，通常C++官方勒令默默安插一个char到空对象内。然而齐位需求（alignment，见条款 50）可能造成编译器为类似 HoldsAnInt这样的 class加上一些衬垫（padding），所以有可能HoldsAnInt对象不只获得一个char大小，也许实际上被放大到足够又存放一个int
+ 
+ 
+几乎可以确定sizeof（HoldsAnInt）==sizeof（int）。这是所谓的EBO（empty base optimization；空白基类最优化），我试过的所有编译器都有这样的结果
+ 
+ 
+但是当derived class需要访问protected base class的成员，或需要重新定义继承而来的virtual函数时，这么设计是合理的
+ 
+ 
+和复合（composition）不同，private继承可以造成empty base最优化
+
+### 条款40：明智而审慎地使用多重继承 Use multiple inheritance judiciously.
+ 
+我对virtual base classes（亦相当于对virtual继承）的忠告很简单。第一，非必要不使用virtual bases。平常请使用non-virtual继承。第二，如果你必须使用virtual base classes，尽可能避免在其中放置数据
+ 
+ 
+这导致多重继承的一个通情达理的应用：将“public继承自某接口”和“private继承自某实现”结合在一起
+ 
+ 
+virtual继承会增加大小、速度、初始化（及赋值）复杂度等等成本。如果virtual base classes不带任何数据，将是最具实用价值的情况
+ 
+ 
+多重继承的确有正当用途。其中一个情节涉及“public继承某个Interface class”和“private继承某个协助实现的class”的两相组合
+7.模板与泛型编程 Templates and Generic Programming
+ 
+最终人们发现，C++template机制自身是一部完整的图灵机（Turing-complete）：它可以被用来计算任何可计算的值
+
+### 条款41：了解隐式接口和编译期多态 Understand implicit interfaces and compile-time polymorphism.
+ 
+由于Widget的某些成员函数是virtual，w对那些函数的调用将表现出运行期多态（runtime polymorphism），也就是说将于运行期根据w的动态类型（见条款37）决定究竟调用哪一个函数
+ 
+ 
+在此世界中显式接口和运行期多态仍然存在，但重要性降低
+ 
+ 
+反倒是隐式接口（implicit interfaces）和编译期多态（compile-time polymorphism）移到前头了
+ 
+ 
+重要的是，这一组表达式（对此 template 而言必须有效编译）便是 T 必须支持的一组隐式接口（implicit interface）
+ 
+ 
+“以不同的template参数具现化function templates”会导致调用不同的函数，这便是所谓的编译期多态（compile-time polymorphism）
+ 
+ 
+类似于“哪一个重载函数该被调用”（发生在编译期）和“哪一个virtual函数该被绑定”（发生在运行期）之间的差异
+ 
+ 
+classes和templates都支持接口（interfaces）和多态（polymorphism）
+ 
+ 
+对classes而言接口是显式的（explicit），以函数签名为中心。多态则是通过virtual函数发生于运行期
+ 
+ 
+对 template 参数而言，接口是隐式的（implicit），奠基于有效表达式
+ 
+ 
+多态则是通过template具现化和函数重载解析（function overloading resolution）发生于编译期
+
+### 条款42：了解typename的双重意义 Understand the two meanings of typename.
+ 
+提一个问题：以下template声明式中，class和typename有什么不同？
+ 
+ 
+答案：没有不同
+ 
+ 
+某些程序员始终比较喜欢class，因为可以少打几个字。其他人（包括我）比较喜欢typename，因为它暗示参数并非一定得是个class类型
+ 
+ 
+class。然而从C++的角度来看，声明template参数时，不论使用关键字class或typename，意义完全相同
+ 
+ 
+然而 C++并不总是把 class 和 typename 视为等价。有时候你一定得使用typename
+ 
+ 
+template内出现的名称如果相依于某个template参数，称之为从属名称（dependent names）。如果从属名称在 class 内呈嵌套状，我们称它为嵌套从属名称（nested dependent name）
+ 
+ 
+int。int是一个并不倚赖任何template参数的名称。这样的名称是谓非从属名称（non-dependent names）
+ 
+ 
+如果 C：：const_iterator不是个类型呢？如果 C有个 static 成员变量而碰巧被命名为 const_iterator，或如果 x 碰巧是个 global变量名称呢？那样的话上述代码就不再是声明一个local变量，而是一个相乘动作：C：：const_iterator乘以x
+ 
+ 
+而撰写C++解析器的人必须操心所有可能的输入，甚至是这么疯狂的输入
+ 
+ 
+C++有个规则可以解析（resolve）此一歧义状态：如果解析器在template中遭遇一个嵌套从属名称，它便假设这名称不是个类型，除非你告诉它是
+ 
+ 
+iter 声明式只有在C：：const_iterator是个类型时才合理，但我们并没有告诉C++说它是，于是C++假设它不是
+ 
+ 
+只要紧临它之前放置关键字typename即可：
+ 
+ 
+一般性规则很简单：任何时候当你想要在template中指涉一个嵌套从属类型名称，就必须在紧临它的前一个位置放上关键字 typename
+ 
+ 
+很快我会谈到一个例外
+ 
+ 
+但C：：iterator是个嵌套从属类型名称，所以必须以typename为前导
+ 
+ 
+例外是，typename 不可以出现在 base classes list 内的嵌套从属类型名称之前，也不可在member initialization list（成员初值列）中作为base class修饰符
+ 
+ 
+类型萃取，STL中大量使用
+相当于说“类型为IterT之对象所指之物的类型
+ 
+ 
+对于 traits 成员名称如value_type（再次请看条款47提供的traits信息），普遍的习惯是设定typedef名称用以代表某个traits成员名称
+ 
+ 
+[插图]
+ 
+ 
+声明template参数时，前缀关键字class和typename可互换
+ 
+ 
+请使用关键字typename标识嵌套从属类型名称；但不得在base class lists（基类列）或member initialization list（成员初值列）内以它作为base class修饰符
+
+### 条款43：学习处理模板化基类内的名称 Know how to access names in templatized base classes.
+ 
+与其base class内的名称（sendClear）不同。那是个好设计，因为它避免遮掩“继承而得的名称”（见条款33），也避免重新定义一个继承而得的non-virtual函数（见条款36）
+ 
+ 
+注意 class 定义式最前头的 "template&lt；&gt；" 语法象征这既不是 template 也不是标准class，而是个特化版的MsgSender template，在template实参是CompanyZ时被使用
+ 
+ 
+这是所谓的模板全特化（total template specialization）：template MsgSender针对类型 CompanyZ特化了，而且其特化是全面性的，也就是说一旦类型参数被定义为CompanyZ，再没有其他template参数可供变化
+ 
+ 
+那就是为什么C++拒绝这个调用的原因：它知道base class templates有可能被特化，而那个特化版本可能不提供和一般性template相同的接口。因此它往往拒绝在templatized base classes（模板化基类，本例的 MsgSender&lt；Company&gt；）内寻找继承而来的名称（本例的 SendClear）
+ 
+ 
+有三个办法，第一是在 base class 函数调用动作之前加上"this-&gt；"
+ 
+ 
+第二是使用using声明式。
+ 
+ 
+第三个做法是，明白指出被调用的函数位于base class内
+ 
+ 
+但这往往是最不让人满意的一个解法，因为如果被调用的是virtual函数，上述的明确资格修饰（explicit qualification）会关闭“virtual绑定行为”
+
+### 条款44：将与参数无关的代码抽离templates Factor parameter-independent code out of templates.
+ 
+条款44：将与参数无关的代码抽离templates 
+ 
+ 
+共性与变性分析（ commonality and variability analysis）
+ 
+ 
+除此之外还接受一个类型为size_t的参数，那是个非类型参数（non-type parameter）。这种参数和类型参数比起来较不常见，但它们完全合法
+
+### 条款47：请使用traits classes表现类型信息 Use traits classes for information about types.
+ 
+条款47：请使用traits classes表现类型信息 
+ 
+ 
+习惯上 traits 总是被实现为structs，但它们却又往往被称为traits classes
+ 
+ 
+Traits 广泛用于标准程序库。其中当然有上述讨论的 iterator_traits
+
+### 条款48：认识template元编程 Be aware of template metaprogramming.
+ 
+Template metaprogramming（TMP，模板元编程）是编写template-based C++程序并执行于编译期的过程
+### 条款50：了解new和delete的合理替换时机 Understand when it makes sense to replace new and delete.
+ 
+在我们目前这个主题中，齐位（alignment）意义重大，因为 C++要求所有operator news返回的指针都有适当的对齐（取决于数据类型）
+9.杂项讨论 Miscellany
+ 
+第一个条款强调不可以轻忽编译器警告信息
+ 
+ 
+最后一个条款带你综览 Boost，那是我认为最重要的一个C++泛用型网站
+
+### 条款53：不要轻忽编译器的警告 Pay attention to compiler warnings.
+ 
+记住，警告信息天生和编译器相依，不同的编译器有不同的警告标准。所以，草率编程然后倚赖编译器为你指出错误，并不可取
+
+### 条款54：让自己熟悉包括TR1在内的标准程序库 Familiarize yourself with the standard library，including TR1.
+ 
+在我下笔的 2005 年此刻
+
+### 条款55：让自己熟悉Boost Familiarize yourself with Boost.
+ 
+条款55：让自己熟悉Boost 
+ 
