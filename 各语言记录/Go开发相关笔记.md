@@ -2222,6 +2222,7 @@ and their dependencies
     - Go Modules基本使用
         + 命令
             * `go mod init` 生成 go.mod 文件
+                - e.g. `go mod init xdtest`
             * `go mod download` 下载 go.mod 文件中指明的所有依赖
             * `go mod graph` 查看现有的依赖结构
             * `go mod edit` 编辑 go.mod 文件
