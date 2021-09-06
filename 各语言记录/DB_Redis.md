@@ -879,3 +879,5 @@ May 21 16:26:30 localhost kernel: Killed process 16850 (redis-server) total-vm:9
                 - 这也就是说，`ASK` 命令的作用只是让客户端能给新实例发送一次请求，而不像 `MOVED` 命令那样，会更改本地缓存，让后续所有命令都发往新实例
     - 在 Redis 3.0 之前，Redis 官方并没有提供切片集群方案，但是，其实当时业界已经有了一些切片集群的方案，例如基于客户端分区的 `ShardedJedis`，基于代理的 `Codis`、`Twemproxy` 等
         + 这些方案的应用早于 Redis Cluster 方案，在支撑的集群实例规模、集群稳定性、客户端友好性方面也都有着各自的优势
+
+* TODO 实践
