@@ -190,7 +190,7 @@ vector<int, std::alloc> iv;
         + 针对 template 参数更进一步的条件限制所设计出来的一个特化版本，本身仍然是 template
         + 如果class template拥有一个以上template参数，我们可以针对其中某个(或数个)template参数进行特化工作
         + `specialization`特化，`refinement`强化
-    - 迭代器相应类型有5种
+    - 迭代器相应类型(型别)有5种
         + `value type`
             * value type 就是迭代器所指对象的类型
         + `difference type`
@@ -210,37 +210,42 @@ vector<int, std::alloc> iv;
                 - 随机访问迭代器 (RandomAccessIterator) 是能在常数时间内移动到指向任何元素的双向迭代器 (BidirectionalIterator)
     - 为了符合规范，任何迭代器都应该提供五个内嵌相应类型，以利用`traits`萃取，否则便是自别于整个STL架构，可能无法与其他STL组件顺利搭配。
         + STL提供了`struct iterator {xxx}`，若每个新设计的迭代器都继承自它，就可以保证符合STL所需的规范
+
 * `stl_iterator.h` (用到其中的迭代器类型却没包含`stl_iterator_base.h`，有点疑问)
-    - 下面的类都在`stl_iterator_base.h`文件中定义，和书中说的`stl_iterator.h`不一致，版本问题？
-        + 五种迭代器类型
-            * `struct input_iterator_tag {};`
-            * `struct output_iterator_tag {};`
-            * `struct forward_iterator_tag : public input_iterator_tag {};`
-            * `struct bidirectional_iterator_tag : public forward_iterator_tag {};`
-            * `struct random_access_iterator_tag : public bidirectional_iterator_tag {};`
-        + 类 `struct iterator{xxx}`
-            * 自行开发的迭代器最好继承该类
-        + 类 `struct iterator_traits{xxx}`
-            * 特性萃取机
-        + 类 `struct iterator_traits<_Tp*>`
-            * 针对原生指针(native pointer)而设计的 traits 偏特化版
-        + 类 `struct iterator_traits<const _Tp*> {xxx}`
-            * 针对原生之 pointer-to-const 而设计的 traits 偏特化版
-    - 对于`stl_iterator.h`
-        + 里面实现了各种不同类型的迭代器，如下：
-            * `back_insert_iterator`
-            * `front_insert_iterator`
-            * `insert_iterator`
-            * `istream_iterator`
-                - 另外包括一个`istream_iterator`的偏特化版本
-            * `istreambuf_iterator`
-            * `ostream_iterator`
-                - 另外包括一个`ostream_iterator`的偏特化版本
-            * `ostreambuf_iterator`
-            * `reverse_bidirectional_iterator`
-            * `reverse_iterator`
-                - 包括一个`reverse_iterator`的偏特化版本
-        + 运用上面的类型萃取、偏特化等特性实现，并没有去继承`struct iterator`
+    + iterator.h 和 iterator 里面包含了base
+* 下面的类都在`stl_iterator_base.h`文件中定义，和书中说的`stl_iterator.h`不一致，版本问题？
+    + 五种迭代器类型
+        * `struct input_iterator_tag {};`
+        * `struct output_iterator_tag {};`
+        * `struct forward_iterator_tag : public input_iterator_tag {};`
+        * `struct bidirectional_iterator_tag : public forward_iterator_tag {};`
+        * `struct random_access_iterator_tag : public bidirectional_iterator_tag {};`
+    + 类 `struct iterator{xxx}`
+        * 自行开发的迭代器最好继承该类
+        * **`struct iterator` 结构定义在`stl_iterator_base.h`文件里**
+        * 里面不包括任何成员，纯粹只是类型定义(上面5种相应型别，不单单包括迭代器分类)，所以继承它不会招致任何额外负担
+    + 类 `struct iterator_traits{xxx}`
+        * 特性萃取机
+    + 类 `struct iterator_traits<_Tp*>`
+        * 针对原生指针(native pointer)而设计的 traits 偏特化版
+    + 类 `struct iterator_traits<const _Tp*> {xxx}`
+        * 针对原生之 pointer-to-const 而设计的 traits 偏特化版
+* 对于`stl_iterator.h`
+    + 里面实现了各种不同类型的迭代器，如下：
+        * `back_insert_iterator`
+        * `front_insert_iterator`
+        * `insert_iterator`
+        * `istream_iterator`
+            - 另外包括一个`istream_iterator`的偏特化版本
+        * `istreambuf_iterator`
+        * `ostream_iterator`
+            - 另外包括一个`ostream_iterator`的偏特化版本
+        * `ostreambuf_iterator`
+        * `reverse_bidirectional_iterator`
+        * `reverse_iterator`
+            - 包括一个`reverse_iterator`的偏特化版本
+    + 运用上面的类型萃取、偏特化等特性实现，并没有去继承`struct iterator`
+
 * `__type_traits` (定义在：`type_traits.h`)
     - `traits`编程技法适度弥补了C++语言本身的不足。
         + STL只对迭代器加以规范，制定出`iterator_traits`这样的东西
