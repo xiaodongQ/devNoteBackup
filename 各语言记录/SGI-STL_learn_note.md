@@ -223,7 +223,7 @@ vector<int, std::alloc> iv;
     + 类 `struct iterator{xxx}`
         * 自行开发的迭代器最好继承该类
         * **`struct iterator` 结构定义在`stl_iterator_base.h`文件里**
-        * 里面不包括任何成员，纯粹只是类型定义(上面5种相应型别，不单单包括迭代器分类)，所以继承它不会招致任何额外负担
+        * iterator class 不包括任何成员，**纯粹只是类型定义(上面5种相应型别，不单单包括迭代器分类)，所以继承它不会招致任何额外负担**
     + 类 `struct iterator_traits{xxx}`
         * 特性萃取机
     + 类 `struct iterator_traits<_Tp*>`
