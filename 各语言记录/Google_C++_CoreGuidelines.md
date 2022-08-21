@@ -4,6 +4,8 @@
 
 [Google C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-org)
 
+[中文版本](https://zh-google-styleguide.readthedocs.io/en/latest/google-cpp-styleguide/formatting/)
+
 ## 编码风格
 
 示例里的编码风格:

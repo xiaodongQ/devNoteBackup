@@ -664,3 +664,6 @@ sort test.csv (可>输出到新文件)
 * `[ -z STRING ]` 如果STRING的长度为0则返回为真
 * `[ -n STRING ]` 如果STRING的长度非0则返回为真
 * [Shell脚本IF条件判断和判断条件总结](https://www.jb51.net/article/56553.htm)
+
+### tr
+
