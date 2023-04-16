@@ -51,12 +51,12 @@
 
 ### 通过官网步骤安装：
 
-https://github.com/robbyrussell/oh-my-zsh/
+https://github.com/ohmyzsh/ohmyzsh
 
 via curl：
 
 ```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
 * 执行报错了：Failed to connect to raw.githubusercontent.com port 443: Connection refused
@@ -111,6 +111,10 @@ code    info
 
 ### 主题
 
+github上比较收藏多的主题：[bullet-train.zsh](https://github.com/caiogondim/bullet-train.zsh)
+
+---
+
 默认主题是：ZSH_THEME=”robbyrussell”, .zshrc中有该配置项
 
 oh my zsh 提供了数十种主题，相关文件在~/.oh-my-zsh/themes目录下
@@ -130,7 +134,7 @@ oh my zsh 项目提供了完善的插件体系，相关的文件在~/.oh-my-zsh/
 ```sh
     如果是 Linux，去下载 autojump 的最新版本，比如：
 
-    git clone git://github.com/joelthelion/autojump.git
+    git clone https://github.com/wting/autojump.git
     解压缩后进入目录，执行
 
     ./install.py
