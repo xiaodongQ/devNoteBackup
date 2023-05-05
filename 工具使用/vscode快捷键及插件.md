@@ -488,7 +488,7 @@ go install github.com/go-delve/delve/cmd/dlv
       * 也可以鼠标右键；
       * 还可以点击右上角图标到边侧预览
       * 不过开启单独预览页后无效果，需先关闭
-    * 预览时，鼠标右键可==以导出pdf等==格式
+    * 预览时，鼠标右键可以导出pdf等格式
   * markdownlint    语法检查。
     * 对不满足markdown语法规范的内容进行警告
     * 挺实用的
@@ -498,10 +498,15 @@ go install github.com/go-delve/delve/cmd/dlv
   * PicGo   可以关联图床。
     * 步骤
       * 生成一个token用于PicGo操作你的仓库(<https://github.com/settings/tokens>)，把repo的勾打上即可
-      * vscode配置：![截屏2023-05-05 15.00.46](https://raw.githubusercontent.com/xiaodongQ/xiaodongq.github.io/master/images/%E6%88%AA%E5%B1%8F2023-05-05%2015.00.46.png)
+      * vscode配置：![pigco配置](https://raw.githubusercontent.com/xiaodongQ/xiaodongq.github.io/master/images/2023-05-05-picgo-config.png)
       * 而后用快捷键上传即可（上传后会自动在当前文件生成markdown形式的url引用，文件名为原始名称）
         * Cmd + Opt + u 从剪切板上传 (windows下则是ctrl+alt+u，下同)
         * Cmd + Opt + e 从资源管理器上传
         * Cmd + Opt + o 手动输入文件路径上传图片
   * Paste Image 在编辑器贴图。
-    * ![](2023-05-05-17-06-58.png)
+    * 和picgo两者各有使用场景
+      * picgo自动向仓库对应路径上传图片，生成图片完整url
+      * 而paste image从截图向本地路径添加图片，生成相对url，需要git add后提交
+    * 使用方式
+      * 命令：Paste Image
+      * 快捷键：Cmd+Alt+V
