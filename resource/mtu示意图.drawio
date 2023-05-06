@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" modified="2023-05-06T08:57:41.969Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36" etag="0JVNpaIJtjYswFvLWGyo" version="21.2.6" type="github">
+  <diagram id="5ZruKXpPlvTqBJEBqCR5" name="第 1 页">
+    <mxGraphModel dx="794" dy="421" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="v45lSo8jkDP5MFNTs2BX-14" value="Ethernet Header" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="160" y="120" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-3" value="IP Header" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="240" y="120" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-4" value="TCP Header" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="320" y="120" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-5" value="TCP Payload" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="400" y="120" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-6" value="FCS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="510" y="120" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-7" value="14byte" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#393C56;" vertex="1" parent="1">
+          <mxGeometry x="156" y="164" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-8" value="20byte" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#393C56;" vertex="1" parent="1">
+          <mxGeometry x="240" y="164" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-9" value="20byte" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#393C56;" vertex="1" parent="1">
+          <mxGeometry x="310" y="164" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-10" value="1460byte" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#393C56;" vertex="1" parent="1">
+          <mxGeometry x="414" y="164" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-11" value="4byte" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#393C56;" vertex="1" parent="1">
+          <mxGeometry x="500" y="164" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-15" value="" style="shape=crossbar;whiteSpace=wrap;html=1;rounded=1;labelBackgroundColor=none;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="240" y="98" width="270" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-24" value="Ethernet MTU" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Architects Daughter;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="340" y="94" width="80" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-25" value="" style="shape=crossbar;whiteSpace=wrap;html=1;rounded=1;labelBackgroundColor=none;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="240" y="72" width="270" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-26" value="IP MTU" style="text;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Architects Daughter;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="340" y="69" width="80" height="21" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-27" value="以太帧头" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="162" y="90" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-28" value="帧尾CRC校验" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="513" y="90" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-29" value="" style="shape=crossbar;whiteSpace=wrap;html=1;rounded=1;hachureGap=4;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fontSize=20;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="400" y="46" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="RDQwlXFFFAaUUBq5AZ5B-31" value="TCP MSS" style="text;html=1;strokeColor=#001DBC;fillColor=#0050ef;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Architects Daughter;labelBackgroundColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="417" y="45" width="80" height="21" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
