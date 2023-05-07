@@ -5,16 +5,16 @@
 ## 1.1. 快捷键
 
 * 主命令框
-  * F1 或 Ctrl+Shift+P: 打开命令面板。在打开的输入框内，可以输入任何命令，例如：
+    * F1 或 Ctrl+Shift+P: 打开命令面板。在打开的输入框内，可以输入任何命令，例如：
 
 * 按一下 Backspace 会进入到 Ctrl+P 模式
 * 在 Ctrl+P 下输入 > 可以进入 Ctrl+Shift+P 模式
 * 在 Ctrl+P 窗口下还可以:
-  * 直接输入文件名，跳转到文件
-  * `?` 列出当前可执行的动作
-  * `!` 显示 Errors或 Warnings，也可以 Ctrl+Shift+M
-  * `:` 跳转到行数，也可以 Ctrl+G 直接进入
-  * `@` 跳转到 symbol（搜索变量或者函数），也可以 Ctrl+Shift+O 直接进入
+    * 直接输入文件名，跳转到文件
+    * `?` 列出当前可执行的动作
+    * `!` 显示 Errors或 Warnings，也可以 Ctrl+Shift+M
+    * `:` 跳转到行数，也可以 Ctrl+G 直接进入
+    * `@` 跳转到 symbol（搜索变量或者函数），也可以 Ctrl+Shift+O 直接进入
 * 代码提示，`editor.action.triggerSuggest`，mac下设置成 shift+空格，其他键太容易冲突了
 * 常用快捷键
 
@@ -63,19 +63,19 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 ```
 
 * 查找替换
-  * 查找 Ctrl+F
-    * 在查找框中，alt+w 切换是否全词匹配
-  * 查找替换 Ctrl+H
-  * 整个文件夹中查找 Ctrl+Shift+F
+    * 查找 Ctrl+F
+        * 在查找框中，alt+w 切换是否全词匹配
+    * 查找替换 Ctrl+H
+    * 整个文件夹中查找 Ctrl+Shift+F
 * 显示相关
-  * 全屏：F11
-  * 显示 Git Ctrl+Shift+G
-  * 显示 Debug Ctrl+Shift+D
-  * 显示 Output Ctrl+Shift+U
-  * 括号展开/收回 zoomIn/zoomOut：Ctrl +/-
-  * 侧边栏显/隐：Ctrl+B
-  * 显示资源管理器 Ctrl+Shift+E
-  * 显示搜索 Ctrl+Shift+F
+    * 全屏：F11
+    * 显示 Git Ctrl+Shift+G
+    * 显示 Debug Ctrl+Shift+D
+    * 显示 Output Ctrl+Shift+U
+    * 括号展开/收回 zoomIn/zoomOut：Ctrl +/-
+    * 侧边栏显/隐：Ctrl+B
+    * 显示资源管理器 Ctrl+Shift+E
+    * 显示搜索 Ctrl+Shift+F
 
 * ctrl+c 不选中内容时，复制当前行
 * ctrl+x 不选中内容时，删除当前行
@@ -87,15 +87,15 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 
 * workspace vs user
 * VS Code提供了两种设置方式：
-  * 用户设置： 这种方式进行的设置，会应用于该用户打开的所有工程；
-  * 工作空间设置：工作空间是指使用VS Code打开的某个文件夹，在该文件夹下会创建一个名为.vscode的隐藏文件夹，里面包含着**仅适用于当前目录的**VS Code的设置。工作空间的设置会覆盖用户的设置。
+    * 用户设置： 这种方式进行的设置，会应用于该用户打开的所有工程；
+    * 工作空间设置：工作空间是指使用VS Code打开的某个文件夹，在该文件夹下会创建一个名为.vscode的隐藏文件夹，里面包含着**仅适用于当前目录的**VS Code的设置。工作空间的设置会覆盖用户的设置。
 * **使用通用的配置则统一加到user用户模式下的配置中。**
 
 * 显示空格和tab
-  * file->perferences->settings->搜 renderWhitespace->选all
-  * 或：
-    * 1.打开vscode的用户设置
-    * 2.在右边添加新设置
+    * file->perferences->settings->搜 renderWhitespace->选all
+    * 或：
+        * 1.打开vscode的用户设置
+        * 2.在右边添加新设置
 
 ```json
     {
@@ -105,35 +105,35 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 ```
 
 * 缩进设置为tab (makefile空格和tab有区别)
-  * 在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
+    * 在vscode下边栏点击 "space" 在上面选项里设置 使用 indent using spaces 缩进
 * 不自动提示代码片段或补全，若要开启自动提示(可指定某个工作空间单独生效，有时每次都自动提示也挺烦的)，在设置里搜`prevent`
-  * 出来的 `Editor › Suggest: Snippets Prevent Quick Suggestions`，取消勾选即可
-  * 代码补全/代码片段提示的触发快捷键，容易和其他键冲突，自己改成了`ctrl+shift+space` (下面也有说明) ctrl+shift+空格
-  * 用`ctrl+j`进行向下选择
+    * 出来的 `Editor › Suggest: Snippets Prevent Quick Suggestions`，取消勾选即可
+    * 代码补全/代码片段提示的触发快捷键，容易和其他键冲突，自己改成了`ctrl+shift+space` (下面也有说明) ctrl+shift+空格
+    * 用`ctrl+j`进行向下选择
 
 ### 1.2.1. 实用快捷键修改
 
 * vim相关键冲突：
-  * 将vim中ctrl相关的键取消，ctrl+c,v,x,a,b,f,g,b等
+    * 将vim中ctrl相关的键取消，ctrl+c,v,x,a,b,f,g,b等
 * 代码补全提示冲突(`代码片段提示`)：
-  * ctrl+shift+space 改成别的，ctrl+space(代码补全提示)改成ctrl+shift+space
+    * ctrl+shift+space 改成别的，ctrl+space(代码补全提示)改成ctrl+shift+space
 * VS Code默认无切换大小写，映射快捷键：
-  * 转换为大写: Ctrl+Shift+u
-  * 转换为小写: Ctrl+Shift+l
-  * (keyboards shortcuts搜upper,lower进行映射 之前已存在的快捷键remove)
+    * 转换为大写: Ctrl+Shift+u
+    * 转换为小写: Ctrl+Shift+l
+    * (keyboards shortcuts搜upper,lower进行映射 之前已存在的快捷键remove)
 
 ### 1.2.2. 自定义代码片段snippets设置
 
 * 很方便的功能
-  * 参考：[vs code设置自定义代码块的方法](https://blog.csdn.net/qq_504762354/article/details/81437118)
+    * 参考：[vs code设置自定义代码块的方法](https://blog.csdn.net/qq_504762354/article/details/81437118)
 * 配置参考官网说明：
-  * [Snippets in Visual Studio Code](https://code.visualstudio.com/docs/editor/userdefinedsnippets)
+    * [Snippets in Visual Studio Code](https://code.visualstudio.com/docs/editor/userdefinedsnippets)
 
 * 1. 首先打开“首选项”，选择“用户代码片段”
 * 2. 然后再选择你需要将此代码块作用在哪种类型的文件，会生成一个json文件
-  * 也可以选全局，生成的json文件中会多一个key，用于设置代码生效范围
+    * 也可以选全局，生成的json文件中会多一个key，用于设置代码生效范围
 * 3. 然后配置一个json文件
-  * File->Preferences->User Snippets->选择某个语言或者global->进行配置
+    * File->Preferences->User Snippets->选择某个语言或者global->进行配置
 
 配置方法说明(选的是全局为例)：
 
@@ -199,38 +199,38 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 * vscode-icon               给项目文件夹前边加上icon
 * Import Cost：             显示导入的包的大小(前端，go不生效)
 * highlight-words:          全局高亮字符串
-  * Highlight Current
-  * Highlight Remove
+    * Highlight Current
+    * Highlight Remove
 
 * koroFileHeader 注释插件，关闭自动添加注释(配置文件放在最后章节)
-  * 快捷键
-    * ctrl+alt+i 文件头部注释  (mac: ctrl+cmd+i)
-    * ctrl+alt+t函数注释       (mac: ctrl+cmd+t)
-  * 配置可以参考：[配置](https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE)
+    * 快捷键
+        * ctrl+alt+i 文件头部注释  (mac: ctrl+cmd+i)
+        * ctrl+alt+t函数注释       (mac: ctrl+cmd+t)
+    * 配置可以参考：[配置](https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE)
 * power mode 编辑代码动态效果，atom风格
-  * File->Preferences->Settings里面过滤powermode，可显示各配置项(修改后会自动同步到settings.json，建议修改用户空间，全局生效)
-    * Powermode: Enable Shake，可以去掉勾选，取消晃动效果
-    * Powermode: Explosion Duration，设置效果持续的时间(ms)，默认1000ms(1秒)，设为0则效果一直在(切换编辑窗口会消失)
-    * Powermode: Presets，powermode被激活时选择的gif效果，有以下效果可选
-      * particles，微粒效果，默认
-      * fireworks，烟花效果
-      * flames，火焰效果(个人选择，500ms)
-      * magic，魔法效果(云状的爆炸效果)
-      * clippy，回形针效果
-      * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
+    * File->Preferences->Settings里面过滤powermode，可显示各配置项(修改后会自动同步到settings.json，建议修改用户空间，全局生效)
+        * Powermode: Enable Shake，可以去掉勾选，取消晃动效果
+        * Powermode: Explosion Duration，设置效果持续的时间(ms)，默认1000ms(1秒)，设为0则效果一直在(切换编辑窗口会消失)
+        * Powermode: Presets，powermode被激活时选择的gif效果，有以下效果可选
+            * particles，微粒效果，默认
+            * fireworks，烟花效果
+            * flames，火焰效果(个人选择，500ms)
+            * magic，魔法效果(云状的爆炸效果)
+            * clippy，回形针效果
+            * simple-rift，简单的裂缝效果(编辑位置出现竖直发散的裂缝)
 * LeetCode插件配置
-  * 在UI配置界面里搜leetcode
-    * 各项配置参考：[settings](https://swift.ctolib.com/jdneo-vscode-leetcode.html#settings)
-  * `Endpoint`选择中文站或者国际站(我用的中文站)
-  * `Show Description`设置题目描述展示的方式，我选`Both`，生成的文件和VSCode里都会显示题目信息
-  * `Workspace Folder`设置生成文件的路径
-  * `File Path` 设置生成文件的格式，由于有时自己想运行些调试测试，所以配置生成的是`_test.go`形式的文件，便于单元测试
-    * 设置File Path选项可以参考官网说明：[Customize the Relative Folder and the File Name](https://github.com/LeetCode-OpenSource/vscode-leetcode/wiki/Customize-the-Relative-Folder-and-the-File-Name-of-the-Problem-File)
-  * 设置换行为`\n`，插件(不确定是gopls还是leetcode插件)只支持这类文件的自动调整(不过我windows上自动生成的文件还是`\r\n`。。。)
-  * 不同机器用同一个账号，题目没有自动同步，自己的方式是切换一下站点再切回来(会自动退出原有登录)，重新登录
-  * 自动新建的窗口复制问题
-    * webViewer窗口的文本突然复制不了了，只能在vscode同一个group里打开一个keyboard shortcuts或者设置窗口才能复制
-    * 估计是哪里快捷键冲突了，卸载插件，修改各个配置还是没弄好，实在不行就开个窗口吧。。。
+    * 在UI配置界面里搜leetcode
+        * 各项配置参考：[settings](https://swift.ctolib.com/jdneo-vscode-leetcode.html#settings)
+    * `Endpoint`选择中文站或者国际站(我用的中文站)
+    * `Show Description`设置题目描述展示的方式，我选`Both`，生成的文件和VSCode里都会显示题目信息
+    * `Workspace Folder`设置生成文件的路径
+    * `File Path` 设置生成文件的格式，由于有时自己想运行些调试测试，所以配置生成的是`_test.go`形式的文件，便于单元测试
+        * 设置File Path选项可以参考官网说明：[Customize the Relative Folder and the File Name](https://github.com/LeetCode-OpenSource/vscode-leetcode/wiki/Customize-the-Relative-Folder-and-the-File-Name-of-the-Problem-File)
+    * 设置换行为`\n`，插件(不确定是gopls还是leetcode插件)只支持这类文件的自动调整(不过我windows上自动生成的文件还是`\r\n`。。。)
+    * 不同机器用同一个账号，题目没有自动同步，自己的方式是切换一下站点再切回来(会自动退出原有登录)，重新登录
+    * 自动新建的窗口复制问题
+        * webViewer窗口的文本突然复制不了了，只能在vscode同一个group里打开一个keyboard shortcuts或者设置窗口才能复制
+        * 估计是哪里快捷键冲突了，卸载插件，修改各个配置还是没弄好，实在不行就开个窗口吧。。。
 
 ```json
 "leetcode.endpoint": "leetcode-cn",
@@ -256,9 +256,9 @@ Ctrl+D 下一个匹配的也被选中 (在 sublime 中是删除当前行，后�
 ### 1.3.1. 配置云端同步
 
 * 使用 Settings Sync 插件，同步到云端提供给其他机器(vscode中搜索安装即可)
-  * (当前版本是3.4.3，第一次上传时并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
-  * (网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
-  * 新版本(当前最新v3.4.3)不需要填令牌token了，下载时配置好`Gist ID`，上传时，会跳出登录github选择哪个Gist ID
+    * (当前版本是3.4.3，第一次上传时并不需要在github上手动生成gist，选择upload会自动生成，生成后从配置页中复制出来保存即可。)
+    * (网上博客介绍的可能是比较早的版本，需要手动生成gist且下载的操作也略有不同)
+    * 新版本(当前最新v3.4.3)不需要填令牌token了，下载时配置好`Gist ID`，上传时，会跳出登录github选择哪个Gist ID
 
 ```json
 Gist ID
@@ -268,17 +268,17 @@ b48fa742e2d6036c5ffca098c926942016bf3c02
 ```
 
 * ctrl+shift+p, 输入sync，
-  * 之前有残留配置则reset extension settings;
-  * update/upload settings 出来的界面配置gist id和token，再执行一次，左下角状态栏会显示操作(字体比较小)
-  * download settings      出来的界面配置gist id和token
+    * 之前有残留配置则reset extension settings;
+    * update/upload settings 出来的界面配置gist id和token，再执行一次，左下角状态栏会显示操作(字体比较小)
+    * download settings      出来的界面配置gist id和token
 
 ## 1.4. C++开发环境
 
 * 参考VS Code官方文档：
-  * [Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
+    * [Using Mingw-w64 in VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)
 
 * 安装mingw (Minimalist GNU for Windows)，(当前自己用的是安装QT时一并安装的mingw730_64)
-  * [mingw官网下载链接](http://mingw-w64.org/doku.php/download/mingw-builds)
+    * [mingw官网下载链接](http://mingw-w64.org/doku.php/download/mingw-builds)
 
 1. 安装C/C++插件
 2. `c_cpp_properties.json`配置文件
@@ -377,23 +377,23 @@ go install github.com/go-delve/delve/cmd/dlv
 ```
 
 * VSCode里运行时用的环境变量，光配置.bashrc或.bash_profile并不行，需要在配置文件中进行配置gopath
-  * e.g. 在settings.json里添加配置: `"go.gopath": "/Users/xd/workspace/src/go_path",`
-  * 编辑配置：配置settings.json中的GOROOT和GOPATH点击VS Code，点击最顶部栏的Code选项，选中Preferences，点击Settings，选中Extensions，点击Go configuration，在点击Edit in settings.json，打开settings.json文件，可以通过搜索go.go查到，settings.json 文件里面默认的go.gopath和go.goroot都是null，需要自己设置，设置完gopath和goroot后按command+s保存文件
+    * e.g. 在settings.json里添加配置: `"go.gopath": "/Users/xd/workspace/src/go_path",`
+    * 编辑配置：配置settings.json中的GOROOT和GOPATH点击VS Code，点击最顶部栏的Code选项，选中Preferences，点击Settings，选中Extensions，点击Go configuration，在点击Edit in settings.json，打开settings.json文件，可以通过搜索go.go查到，settings.json 文件里面默认的go.gopath和go.goroot都是null，需要自己设置，设置完gopath和goroot后按command+s保存文件
 * `gopls`
-  * vscode开发Go，提示太慢了
-  * [在 VS Code 中使用 gopls](https://segmentfault.com/a/1190000020276833)
-    * `go get golang.org/x/tools/gopls`
-    * `go get`没科学上网访问不了golang.org，开启go module后，设置GOPROXY可直接用该命令
-  * 开启 Use Language Server，需要安装gopls，go get安装被墙
-  * `git clone https://github.com/golang/tools.git`
-    * 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建
-  * `go list -e -compiled -json golang.org/x/tools/gopls` 可以查看build依赖的环境和包，若提示没有包，则单独clone对应的包
-    * 提示少下面几个包(golang.org/x/xerrors、mod、xerrors)，到`go_path\src\golang.org\x\tools`目录git clone
-      * `git clone https://github.com/golang/mod.git`
-      * `git clone https://github.com/golang/sync.git`
-      * `git clone https://github.com/golang/xerrors.git`
-  * `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
-  * 安装后，函数跳转、代码提示都是飞速
+    * vscode开发Go，提示太慢了
+    * [在 VS Code 中使用 gopls](https://segmentfault.com/a/1190000020276833)
+        * `go get golang.org/x/tools/gopls`
+        * `go get`没科学上网访问不了golang.org，开启go module后，设置GOPROXY可直接用该命令
+    * 开启 Use Language Server，需要安装gopls，go get安装被墙
+    * `git clone https://github.com/golang/tools.git`
+        * 到这个目录clone：`go_path\src\golang.org\x\tools`，没有就创建
+    * `go list -e -compiled -json golang.org/x/tools/gopls` 可以查看build依赖的环境和包，若提示没有包，则单独clone对应的包
+        * 提示少下面几个包(golang.org/x/xerrors、mod、xerrors)，到`go_path\src\golang.org\x\tools`目录git clone
+            * `git clone https://github.com/golang/mod.git`
+            * `git clone https://github.com/golang/sync.git`
+            * `git clone https://github.com/golang/xerrors.git`
+    * `go install golang.org/x/tools/gopls` 依赖都正常，则go install安装
+    * 安装后，函数跳转、代码提示都是飞速
 
 ## 1.6. koroFileHeader的user配置备份
 
@@ -465,48 +465,48 @@ go install github.com/go-delve/delve/cmd/dlv
 ## 1.7. 离线安装
 
 * 下载对应的插件文件(.vsix文件)，ctrl+shift+p执行："Install from VSIX"
-  * download the .vsix that matches your OS and run the "Install from VSIX" command in VS Code.
+    * download the .vsix that matches your OS and run the "Install from VSIX" command in VS Code.
 
 ## 1.8. markdown写博客插件
 
 参考自：[github + jekyll 搭建博客](https://wenfh2020.com/2020/02/17/make-blog/)
 
 * 7.1. 插件
-  * Markdown All in Once    文档编写基本插件。
-    * markdown预览、各语法快捷键
-    * ctrl/cmd+b 粗体
-      * ctrl/cmd+i 斜体
-      * ctrl/cmd+shift+v 预览
-      * Ctrl/Cmd+k v 边侧预览(可能快捷键冲突，可cmd+shift+p，输入简写markdown preview side)
-    * 文档功能
-      * 添加或更新章节编号
-        * Markdown All in One: Add/Update section numbers
-        * 移除编号 Remove section numbers
-    * 自动调节列表号(跟sublime text里的操作一样，这个比较有用)
-  * Markdown Preview Enhanced   预览。
-    * 操作预览
-      * 也可以鼠标右键；
-      * 还可以点击右上角图标到边侧预览
-      * 不过开启单独预览页后无效果，需先关闭
-    * 预览时，鼠标右键可以导出pdf等格式
-  * markdownlint    语法检查。
-    * 对不满足markdown语法规范的内容进行警告
-    * 挺实用的
-  * Markdown TOC    自动生成目录。
-    * 感觉不大需要，直接开头TOC，在支持的工具/浏览器就可以
-    * 插件生成目录后，在预览里点击跳转不了
-  * PicGo   可以关联图床。
-    * 步骤
-      * 生成一个token用于PicGo操作你的仓库(<https://github.com/settings/tokens>)，把repo的勾打上即可
-      * vscode配置：![pigco配置](https://raw.githubusercontent.com/xiaodongQ/xiaodongq.github.io/master/images/2023-05-05-picgo-config.png)
-      * 而后用快捷键上传即可（上传后会自动在当前文件生成markdown形式的url引用，文件名为原始名称）
-        * Cmd + Opt + u 从剪切板上传 (windows下则是ctrl+alt+u，下同)
-        * Cmd + Opt + e 从资源管理器上传
-        * Cmd + Opt + o 手动输入文件路径上传图片
-  * Paste Image 在编辑器贴图。
-    * 和picgo两者各有使用场景
-      * picgo自动向仓库对应路径上传图片，生成图片完整url
-      * 而paste image从截图向本地路径添加图片，生成相对url，需要git add后提交
-    * 使用方式
-      * 命令：Paste Image
-      * 快捷键：Cmd+Alt+V
+    * Markdown All in Once    文档编写基本插件。
+        * markdown预览、各语法快捷键
+        * ctrl/cmd+b 粗体
+            * ctrl/cmd+i 斜体
+            * ctrl/cmd+shift+v 预览
+            * Ctrl/Cmd+k v 边侧预览(可能快捷键冲突，可cmd+shift+p，输入简写markdown preview side)
+        * 文档功能
+            * 添加或更新章节编号
+                * Markdown All in One: Add/Update section numbers
+                * 移除编号 Remove section numbers
+        * 自动调节列表号(跟sublime text里的操作一样，这个比较有用)
+    * Markdown Preview Enhanced   预览。
+        * 操作预览
+            * 也可以鼠标右键；
+            * 还可以点击右上角图标到边侧预览
+            * 不过开启单独预览页后无效果，需先关闭
+        * 预览时，鼠标右键可以导出pdf等格式
+    * markdownlint    语法检查。
+        * 对不满足markdown语法规范的内容进行警告
+        * 挺实用的
+    * Markdown TOC    自动生成目录。
+        * 感觉不大需要，直接开头TOC，在支持的工具/浏览器就可以
+        * 插件生成目录后，在预览里点击跳转不了
+    * PicGo   可以关联图床。
+        * 步骤
+            * 生成一个token用于PicGo操作你的仓库(<https://github.com/settings/tokens>)，把repo的勾打上即可
+            * vscode配置：![pigco配置](https://raw.githubusercontent.com/xiaodongQ/xiaodongq.github.io/master/images/2023-05-05-picgo-config.png)
+            * 而后用快捷键上传即可（上传后会自动在当前文件生成markdown形式的url引用，文件名为原始名称）
+                * Cmd + Opt + u 从剪切板上传 (windows下则是ctrl+alt+u，下同)
+                * Cmd + Opt + e 从资源管理器上传
+                * Cmd + Opt + o 手动输入文件路径上传图片
+    * Paste Image 在编辑器贴图。
+        * 和picgo两者各有使用场景
+            * picgo自动向仓库对应路径上传图片，生成图片完整url
+            * 而paste image从截图向本地路径添加图片，生成相对url，需要git add后提交
+        * 使用方式
+            * 命令：Paste Image
+            * 快捷键：Cmd+Alt+V
