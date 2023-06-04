@@ -1,6 +1,6 @@
-## shell
+# shell
 
-### 循环
+## 循环
 
 Shell 流程控制：
 [for 循环](https://www.runoob.com/linux/linux-shell-process-control.html)
@@ -15,7 +15,7 @@ do
 done
 ```
 
-### 函数
+## 函数
 
 [Shell 函数](https://www.runoob.com/linux/linux-shell-func.html)
 
@@ -43,11 +43,11 @@ demoFun
 echo "-----函数执行完毕-----"
 ```
 
-###  参数
+##  参数
 
 $0 是命令本身
 
-### Shell判断字符串包含关系的几种方法
+## Shell判断字符串包含关系的几种方法
 
 [Shell判断字符串包含关系的几种方法](https://www.cnblogs.com/AndyStudy/p/6064834.html)
 
@@ -76,7 +76,7 @@ else
 fi
 ```
 
-### 数组
+## 数组
 
 * [Shell数组：shell数组的定义、数组长度](http://c.biancheng.net/cpp/view/7002.html)
 * 在Shell中，用括号`()`来表示数组，数组元素用“空格”符号(` `)分割开
@@ -113,7 +113,7 @@ array_name[2]=value2
     - 获取数组单个元素的长度
         + `lengthn=${#array_name[n]}`
 
-### awk
+## awk
 
 * 利用`awk`计算所有tar文件的总大小
     - `tar_file=($(ls -tr *.tar.gz))`
@@ -129,7 +129,7 @@ array_name[2]=value2
         + 注意此处作为`awk`的参数，for后面只有一层括号`()`
             * 一般shell中两层 `for((i=0; i<5; i++))`
 
-### expr
+## expr
 
 * [Linux expr命令](https://www.runoob.com/linux/linux-comm-expr.html)
 * `expr` 命令是一个手工命令行计数器，用于在UNIX/LINUX下求表达式变量的值，一般用于整数值，也可用于字符串
@@ -154,11 +154,11 @@ array_name[2]=value2
             * 因为shell可能会误解显示星号的意义
             * `expr 30 * 3`会报语法错误：`expr: Syntax error`
 
-### shell中各种括号的作用和区别
+## shell中各种括号的作用和区别
 
 [shell 中各种括号的作用()、(())、[]、[[]]、{}](https://www.runoob.com/w3cnote/linux-shell-brackets-features.html)
 
-#### 单小括号() 和 双小括号(())
+### 单小括号() 和 双小括号(())
 
 1. 单小括号()
     - 命令组
@@ -201,7 +201,7 @@ array_name[2]=value2
     if ((i<5, a++)), 执行完后，a=4
 ```
 
-#### 单中括号[] 和 双中括号[[]]
+### 单中括号[] 和 双中括号[[]]
 
 1. 单中括号[]
     - bash 的内部命令，[和test是等同的。 新版的Bash中要求必须有]匹配。
@@ -234,7 +234,7 @@ for ((i=0;i<5;i++));do echo $i;done    # (()) 可以使用符合C语言运算规
 for i in {0..4};do echo $i;done        #
 ```
 
-#### 大括号、花括号 {}
+### 大括号、花括号 {}
 
 1. 大括号拓展。(通配(globbing))将对大括号中的文件名做扩展。 在大括号中，不允许有空白，除非这个空白被引用或转义。
     - 第一种：对大括号中的以逗号分割的文件列表进行拓展。`touch {a,b}.txt 结果为a.txt b.txt` **{a,b}之间不能有空格，有空格会变成 "{a," 和 "b}.txt"两个文件**
@@ -357,7 +357,7 @@ tips：
 
     若为7*24小时程序，删除日志文件可能不会重新生成，移动日志后后续日志则记不到文件中。 脚本中应进行保护判断。
 
-### 日志清理脚本
+## 日志清理脚本
 
 ```sh
 #log_daily_backup.sh
@@ -414,7 +414,7 @@ check_log_size
 echo "`date`, end" >> $AUTO_OPS_LOG_FILE
 ```
 
-### crontab文件
+## crontab文件
 
 关于crontab，参考前面贴出来的 [crontab学习使用笔记](https://xiaodongq.github.io/2015/08/18/crontab%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/)
 
@@ -523,7 +523,7 @@ done
         + `sh ./test.sh` 会 `cd .`
         + `sh /home/xd/workspace/test.sh` 会 `cd /home/xd/workspace`
 
-### find
+## find
 
 查找目录 时跳过指定目录，使用prune(英 /pruːn/   删除；减少)
   (注意顺序，-path接源路径，后面跟-prune，再跟-o，后面再跟其他过滤选项，-print不能少)：
@@ -549,7 +549,7 @@ find . -type f -name '*.h' | xargs grep "hello"
 * 正则表达式：
 `find . -regex '.*\.md\|.*\.h\|.*\.cpp'`
 
-### 统计文本行数
+## 统计文本行数
 
 语法：wc [选项] 文件…
 
@@ -578,15 +578,15 @@ find . -type f -name '*.h' | xargs grep "hello"
 
 `find src/ -name "*.cpp" |xargs cat | grep -v ^$ | wc -l`
 
-### unzip
+## unzip
 
 unzip zip文件
 
-### 目录排序
+## 目录排序
 
 du -s -d1|sort -n      (h会影响排序，仅按数字来排的)
 
-### grep 查找后去重
+## grep 查找后去重
 
 `grep "#include <boost" -rn *|awk -F' ' '{print $2}'|sort|uniq`  (注意要先sort，要不仅会去重相邻的)
 
@@ -601,7 +601,7 @@ du -s -d1|sort -n      (h会影响排序，仅按数字来排的)
         + `grep -E "abc|123"` 会匹配包含 `abc` 或 `123`的字符串
     - `grep -w pattern files` 只匹配整个单词，而不是字符串的一部分
 
-### sort uniq 文件去重
+## sort uniq 文件去重
 
 对文件排序：  
 sort test.csv (可>输出到新文件)
@@ -619,7 +619,7 @@ sort test.csv (可>输出到新文件)
                 - `-r` 颠倒比较的结果
             * 这几个选项使用，可以再参考：[sort命令](https://man.linuxde.net/sort)
 
-### echo 不换行
+## echo 不换行
 
 * echo -e 允许对下面列出的加反斜线转义的字符进行解释
 
@@ -635,17 +635,17 @@ sort test.csv (可>输出到新文件)
 
 * `echo -n "hello"` 也可指定不换行(-n 不输出行尾的换行符)
 
-### 正则表达式
+## 正则表达式
 
 非：  volume:[^0] 匹配"volume:"后接非0的行
 
 
-### shell文件包含
+## shell文件包含
 
 * 脚本内容中包含
     - `. xdtest.sh` 或者 `source xdtest.sh`
 
-### shell默认值
+## shell默认值
 
 * 形式一：`${a-defaultvalue}`
     - a如果没有定义，则表达式返回默认值，否则返回a的值
@@ -659,11 +659,128 @@ sort test.csv (可>输出到新文件)
         + 若有`a=""`，`echo "$ret1"`则输出`/usr/local`(a为空)
         + 若有`a="123"`，`echo "$ret1"`则输出`123`(a非空)
 
-### 字符串判断
+## 字符串判断
 
 * `[ -z STRING ]` 如果STRING的长度为0则返回为真
 * `[ -n STRING ]` 如果STRING的长度非0则返回为真
 * [Shell脚本IF条件判断和判断条件总结](https://www.jb51.net/article/56553.htm)
 
-### tr
+## tr
 
+## google style guide
+
+### 背景
+
+* Shell应该仅仅被用于小功能或者简单的包装脚本。
+
+    以下是一些准则：
+
+    * 如果你主要是在调用其他的工具并且做一些相对很小数据量的操作，那么使用shell来完成任务是一种可接受的选择。
+    * 如果你在乎性能，那么请选择其他工具，而不是使用shell。
+    * 如果你发现你需要使用数据而不是变量赋值（如 ``${PHPESTATUS}`` ），那么你应该使用Python脚本。
+    * 如果你将要编写的脚本会超过100行，那么你可能应该使用Python来编写，而不是Shell。请记住，当脚本行数增加，尽早使用另外一种语言重写你的脚本，以避免之后花更多的时间来重写。
+
+### 注释
+
+* 每个文件必须包含一个顶层注释，对其内容进行简要概述。版权声明和作者信息是可选的。
+
+```sh
+#!/bin/bash
+#
+# Perform hot backups of Oracle databases.
+```
+
+* 任何不是既明显又短的函数都必须被注释。任何库函数无论其长短和复杂性都必须被注释。
+
+* 使用TODO注释临时的、短期解决方案的、或者足够好但不够完美的代码。
+
+    TODOs应该包含全部大写的字符串TODO，接着是括号中你的用户名。冒号是可选的。最好在TODO条目之后加上 bug或者ticket 的序号。
+
+```sh
+# TODO(mrmonkey): Handle the unlikely edge cases (bug ####)
+```
+
+### 格式
+
+* 请将 ``; do`` , ``; then`` 和 ``while`` , ``for`` , ``if`` 放在同一行。
+
+```sh
+    if [[ -n "${myvar}" ]]; then
+        xxx
+    else
+        xxx
+    fi
+```
+
+* 推荐用 ``${var}`` 而不是 ``$var``
+
+* 传递参数时，请使用 ``$@`` 除非你有特殊原因需要使用 ``$*``
+
+### 特性及错误
+
+* 使用 ``$(command)`` 而不是反引号
+
+    嵌套的反引号要求用反斜杠转义内部的反引号
+
+* 推荐使用 ``[[ ... ]]`` ，而不是 ``[`` , ``test`` , 和 ``/usr/bin/[``
+
+    因为在 ``[[`` 和 ``]]`` 之间不会有路径名称扩展或单词分割发生，所以使用 ``[[ ... ]]`` 能够减少错误
+
+* 测试字符串
+
+    * 为了避免对你测试的目的产生困惑，请明确使用`-z`或者`-n`
+        * 建议 `if [[ -z "${my_var}" ]];`
+        * 不建议 `if [[ "${my_var}" = "" ]];`
+
+    * 建议 `if [[ "${my_var}" = "some_string" ]];`
+        * 不建议 `if [[ "${my_var}X" = "some_stringX" ]];`
+
+* 应该避免使用eval
+
+### 命名约定
+
+* 使用小写字母，并用下划线分隔单词
+
+    函数名：my_func
+
+    源文件名：make_template.sh
+
+* 函数名之后必须有圆括号。关键词 ``function`` 是可选的，但必须在一个项目中保持一致。
+* 大括号必须和函数名位于同一行（就像在Google的其他语言一样），并且函数名和圆括号之间没有空格。
+
+```sh
+    my_func() {
+        ...
+    }
+```
+
+* 使用 ``local`` 声明特定功能的变量。声明和赋值应该在不同行。
+
+    当赋值的值由命令替换提供时，声明和赋值必须分开。因为内建的 ``local`` 不会从命令替换中传递退出码。
+
+```sh
+    # 传入值无需返回值，所以不分开没关系
+    local name="$1"
+
+    # 通过命令获取的结果赋值，分开便于判断命令返回值
+    local my_var
+    my_var="$(my_func)" || return
+```
+
+* 对于包含至少一个其他函数的足够长的脚本，需要称为 ``main`` 的函数。
+
+    显然，对于仅仅是线性流的短脚本， ``main`` 是矫枉过正，因此是不需要的。
+
+### 调用命令
+
+* 可以在调用shell内建命令和调用另外的程序之间选择，请选择内建命令。
+
+```sh
+    # Prefer this:
+    addition=$((${X} + ${Y}))
+    substitution="${string/#foo/bar}"
+
+    # Instead of this:
+    addition="$(expr ${X} + ${Y})"
+    substitution="$(echo "${string}" | sed -e 's/^foo/bar/')"
+```
