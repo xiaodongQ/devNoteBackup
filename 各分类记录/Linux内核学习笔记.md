@@ -154,7 +154,199 @@ const struct proto_ops inet_stream_ops = {
 	.connect	   = inet_stream_connect,
 	.socketpair	   = sock_no_socketpair,
 	.accept		   = inet_accept,
+	.getname	   = inet_getname,
+	.poll		   = tcp_poll,
+	.ioctl		   = inet_ioctl,
+	.gettstamp	   = sock_gettstamp,
+	.listen		   = inet_listen,
+	.shutdown	   = inet_shutdown,
+	.setsockopt	   = sock_common_setsockopt,
+	.getsockopt	   = sock_common_getsockopt,
+	.sendmsg	   = inet_sendmsg,
+	.recvmsg	   = inet_recvmsg,
+	...
+}
+```
+
+### struct sock 结构
+
+上述 `struct socket`里有`struct sock *sk;`成员，里面根据类型定义了操作(对后面跟踪`connect`流程很重要)
+
+要看其初始化成了哪些io操作，需要看`socket`创建流程
+
+```c
+// linux-5.10.176\include\net\sock.h
+struct sock {
+    struct sock_common  __sk_common;
+    socket_lock_t       sk_lock;
+    atomic_t        sk_drops;
+    int         sk_rcvlowat;
+    struct sk_buff_head sk_error_queue;
+    struct sk_buff      *sk_rx_skb_cache;
+    struct sk_buff_head sk_receive_queue;
     ...
+	struct proto		*skc_prot;
+	...
+}
+
+// linux-5.10.176\include\net\sock.h
+struct sock_common {
+	...
+	unsigned short		skc_family;
+	volatile unsigned char	skc_state;
+	...
+	// 里面定义一些sock的操作io，这部分信息是在创建socket时根据类型初始化的(sock_create)
+	struct proto		*skc_prot;
+	possible_net_t		skc_net;
+	...
+```
+
+上面skc_prot初始化为具体哪些信息，见下面的创建socket
+
+### `socket()` 创建socket
+
+调用流程：
+__sys_socket -> sock_create -> __sock_create -> (net_proto_family结构)pf->create，实际调用到`inet_create`
+
+```cpp
+// linux-5.10.10/net/socket.c
+int __sys_socket(int family, int type, int protocol)
+{
+	...
+	retval = sock_create(family, type, protocol, &sock);
+	if (retval < 0)
+		return retval;
+	...
+}
+
+int sock_create(int family, int type, int protocol, struct socket **res)
+{
+	return __sock_create(current->nsproxy->net_ns, family, type, protocol, res, 0);
+}
+
+int __sock_create(struct net *net, int family, int type, int protocol,
+			 struct socket **res, int kern)
+{
+	int err;
+	struct socket *sock;
+	// 
+	const struct net_proto_family *pf;
+	...
+	sock = sock_alloc();
+	if (!sock) {
+		net_warn_ratelimited("socket: no more sockets\n");
+		return -ENFILE;	/* Not exactly a match, but its the
+				   closest posix thing */
+	}
+
+	sock->type = type;
+	...
+	// 根据协议族找到对应的 net_proto_family 结构
+	// 这个在网络初始化时设置了(inet_init里调用`sock_register(&inet_family_ops);`)
+	pf = rcu_dereference(net_families[family]);
+	err = -EAFNOSUPPORT;
+	if (!pf)
+		goto out_release;
+
+	/*
+	 * We will call the ->create function, that possibly is in a loadable
+	 * module, so we have to bump that loadable module refcnt first.
+	 */
+	if (!try_module_get(pf->owner))
+		goto out_release;
+
+	/* Now protected by module ref count */
+	rcu_read_unlock();
+
+	// 对应协议族的create是 inet_create
+	err = pf->create(net, sock, protocol, kern);
+	if (err < 0)
+		goto out_module_put;
+	...
+	*res = sock;
+	...
+}
+```
+
+```cpp
+// linux-5.10.10/net/ipv4/af_inet.c
+static int inet_create(struct net *net, struct socket *sock, int protocol,
+		       int kern)
+{
+	struct sock *sk;
+	struct inet_protosw *answer;
+	struct inet_sock *inet;
+	struct proto *answer_prot;
+	...
+
+	/* Look for the requested type/protocol pair. */
+lookup_protocol:
+	err = -ESOCKTNOSUPPORT;
+	rcu_read_lock();
+	// 根据socket类型找到对应操作信息，从全局 inetsw 中找，即找 inetsw_array
+	// 对于tcp，为 struct proto tcp_prot
+	list_for_each_entry_rcu(answer, &inetsw[sock->type], list) {
+
+		err = 0;
+		/* Check the non-wild match. */
+		if (protocol == answer->protocol) {
+			if (protocol != IPPROTO_IP)
+				break;
+		} else {
+			/* Check for the two wild cases. */
+			if (IPPROTO_IP == protocol) {
+				protocol = answer->protocol;
+				break;
+			}
+			if (IPPROTO_IP == answer->protocol)
+				break;
+		}
+		err = -EPROTONOSUPPORT;
+	}
+	...
+	// struct sock 结构申请， answer_prot 是对应操作
+	sk = sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
+	if (!sk)
+		goto out;
+
+	err = 0;
+	if (INET_PROTOSW_REUSE & answer_flags)
+		sk->sk_reuse = SK_CAN_REUSE;
+
+	inet = inet_sk(sk);
+	...
+
+	sock_init_data(sock, sk);
+
+	sk->sk_destruct	   = inet_sock_destruct;
+	sk->sk_protocol	   = protocol;
+	sk->sk_backlog_rcv = sk->sk_prot->backlog_rcv;
+	...
+}
+```
+
+```cpp
+// linux-5.10.10/net/ipv4/tcp_ipv4.c
+struct proto tcp_prot = {
+	.name			= "TCP",
+	.owner			= THIS_MODULE,
+	.close			= tcp_close,
+	.pre_connect		= tcp_v4_pre_connect,
+	.connect		= tcp_v4_connect,
+	.disconnect		= tcp_disconnect,
+	.accept			= inet_csk_accept,
+	.ioctl			= tcp_ioctl,
+	.init			= tcp_v4_init_sock,
+	.destroy		= tcp_v4_destroy_sock,
+	.shutdown		= tcp_shutdown,
+	.setsockopt		= tcp_setsockopt,
+	.getsockopt		= tcp_getsockopt,
+	.keepalive		= tcp_set_keepalive,
+	.recvmsg		= tcp_recvmsg,
+	.sendmsg		= tcp_sendmsg,
+	.sendpage		= tcp_sendpage,
+	...
+}
 ```
 
 ### listen
@@ -257,17 +449,89 @@ int inet_listen(struct socket *sock, int backlog)
 }
 ```
 
-```c
-// linux-5.10.176\include\net\sock.h
-struct sock {
-    struct sock_common  __sk_common;
-    socket_lock_t       sk_lock;
-    atomic_t        sk_drops;
-    int         sk_rcvlowat;
-    struct sk_buff_head sk_error_queue;
-    struct sk_buff      *sk_rx_skb_cache;
-    struct sk_buff_head sk_receive_queue;
-    ...
+### connect
+
+```cpp
+// linux-5.10.10/net/socket.c
+int __sys_connect(int fd, struct sockaddr __user *uservaddr, int addrlen)
+{
+	int ret = -EBADF;
+	struct fd f;
+
+	f = fdget(fd);
+	if (f.file) {
+		struct sockaddr_storage address;
+
+		// 用户态结构：sockaddr，拷贝到内核空间结构：sockaddr_storage
+		ret = move_addr_to_kernel(uservaddr, addrlen, &address);
+		if (!ret)
+			// 里面调用对应协议注册的 connect op操作，对于tcp是 inet_stream_connect
+			ret = __sys_connect_file(f.file, &address, addrlen, 0);
+		fdput(f);
+	}
+
+	return ret;
 }
 ```
 
+```cpp
+// linux-5.10.10/net/ipv4/af_inet.c
+int inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
+			int addr_len, int flags)
+{
+	int err;
+
+	lock_sock(sock->sk);
+	err = __inet_stream_connect(sock, uaddr, addr_len, flags, 0);
+	release_sock(sock->sk);
+	return err;
+}
+```
+
+```cpp
+// linux-5.10.10/net/ipv4/af_inet.c
+int __inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
+			  int addr_len, int flags, int is_sendmsg)
+{
+	struct sock *sk = sock->sk;
+	int err;
+	long timeo;
+	...
+	if (uaddr) {
+		if (addr_len < sizeof(uaddr->sa_family))
+			return -EINVAL;
+
+		if (uaddr->sa_family == AF_UNSPEC) {
+			// sk_prot的定义：#define sk_prot	__sk_common.skc_prot
+			err = sk->sk_prot->disconnect(sk, flags);
+			sock->state = err ? SS_DISCONNECTING : SS_UNCONNECTED;
+			goto out;
+		}
+	}
+
+	switch (sock->state) {
+	...
+	case SS_UNCONNECTED:
+		...
+		// sk_prot的定义：#define sk_prot	__sk_common.skc_prot
+		// sk_prot的初始化，在socket()创建流程中，参考上面流程可知：tcp为 tcp_v4_connect
+		err = sk->sk_prot->connect(sk, uaddr, addr_len);
+		if (err < 0)
+			goto out;
+
+		sock->state = SS_CONNECTING;
+
+		if (!err && inet_sk(sk)->defer_connect)
+			goto out;
+
+		/* Just entered SS_CONNECTING state; the only
+		 * difference is that return value in non-blocking
+		 * case is EINPROGRESS, rather than EALREADY.
+		 */
+		err = -EINPROGRESS;
+		break;
+	...
+	}
+	...
+}
+```
