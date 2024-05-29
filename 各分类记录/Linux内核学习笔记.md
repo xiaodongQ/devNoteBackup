@@ -1,21 +1,25 @@
 # Linux内核学习笔记
 
+[TOC]
+
 ## 网络
 
 [图解Linux网络包接收过程](https://mp.weixin.qq.com/s?__biz=MjM5Njg5NDgwNA==&mid=2247484058&idx=1&sn=a2621bc27c74b313528eefbc81ee8c0f&chksm=a6e303a191948ab7d06e574661a905ddb1fae4a5d9eb1d2be9f1c44491c19a82d95957a0ffb6&scene=178&cur_album_id=1532487451997454337#rd)
 
 网络设备驱动对应的逻辑位于drivers/net/ethernet
-    比如intel系列网卡的驱动：drivers/net/ethernet/intel
+	比如intel系列网卡的驱动：drivers/net/ethernet/intel
 网络协议栈，模块代码位于kernel和net目录
-    linux-3.10.89/kernel
-    linux-3.10.89/net
+	linux-3.10.89/kernel
+	linux-3.10.89/net
 
-### 初始化相关
+### 网络协议初始化
 
 Linux内核中的`fs_initcall`和`subsys_initcall`类似，也是初始化模块的入口。
-    linux-5.10.176\net\ipv4\af_inet.c
+	linux-5.10.176\net\ipv4\af_inet.c
 
 `fs_initcall`调用**`inet_init`**后开始网络协议栈注册。通过`inet_init`，将这些函数注册到了`inet_protos`和`ptype_base`数据结构中了
+
+下面的`inet_init`很重要，定义了各类网络协议的操作api
 
 ```c
 // linux-5.10.176\net\ipv4\af_inet.c
@@ -27,6 +31,7 @@ static int __init inet_init(void)
 
 	sock_skb_cb_check_size(sizeof(struct inet_skb_parm));
 
+	// 定义tcp协议的 .close/.connect/.accept等操作api
 	rc = proto_register(&tcp_prot, 1);
 	if (rc)
 		goto out;
@@ -42,16 +47,23 @@ static int __init inet_init(void)
 	rc = proto_register(&ping_prot, 1);
 	if (rc)
 		goto out_unregister_raw_proto;
+
+	// 注册网络协议族的.create = inet_create
+	(void)sock_register(&inet_family_ops);
 	...
-    if (inet_add_protocol(&icmp_protocol, IPPROTO_ICMP) < 0)
+	if (inet_add_protocol(&icmp_protocol, IPPROTO_ICMP) < 0)
 		pr_crit("%s: Cannot add ICMP protocol\n", __func__);
 	if (inet_add_protocol(&udp_protocol, IPPROTO_UDP) < 0)
 		pr_crit("%s: Cannot add UDP protocol\n", __func__);
-    ...
+	// 添加tcp协议，里面会注册 .handler	=	tcp_v4_rcv
+	if (inet_add_protocol(&tcp_protocol, IPPROTO_TCP) < 0)
+		pr_crit("%s: Cannot add TCP protocol\n", __func__);
+	...
+	
 }
 ```
 
-比如上面注册tcp协议相关接口的函数指针，定义在：`tcp_prot`
+上面注册tcp协议相关接口的函数指针，定义：`tcp_prot`
 
 ```cpp
 // linux-5.10.176\net\ipv4\tcp_ipv4.c
@@ -72,8 +84,28 @@ struct proto tcp_prot = {
 	.keepalive		= tcp_set_keepalive,
 	.recvmsg		= tcp_recvmsg,
 	.sendmsg		= tcp_sendmsg,
-    ...
+	...
 }
+```
+
+```cpp
+// linux-5.10.10/net/ipv4/af_inet.c
+static struct net_protocol tcp_protocol = {
+	.early_demux	=	tcp_v4_early_demux,
+	.early_demux_handler =  tcp_v4_early_demux,
+	.handler	=	tcp_v4_rcv,
+	.err_handler	=	tcp_v4_err,
+	.no_policy	=	1,
+	.netns_ok	=	1,
+	.icmp_strict_tag_validation = 1,
+};
+
+// 注册网络协议族的 create 接口
+static const struct net_proto_family inet_family_ops = {
+	.family = PF_INET,
+	.create = inet_create,
+	.owner	= THIS_MODULE,
+};
 ```
 
 ### socket 结构
@@ -106,16 +138,16 @@ struct proto_ops {
 	struct module	*owner;
 	int		(*release)   (struct socket *sock);
 	int		(*bind)	     (struct socket *sock,
-				      struct sockaddr *myaddr,
-				      int sockaddr_len);
-    ...
+					  struct sockaddr *myaddr,
+					  int sockaddr_len);
+	...
 }
 
 // 上面的type也在该文件定义，注意不同架构枚举值可能不同(比如linux-5.10.176\arch\mips\include\asm\socket.h里，值是不同的)
 enum sock_type {
-    SOCK_STREAM = 1,
-    SOCK_DGRAM  = 2,
-    ...
+	SOCK_STREAM = 1,
+	SOCK_DGRAM  = 2,
+	...
 }
 ```
 
@@ -131,7 +163,7 @@ static struct inet_protosw inetsw_array[] =
 		.prot =       &tcp_prot,
 		.ops =        &inet_stream_ops,
 		.flags =      INET_PROTOSW_PERMANENT |
-			      INET_PROTOSW_ICSK,
+				  INET_PROTOSW_ICSK,
 	},
 
 	{
@@ -140,8 +172,8 @@ static struct inet_protosw inetsw_array[] =
 		.prot =       &udp_prot,
 		.ops =        &inet_dgram_ops,
 		.flags =      INET_PROTOSW_PERMANENT,
-       },
-    ...
+	   },
+	...
 }
 
 // 比如上面 SOCK_STREAM、TCP协议对应的ops如下(同在af_inet.c中定义)
@@ -177,14 +209,14 @@ const struct proto_ops inet_stream_ops = {
 ```c
 // linux-5.10.176\include\net\sock.h
 struct sock {
-    struct sock_common  __sk_common;
-    socket_lock_t       sk_lock;
-    atomic_t        sk_drops;
-    int         sk_rcvlowat;
-    struct sk_buff_head sk_error_queue;
-    struct sk_buff      *sk_rx_skb_cache;
-    struct sk_buff_head sk_receive_queue;
-    ...
+	struct sock_common  __sk_common;
+	socket_lock_t       sk_lock;
+	atomic_t        sk_drops;
+	int         sk_rcvlowat;
+	struct sk_buff_head sk_error_queue;
+	struct sk_buff      *sk_rx_skb_cache;
+	struct sk_buff_head sk_receive_queue;
+	...
 	struct proto		*skc_prot;
 	...
 }
@@ -271,7 +303,7 @@ int __sock_create(struct net *net, int family, int type, int protocol,
 ```cpp
 // linux-5.10.10/net/ipv4/af_inet.c
 static int inet_create(struct net *net, struct socket *sock, int protocol,
-		       int kern)
+			   int kern)
 {
 	struct sock *sk;
 	struct inet_protosw *answer;
@@ -358,28 +390,28 @@ struct proto tcp_prot = {
 // linux-5.10.176\net\socket.c
 int __sys_listen(int fd, int backlog)
 {
-    // socket 定义在 include\linux\net.h
-    struct socket *sock;
-    int err, fput_needed;
-    int somaxconn;
+	// socket 定义在 include\linux\net.h
+	struct socket *sock;
+	int err, fput_needed;
+	int somaxconn;
 
-    sock = sockfd_lookup_light(fd, &err, &fput_needed);
-    if (sock) {
-        // 获取sysctl配置的 net.core.somaxconn 参数
-        somaxconn = READ_ONCE(sock_net(sock->sk)->core.sysctl_somaxconn);
-        // 取min(传入的backlog, 系统net.core.somaxconn)
-        if ((unsigned int)backlog > somaxconn)
-            backlog = somaxconn;
+	sock = sockfd_lookup_light(fd, &err, &fput_needed);
+	if (sock) {
+		// 获取sysctl配置的 net.core.somaxconn 参数
+		somaxconn = READ_ONCE(sock_net(sock->sk)->core.sysctl_somaxconn);
+		// 取min(传入的backlog, 系统net.core.somaxconn)
+		if ((unsigned int)backlog > somaxconn)
+			backlog = somaxconn;
 
-        err = security_socket_listen(sock, backlog);
-        if (!err)
-            // ops里是一系列socket操作的函数指针(如bind/accept)，inet_init(void)网络协议初始化时会设置
-            // 其中，tcp协议的结构是 inet_stream_ops，里面的listen函数指针赋值为：inet_listen
-            err = sock->ops->listen(sock, backlog);
+		err = security_socket_listen(sock, backlog);
+		if (!err)
+			// ops里是一系列socket操作的函数指针(如bind/accept)，inet_init(void)网络协议初始化时会设置
+			// 其中，tcp协议的结构是 inet_stream_ops，里面的listen函数指针赋值为：inet_listen
+			err = sock->ops->listen(sock, backlog);
 
-        fput_light(sock->file, fput_needed);
-    }
-    return err;
+		fput_light(sock->file, fput_needed);
+	}
+	return err;
 }
 ```
 
@@ -390,23 +422,23 @@ int __sys_listen(int fd, int backlog)
 ```c
 // linux-5.10.176\include\linux\file.h
 struct fd {
-    struct file *file;
-    unsigned int flags;
+	struct file *file;
+	unsigned int flags;
 };
 ```
 
 ```c
 // linux-5.10.176\include\linux\fs.h
 struct file {
-    union {
-        struct llist_node   fu_llist;
-        struct rcu_head     fu_rcuhead;
-    } f_u;
-    struct path     f_path;
-    struct inode        *f_inode;   /* cached value */
-    ...
-    void            *private_data;
-    ...
+	union {
+		struct llist_node   fu_llist;
+		struct rcu_head     fu_rcuhead;
+	} f_u;
+	struct path     f_path;
+	struct inode        *f_inode;   /* cached value */
+	...
+	void            *private_data;
+	...
 }
 ```
 
@@ -416,11 +448,11 @@ struct file {
 // linux-5.10.176\net\ipv4\af_inet.c
 static int __init inet_init(void)
 {
-    ...
-    // 各协议的重要结构和接口，定义在 inetsw_array(见上面的结构说明)，这里会按协议注册
-    for (q = inetsw_array; q < &inetsw_array[INETSW_ARRAY_LEN]; ++q)
-        inet_register_protosw(q);
-    ...
+	...
+	// 各协议的重要结构和接口，定义在 inetsw_array(见上面的结构说明)，这里会按协议注册
+	for (q = inetsw_array; q < &inetsw_array[INETSW_ARRAY_LEN]; ++q)
+		inet_register_protosw(q);
+	...
 }
 ```
 
@@ -428,24 +460,24 @@ static int __init inet_init(void)
 // linux-5.10.176\net\ipv4\af_inet.c
 int inet_listen(struct socket *sock, int backlog)
 {
-    struct sock *sk = sock->sk;
-    unsigned char old_state;
-    int err, tcp_fastopen;
+	struct sock *sk = sock->sk;
+	unsigned char old_state;
+	int err, tcp_fastopen;
 
-    lock_sock(sk);
+	lock_sock(sk);
 
-    err = -EINVAL;
-    if (sock->state != SS_UNCONNECTED || sock->type != SOCK_STREAM)
-        goto out;
+	err = -EINVAL;
+	if (sock->state != SS_UNCONNECTED || sock->type != SOCK_STREAM)
+		goto out;
 
-    old_state = sk->sk_state;
-    if (!((1 << old_state) & (TCPF_CLOSE | TCPF_LISTEN)))
-        goto out;
+	old_state = sk->sk_state;
+	if (!((1 << old_state) & (TCPF_CLOSE | TCPF_LISTEN)))
+		goto out;
 
-    // __sys_listen(linux-5.10.176\net\socket.c)调用时，传进来的的backlog值是min(调__sys_listen传入的backlog, 系统net.core.somaxconn)
-    // 此处设置到struct socket中struct sock相应成员中： sk_max_ack_backlog
-    WRITE_ONCE(sk->sk_max_ack_backlog, backlog);
-    ...
+	// __sys_listen(linux-5.10.176\net\socket.c)调用时，传进来的的backlog值是min(调__sys_listen传入的backlog, 系统net.core.somaxconn)
+	// 此处设置到struct socket中struct sock相应成员中： sk_max_ack_backlog
+	WRITE_ONCE(sk->sk_max_ack_backlog, backlog);
+	...
 }
 ```
 
@@ -534,4 +566,14 @@ int __inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
 	}
 	...
 }
+```
+
+### 接收
+
+在服务器接收了SYN之后，会调用`tcp_conn_request`来处理连接请求，其中调用`inet_reqsk_alloc`来创建请求控制块，可见请求控制块的ireq_state被初始化为TCP_NEW_SYN_RECV；
+
+(参考：[TCP 之 TCP_NEW_SYN_RECV状态](https://www.cnblogs.com/wanpengcoder/p/11751740.html))
+
+```cpp
+
 ```
