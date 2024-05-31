@@ -684,3 +684,24 @@ const struct tcp_request_sock_ops tcp_request_sock_ipv4_ops = {
 	.send_synack	=	tcp_v4_send_synack,
 };
 ```
+
+```cpp
+// linux-5.10.10/net/ipv4/tcp_input.c
+// 处理第一次SYN请求
+int tcp_conn_request(struct request_sock_ops *rsk_ops,
+		     const struct tcp_request_sock_ops *af_ops,
+		     struct sock *sk, struct sk_buff *skb)
+{
+    ...
+    // tcp_syncookies：1表示当半连接队列满时才开启；2表示无条件开启功能，此处可看到就算半连接队列满了也不drop
+	// inet_csk_reqsk_queue_is_full：判断accept队列(全连接队列)是否满
+	if ((net->ipv4.sysctl_tcp_syncookies == 2 ||
+	     inet_csk_reqsk_queue_is_full(sk)) && !isn) {
+		want_cookie = tcp_syn_flood_action(sk, rsk_ops->slab_name);
+		if (!want_cookie)
+			goto drop;
+	}
+    ...
+}
+```
+
