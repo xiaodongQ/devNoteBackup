@@ -705,3 +705,14 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 }
 ```
 
+```cpp
+// linux-5.10.10/include/net/inet_connection_sock.h
+// 判断全连接队列是否已满
+static inline int inet_csk_reqsk_queue_is_full(const struct sock *sk)
+{
+	// sk->sk_max_ack_backlog，之前跟踪listen，可以看到是将 min(backlog,somaxconn) 赋值给了它
+	// 全连接队列 >= 最大全连接队列数量
+	return inet_csk_reqsk_queue_len(sk) >= sk->sk_max_ack_backlog;
+}
+```
+
