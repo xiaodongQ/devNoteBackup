@@ -1,5 +1,103 @@
 # docker
 
+[Docker — 从入门到实践](https://docker-practice.github.io/zh-cn/install/centos.html)
+
+安装：卸载老的(注意会把依赖删掉，有可能其他服务依赖也会受影响，后续尝试`--nodeps`?)，安装`yum-utils`并使用`yum-config-manager`安装，使用阿里云国内源
+(CentOS8用podman替代docker，可以删除换成docker)
+
+```sh
+yum erase podman buildah
+yum install docker-ce docker-ce-cli containerd.io
+systemctl start docker
+systemctl enable docker
+```
+
+设置国内docker镜像源，Docker的配置文件通常位于`/etc/docker/daemon.json`。如果该文件不存在则创建
+    具体参考：[镜像加速器](https://docker-practice.github.io/zh-cn/install/mirror.html)
+
+设置源，由于镜像服务可能出现宕机，建议同时配置多个镜像。(注意需要带上`https://`，而ping检查联通性时不带)
+当前实际配置如下：
+
+```sh
+{    
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"                                                              
+  ]  
+}  
+```
+
+`systemctl daemon-reload`
+`systemctl restart docker`
+
+`docker info`查看是否生效
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ docker info
+Client: Docker Engine - Community
+ Version:    26.1.3
+ Context:    default
+ Debug Mode: false
+ ...
+Registry Mirrors:
+  https://docker.m.daocloud.io/
+  https://hub-mirror.c.163.com/
+  https://mirror.baidubce.com/
+ Live Restore Enabled: false
+```
+
+碰到的问题：
+
+ping 127.0.0.1也报错：
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ ping 127.0.0.1       
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+ping: sendmsg: Operation not permitted
+ping: sendmsg: Operation not permitted
+```
+
+strace查看创建socket就报权限问题
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ strace -yy ping 127.0.0.1
+execve("/usr/sbin/ping", ["ping", "127.0.0.1"], 0x7fff1f4cf790 /* 43 vars */) = 0
+...
+socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP) = -1 EACCES (Permission denied)
+socket(AF_INET, SOCK_RAW, IPPROTO_ICMP) = 3<RAW:[0.0.0.0:1]>
+socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6) = -1 EACCES (Permission denied)
+```
+
+怀疑之前设置用户组的问题，先不管，重启解决了(另外之前修改了hostname，重启后才生效了)
+
+```sh
+# 重启前
+[root@desktop-mme7h3a ➜ /root ]$ id
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+# 重启后
+[root@xdlinux ➜ /root ]$ id
+uid=0(root) gid=0(root) groups=0(root),982(docker)
+```
+
+验证安装配置正常：
+
+```sh
+[root@xdlinux ➜ /root ]$ docker run --rm hello-world                        
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+c1ec31eb5944: Pull complete 
+Digest: sha256:d1b0b5888fbb59111dbf2b3ed698489c41046cb9d6d61743e37ef8d9f3dda06f
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+...
+```
+
+## previous
+
 ## 入门
 
 [Docker 入门教程](http://www.ruanyifeng.com/blog/2018/02/docker-tutorial.html)
