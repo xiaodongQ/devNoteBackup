@@ -499,14 +499,14 @@ go install github.com/go-delve/delve/cmd/dlv
         * 步骤
             * 生成一个token用于PicGo操作你的仓库(<https://github.com/settings/tokens>)，把repo的勾打上即可
             * vscode配置：![pigco配置](https://raw.githubusercontent.com/xiaodongQ/xiaodongq.github.io/master/images/2023-05-05-picgo-config.png)
-            * 而后用快捷键上传即可（上传后会自动在当前文件生成markdown形式的url引用，文件名为原始名称）
+            * 而后**用快捷键上传**即可（上传后会自动在当前文件生成markdown形式的url引用，文件名为原始名称）
                 * Cmd + Opt + u 从剪切板上传 (windows下则是ctrl+alt+u，下同)
                 * Cmd + Opt + e 从资源管理器上传
                 * Cmd + Opt + o 手动输入文件路径上传图片
     * Paste Image 在编辑器贴图。
         * 和picgo两者各有使用场景
             * picgo自动向仓库对应路径上传图片，生成图片完整url
-            * 而paste image从截图向本地路径添加图片，生成相对url，需要git add后提交
-        * 使用方式
+            * 而paste image从截图**向本地路径添加图片**，生成相对url，**需要git add后提交**
+        * **使用方式**
             * 命令：Paste Image
             * 快捷键：Cmd+Alt+V
