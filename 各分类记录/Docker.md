@@ -1,101 +1,5 @@
 # docker
 
-[Docker — 从入门到实践](https://docker-practice.github.io/zh-cn/install/centos.html)
-
-安装：卸载老的(注意会把依赖删掉，有可能其他服务依赖也会受影响，后续尝试`--nodeps`?)，安装`yum-utils`并使用`yum-config-manager`安装，使用阿里云国内源
-(CentOS8用podman替代docker，可以删除换成docker)
-
-```sh
-yum erase podman buildah
-yum install docker-ce docker-ce-cli containerd.io
-systemctl start docker
-systemctl enable docker
-```
-
-设置国内docker镜像源，Docker的配置文件通常位于`/etc/docker/daemon.json`。如果该文件不存在则创建
-    具体参考：[镜像加速器](https://docker-practice.github.io/zh-cn/install/mirror.html)
-
-设置源，由于镜像服务可能出现宕机，建议同时配置多个镜像。(注意需要带上`https://`，而ping检查联通性时不带)
-当前实际配置如下：
-
-```sh
-{    
-  "registry-mirrors": [
-    "https://docker.m.daocloud.io",
-    "https://hub-mirror.c.163.com",
-    "https://mirror.baidubce.com"                                                              
-  ]  
-}  
-```
-
-`systemctl daemon-reload`
-`systemctl restart docker`
-
-`docker info`查看是否生效
-
-```sh
-[root@desktop-mme7h3a ➜ /root ]$ docker info
-Client: Docker Engine - Community
- Version:    26.1.3
- Context:    default
- Debug Mode: false
- ...
-Registry Mirrors:
-  https://docker.m.daocloud.io/
-  https://hub-mirror.c.163.com/
-  https://mirror.baidubce.com/
- Live Restore Enabled: false
-```
-
-碰到的问题：
-
-ping 127.0.0.1也报错：
-
-```sh
-[root@desktop-mme7h3a ➜ /root ]$ ping 127.0.0.1       
-PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
-ping: sendmsg: Operation not permitted
-ping: sendmsg: Operation not permitted
-```
-
-strace查看创建socket就报权限问题
-
-```sh
-[root@desktop-mme7h3a ➜ /root ]$ strace -yy ping 127.0.0.1
-execve("/usr/sbin/ping", ["ping", "127.0.0.1"], 0x7fff1f4cf790 /* 43 vars */) = 0
-...
-socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP) = -1 EACCES (Permission denied)
-socket(AF_INET, SOCK_RAW, IPPROTO_ICMP) = 3<RAW:[0.0.0.0:1]>
-socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6) = -1 EACCES (Permission denied)
-```
-
-怀疑之前设置用户组的问题，先不管，重启解决了(另外之前修改了hostname，重启后才生效了)
-
-```sh
-# 重启前
-[root@desktop-mme7h3a ➜ /root ]$ id
-uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
-
-# 重启后
-[root@xdlinux ➜ /root ]$ id
-uid=0(root) gid=0(root) groups=0(root),982(docker)
-```
-
-验证安装配置正常：
-
-```sh
-[root@xdlinux ➜ /root ]$ docker run --rm hello-world                        
-Unable to find image 'hello-world:latest' locally
-latest: Pulling from library/hello-world
-c1ec31eb5944: Pull complete 
-Digest: sha256:d1b0b5888fbb59111dbf2b3ed698489c41046cb9d6d61743e37ef8d9f3dda06f
-Status: Downloaded newer image for hello-world:latest
-
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-...
-```
-
 ## previous
 
 ## 入门
@@ -425,3 +329,224 @@ This message shows that your installation appears to be working correctly.
     - [Docker之操作系统Alpine](https://blog.csdn.net/bbwangj/article/details/81088231)
     - [CGO_ENABLED环境变量对Go静态编译机制的影响](https://johng.cn/cgo-enabled-affect-go-static-compile/)
         + 纯静态编译
+
+---
+
+此前有些笔记是很早之前的了，很久没用基本没太多实用价值，暂时不删除。
+
+后续记录实践过程中碰到的问题。
+
+## 记一次CentOS新环境安装Docker
+
+参考：[Docker — 从入门到实践，CentOS 安装 Docker](https://docker-practice.github.io/zh-cn/install/centos.html)
+
+安装：卸载老的(注意会把依赖删掉，有可能其他服务依赖也会受影响，后续尝试`--nodeps`?)，安装`yum-utils`并使用`yum-config-manager`安装，使用阿里云国内源
+(CentOS8用podman替代docker，可以删除换成docker)
+
+```sh
+yum erase podman buildah
+yum install docker-ce docker-ce-cli containerd.io
+systemctl start docker
+systemctl enable docker
+```
+
+设置国内docker镜像源，Docker的配置文件通常位于`/etc/docker/daemon.json`。如果该文件不存在则创建
+    具体参考：[镜像加速器](https://docker-practice.github.io/zh-cn/install/mirror.html)
+
+设置源，由于镜像服务可能出现宕机，建议同时配置多个镜像。(注意需要带上`https://`，而ping检查联通性时不带)
+当前实际配置如下：
+
+```sh
+{    
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"                                                              
+  ]  
+}  
+```
+
+`systemctl daemon-reload`
+`systemctl restart docker`
+
+`docker info`查看是否生效
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ docker info
+Client: Docker Engine - Community
+ Version:    26.1.3
+ Context:    default
+ Debug Mode: false
+ ...
+Registry Mirrors:
+  https://docker.m.daocloud.io/
+  https://hub-mirror.c.163.com/
+  https://mirror.baidubce.com/
+ Live Restore Enabled: false
+```
+
+碰到的问题：
+
+ping 127.0.0.1也报错：
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ ping 127.0.0.1       
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+ping: sendmsg: Operation not permitted
+ping: sendmsg: Operation not permitted
+```
+
+strace查看创建socket就报权限问题
+
+```sh
+[root@desktop-mme7h3a ➜ /root ]$ strace -yy ping 127.0.0.1
+execve("/usr/sbin/ping", ["ping", "127.0.0.1"], 0x7fff1f4cf790 /* 43 vars */) = 0
+...
+socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP) = -1 EACCES (Permission denied)
+socket(AF_INET, SOCK_RAW, IPPROTO_ICMP) = 3<RAW:[0.0.0.0:1]>
+socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6) = -1 EACCES (Permission denied)
+```
+
+怀疑之前设置用户组的问题，先不管，重启解决了(另外之前修改了hostname，重启后才生效了)
+
+```sh
+# 重启前
+[root@desktop-mme7h3a ➜ /root ]$ id
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+# 重启后
+[root@xdlinux ➜ /root ]$ id
+uid=0(root) gid=0(root) groups=0(root),982(docker)
+```
+
+验证安装配置正常：
+
+```sh
+[root@xdlinux ➜ /root ]$ docker run --rm hello-world                        
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+c1ec31eb5944: Pull complete 
+Digest: sha256:d1b0b5888fbb59111dbf2b3ed698489c41046cb9d6d61743e37ef8d9f3dda06f
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+...
+```
+
+## 测试程序制作镜像
+
+```sh
+# 使用一个带有g++的base image  
+FROM gcc:latest  
+  
+# 使用 WORKDIR 指令可以来指定工作目录（或者称为当前目录），以后各层的当前目录就被改为指定的目录
+# 如该目录不存在，WORKDIR 会帮你建立目录。
+# 设置工作目录  
+WORKDIR /app  
+  
+# COPY 指令将从构建上下文目录中的文件/目录复制到新的一层的镜像内的目的路径位置。
+# Dockerfile和要拷贝的内容需要在相同的根目录
+# 将你的C++代码复制到Docker容器中  
+COPY server.cpp client.cpp make.sh /app/
+
+# ADD 命令，和COPY类似，在其基础上加了一些功能
+# 如果源路径是一个tar/gzip//bzip2/xz包，则ADD会自动解压
+# 在 Docker 官方的 Dockerfile 最佳实践文档 中要求，尽可能的使用 COPY，因为 COPY 的语义很明确
+  
+# RUN 指令用于在镜像构建过程中执行命令。这些命令会在构建镜像时运行，并且它们的结果会被提交到新的镜像层中。
+# 编译你的C++代码（假设你有一个名为main.cpp的文件）  
+RUN bash make.sh 
+
+# CMD 设置容器启动时默认执行的命令及其参数，这个命令会在容器启动时运行，而且可以被 docker run 命令后面的参数所覆盖。
+# 运行编译后的程序  
+CMD ["./server"]
+```
+
+1、构建：
+`docker build -t test-tcp-connect .`
+
+gcc镜像一直拉不下来
+
+2、设置阿里云镜像加速器：
+
+参考：[设置阿里云镜像加速器](https://developer.aliyun.com/article/1402795?spm=a2c6h.14164896.0.0.3d4747c546qVzc&scm=20140722.S_community@@%E6%96%87%E7%AB%A0@@1402795._.ID_1402795-RL_%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F%E5%99%A8-LOC_search~UND~community~UND~item-OR_ser-V_3-P0_0)
+
+阿里云，搜索“镜像加速器”，要登录获取加速器地址。上面还有设置方法
+[镜像加速器](https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors?spm=a2c6h.12873639.article-detail.12.799a4e6dYofFto)
+
+碰到docker重启不起来。参考这篇解决：
+[创建默认“网桥”网络时出错:无法创建网络(docker0)：与网络(Docker0)冲突:网络具有相同的网桥名称](https://cloud.tencent.com/developer/ask/sof/105054756)
+
+```sh
+rm -rf /var/docker/network/*
+mkdir /var/docker/network/files
+systemctl start docker
+```
+
+3、设置后重新build，成功。
+
+```sh
+# 编译镜像
+[root@xdlinux ➜ tcp_connect git:(main) ✗ ]$ docker build -t test-tcp-connect .
+[+] Building 62.8s (9/9) FINISHED                                                           docker:default
+ => [internal] load build definition from Dockerfile                                                  0.0s
+ => => transferring dockerfile: 369B                                                                  0.0s
+ => [internal] load metadata for docker.io/library/gcc:latest                                        17.0s
+ => [internal] load .dockerignore                                                                     0.0s
+ => => transferring context: 2B                                                                       0.0s
+ => [1/4] FROM docker.io/library/gcc:latest@sha256:084eaedf8e3c51f3db939ad7ed2b1455ff9ce4705845a014  43.4s
+ => => resolve docker.io/library/gcc:latest@sha256:084eaedf8e3c51f3db939ad7ed2b1455ff9ce4705845a014f  0.0s
+ => => sha256:9b829c73b52b92b97d5c07a54fb0f3e921995a296c714b53a32ae67d19231fcd 5.15MB / 5.15MB        1.4s
+ => => sha256:084eaedf8e3c51f3db939ad7ed2b1455ff9ce4705845a014fb9fe5577b35c901 1.43kB / 1.43kB        0.0s
+ => => sha256:f7ea55625e097107d176d06641b637eeae64c606dbf9fa2938872e4c0aca15bc 2.22kB / 2.22kB        0.0s
+ => => sha256:cb5b7ae361722f070eca53f35823ed21baa85d61d5d95cd5a95ab53d740cdd56 10.87MB / 10.87MB      5.6s
+ => => sha256:709e60f7d3e3c4c83db820a7edc55c7fc50b52d18870b62165aef3bd38d97f64 9.39kB / 9.39kB        0.0s
+ => => sha256:0e29546d541cdbd309281d21a73a9d1db78665c1b95b74f32b009e0b77a6e1e3 54.92MB / 54.92MB     26.1s
+ => => sha256:6494e4811622b31c027ccac322ca463937fd805f569a93e6f15c01aade718793 54.57MB / 54.57MB      7.2s
+ => => sha256:6f9f74896dfa93fe0172f594faba85e0b4e8a0481a0fefd9112efc7e4d3c78f7 196.51MB / 196.51MB   39.7s
+ => => sha256:9e02d5ba8945fff0903d608586865f4a30fccd4a5d038ee2366339be3052676b 15.43kB / 15.43kB      7.7s
+ => => sha256:f26bedb21a7b9d02daceea55babc6c2bbaf0e30c4d6fdb3b3f1a81e0fd810ed6 127.26MB / 127.26MB   30.2s
+ => => extracting sha256:0e29546d541cdbd309281d21a73a9d1db78665c1b95b74f32b009e0b77a6e1e3             0.9s
+ => => sha256:6584fc653633ae1641051770b2e9f7c13f3be570204b2875c343c27b312c9fbf 10.10kB / 10.10kB     26.6s
+ => => sha256:bae0ff2cc62a65ad7630a9e39e71081c85e5669bfa74cdc5c971385ec4daea25 1.89kB / 1.89kB       27.1s
+ => => extracting sha256:9b829c73b52b92b97d5c07a54fb0f3e921995a296c714b53a32ae67d19231fcd             0.1s
+ => => extracting sha256:cb5b7ae361722f070eca53f35823ed21baa85d61d5d95cd5a95ab53d740cdd56             0.1s
+ => => extracting sha256:6494e4811622b31c027ccac322ca463937fd805f569a93e6f15c01aade718793             0.9s
+ => => extracting sha256:6f9f74896dfa93fe0172f594faba85e0b4e8a0481a0fefd9112efc7e4d3c78f7             2.1s
+ => => extracting sha256:9e02d5ba8945fff0903d608586865f4a30fccd4a5d038ee2366339be3052676b             0.0s
+ => => extracting sha256:f26bedb21a7b9d02daceea55babc6c2bbaf0e30c4d6fdb3b3f1a81e0fd810ed6             1.0s
+ => => extracting sha256:6584fc653633ae1641051770b2e9f7c13f3be570204b2875c343c27b312c9fbf             0.0s
+ => => extracting sha256:bae0ff2cc62a65ad7630a9e39e71081c85e5669bfa74cdc5c971385ec4daea25             0.0s
+ => [internal] load build context                                                                     0.0s
+ => => transferring context: 89B                                                                      0.0s
+ => [2/4] WORKDIR /app                                                                                1.3s
+ => [3/4] COPY server.cpp client.cpp make.sh /app/                                                    0.1s
+ => [4/4] RUN bash make.sh                                                                            0.9s
+ => exporting to image                                                                                0.1s
+ => => exporting layers                                                                               0.0s
+ => => writing image sha256:1a808f6d5ad196ebffa9615ba404fcaabda7384aad6e3d6721d9014710d0b0d1          0.0s
+ => => naming to docker.io/library/test-tcp-connect                                                   0.0s
+
+# 编译成功：test-tcp-connect
+[root@xdlinux ➜ tcp_connect git:(main) ✗ ]$ docker images
+REPOSITORY         TAG       IMAGE ID       CREATED          SIZE
+test-tcp-connect   latest    1a808f6d5ad1   47 seconds ago   1.23GB
+alpine             latest    a606584aa9aa   2 days ago       7.8MB
+testnginx          latest    2d3d2bb36614   7 days ago       188MB
+hello-world        latest    d2c94e258dcb   13 months ago    13.3kB
+```
+
+`docker run -d -p 8080:8080 --name my-test-tcp-connect-container test-tcp-connect`
+
+```sh
+# 创建一个docker容器
+[root@xdlinux ➜ tcp_connect git:(main) ✗ ]$ docker run -d -p 8080:8080 --name my-test-tcp-connect-container test-tcp-connect
+f52f3b53e7c5be0dd16d132b169c2f952becf0b9bfd86580cf9e6a794ee40fee
+# 查看监听
+[root@xdlinux ➜ tcp_connect git:(main) ✗ ]$ netstat -anp|grep 8080
+tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      8819/docker-proxy   
+tcp6       0      0 :::8080                 :::*                    LISTEN      8826/docker-proxy
+```
+
+客户端可通过服务端ip和8080访问服务。
