@@ -656,7 +656,8 @@ struct inet_sock {
 struct inet_connection_sock {
 	/* inet_sock has to be the first member! */
 	struct inet_sock	  icsk_inet;
-	// 全连接队列，已经 ESTABLISHED 的队列：FIFO of established children
+	// ~~废弃：全连接队列，已经 ESTABLISHED 的队列：FIFO of established children~~
+	// 里面包含全连接队列、以及半连接队列长度等信息
 	struct request_sock_queue icsk_accept_queue;
 	struct inet_bind_bucket	  *icsk_bind_hash;
 	unsigned long		  icsk_timeout;
@@ -822,7 +823,7 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 {
     ...
     // tcp_syncookies：1表示当半连接队列满时才开启；2表示无条件开启功能，此处可看到就算半连接队列满了也不drop
-    // inet_csk_reqsk_queue_is_full：判断accept队列(全连接队列)是否满
+	// inet_csk_reqsk_queue_is_full：判断半连接队列是否满(相对于4.4之前的内核，之后内核中半连接队列最大长度也和全连接队列一样)，里面判断的是：inet_connection_sock（面向连接的sock）中的队列
     if ((net->ipv4.sysctl_tcp_syncookies == 2 ||
          inet_csk_reqsk_queue_is_full(sk)) && !isn) {
         want_cookie = tcp_syn_flood_action(sk, rsk_ops->slab_name);
@@ -835,11 +836,11 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 
 ```cpp
 // linux-5.10.10/include/net/inet_connection_sock.h
-// 判断全连接队列是否已满
+// 判断半连接队列是否已满
 static inline int inet_csk_reqsk_queue_is_full(const struct sock *sk)
 {
 	// sk->sk_max_ack_backlog，之前跟踪listen，可以看到是将 min(backlog,somaxconn) 赋值给了它
-	// 全连接队列 >= 最大全连接队列数量
+	// 半连接队列 >= 最大半连接队列数量（相对于4.4之前内核，新内核的全连接队列和半连接队列最大长度一样。队列是同一个，根据状态区分？）
 	return inet_csk_reqsk_queue_len(sk) >= sk->sk_max_ack_backlog;
 }
 ```
