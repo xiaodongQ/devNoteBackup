@@ -1,0 +1,130 @@
+<mxfile host="app.diagrams.net" modified="2024-07-21T06:15:29.411Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="M3fLzPbaUNfGN6pSRfCN" version="24.2.5" type="device">
+  <diagram id="5ZruKXpPlvTqBJEBqCR5" name="第 1 页">
+    <mxGraphModel dx="776" dy="388" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-9" value="&lt;p style=&quot;margin: 4px 0px 0px; text-align: center; line-height: 120%;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;Interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;&lt;font color=&quot;#0000ff&quot;&gt;DB&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style: solid; line-height: 120%;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;（普通函数）&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ Open(Options, string, DB**): Status&lt;br&gt;&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;（纯虚函数/接口）&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ Put(WriteOptions, Slice, Slice): Status&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ Delete(WriteOptions, Slice): Status&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ Write(WriteOptions, WriteBatch*): Status&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ Get(ReadOptions, Slice, string*): Status&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ NewIterator(ReadOptions): Iterator*&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ GetSnapshot(): Snapshot*&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ ReleaseSnapshot(Snapshot*): void&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ GetProperty(Slice, string*): bool&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ GetApproximateSizes(Range*, int, uint64_t*)&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;+ CompactRange(Slice*, Slice*): void&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 4px; line-height: 120%;&quot;&gt;&lt;br&gt;&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;hachureGap=4;fontFamily=Comic Sans MS;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=0;glass=0;shadow=1;labelBackgroundColor=none;labelBorderColor=none;whiteSpace=wrap;spacingTop=0;spacingBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="130" y="90" width="280" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-17" value="include/leveldb/db.h" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="190" y="50" width="180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-22" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;&lt;font color=&quot;#3333ff&quot;&gt;DBImpl&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- env_: Env*&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- options_: Options&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- dbname_: string&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- table_cache_: TableCache*&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- mutex_: port::Mutex&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- mem_: MemTable*&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- imm_: MemTable*&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- log_: log::Writer*&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;...&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ 实现上述所有纯虚函数&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ NewDB(): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ Recover(VersionEdit*, bool*): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ RemoveObsoleteFiles(): void&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ CompactMemtable(): void&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ RecoverLogFile(uint64_t, ...): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;...&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fontFamily=Comic Sans MS;fillColor=#fff2cc;strokeColor=#d6b656;shadow=1;gradientColor=none;" vertex="1" parent="1">
+          <mxGeometry x="490" y="90" width="250" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-25" value="db/db_impl.h" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="550" y="50" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-26" value="说明下 db/db_impl.cc中的函数，其中包含：&lt;div style=&quot;font-size: 12px;&quot;&gt;1、实现基类纯虚函数&lt;/div&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;2、自身定义的函数&lt;/div&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;3、还包含如下几个基类接口的实现（虽为纯虚函数也定义了实现）&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;&lt;div style=&quot;color: rgb(204, 204, 204); background-color: rgb(31, 31, 31); font-size: 12px; line-height: 17px; white-space: pre;&quot;&gt;&lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Status&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;DB&lt;/span&gt;::&lt;span style=&quot;color: rgb(220, 220, 170); font-size: 12px;&quot;&gt;Put&lt;/span&gt;(&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;WriteOptions&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;opt&lt;/span&gt;, &lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Slice&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;key&lt;/span&gt;, &lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Slice&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;value&lt;/span&gt;) {xxx}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;color: rgb(204, 204, 204); background-color: rgb(31, 31, 31); font-size: 12px; line-height: 17px; white-space: pre;&quot;&gt;&lt;div style=&quot;line-height: 17px; font-size: 12px;&quot;&gt;&lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Status&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;DB&lt;/span&gt;::&lt;span style=&quot;color: rgb(220, 220, 170); font-size: 12px;&quot;&gt;Delete&lt;/span&gt;(&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;WriteOptions&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;opt&lt;/span&gt;, &lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Slice&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;key&lt;/span&gt;) {xxx}&lt;/div&gt;&lt;div style=&quot;line-height: 17px; font-size: 12px;&quot;&gt;&lt;div style=&quot;line-height: 17px; font-size: 12px;&quot;&gt;&lt;div style=&quot;line-height: 17px; font-size: 12px;&quot;&gt;&lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Status&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;DB&lt;/span&gt;::&lt;span style=&quot;color: rgb(220, 220, 170); font-size: 12px;&quot;&gt;Open&lt;/span&gt;(&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;Options&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;options&lt;/span&gt;, &lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;const&lt;/span&gt; &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;std&lt;/span&gt;::&lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;string&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;dbname&lt;/span&gt;, &lt;span style=&quot;color: rgb(78, 201, 176); font-size: 12px;&quot;&gt;DB&lt;/span&gt;&lt;span style=&quot;color: rgb(86, 156, 214); font-size: 12px;&quot;&gt;**&lt;/span&gt; &lt;span style=&quot;color: rgb(156, 220, 254); font-size: 12px;&quot;&gt;dbptr&lt;/span&gt;) {xxx}&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="754" y="170" width="576" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-28" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;fontSize=12;curved=1;exitX=0.001;exitY=0.036;exitDx=0;exitDy=0;exitPerimeter=0;fontFamily=Comic Sans MS;" edge="1" parent="1" source="ZAFrgoKh-T77m-U7ydel-22">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="490" y="220" as="sourcePoint" />
+            <mxPoint x="410" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-55" value="实现" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Comic Sans MS;" vertex="1" connectable="0" parent="ZAFrgoKh-T77m-U7ydel-28">
+          <mxGeometry x="-0.0977" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-30" value="提供访问操作系统的功能接口，如文件系统。&lt;div style=&quot;font-size: 12px;&quot;&gt;也可自定义Env对象实现进一步的控制&lt;/div&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="105" y="405" width="330" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-31" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;Interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;Env&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;+&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;NewSequentialFile&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;(string, SequentialFile**): Status&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ NewRandomAccessFile(string, RandomAccessFile**): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ NewWritableFile(string, WritableFile**): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ NewAppendableFile&lt;span style=&quot;background-color: initial;&quot;&gt;(string, WritableFile**): Status&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ FileExists(string): bool&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ RemoveFile(string): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ GetFileSize(string, uint64_t*): Status&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;...&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;&lt;br&gt;&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="80" y="445" width="350" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-43" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;PosixEnv&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot; style=&quot;border-style:solid;&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="80" y="690" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-44" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;WindowsEnv&lt;/b&gt;&lt;br&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot; style=&quot;border-style:solid;&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="260" y="690" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-45" value="Extends" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.2;entryY=1.009;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Comic Sans MS;" edge="1" parent="1" source="ZAFrgoKh-T77m-U7ydel-43" target="ZAFrgoKh-T77m-U7ydel-31">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="340" y="670" as="sourcePoint" />
+            <mxPoint x="500" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-47" value="Extends" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.2;entryY=1.009;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Comic Sans MS;" edge="1" parent="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="329.40999999999997" y="688" as="sourcePoint" />
+            <mxPoint x="329.40999999999997" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-53" value="" style="endArrow=diamondThin;endFill=0;endSize=24;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.002;entryY=0.15;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Comic Sans MS;" edge="1" parent="1" source="ZAFrgoKh-T77m-U7ydel-31" target="ZAFrgoKh-T77m-U7ydel-22">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="350" y="360" as="sourcePoint" />
+            <mxPoint x="480" y="170" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="450" y="533" />
+              <mxPoint x="450" y="134" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-54" value="聚合" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Comic Sans MS;" vertex="1" connectable="0" parent="ZAFrgoKh-T77m-U7ydel-53">
+          <mxGeometry x="0.1952" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-57" value="include/leveldb/env.h" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="100" y="375" width="180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-58" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;span style=&quot;text-align: left;&quot;&gt;&lt;b&gt;TableCache&lt;/b&gt;&lt;/span&gt;&lt;br&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="480" y="460" width="90" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-60" value="&lt;p style=&quot;margin: 4px 0px 0px; text-align: center;&quot;&gt;&lt;span style=&quot;text-align: left;&quot;&gt;&lt;b&gt;Memtable&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- refs_: int&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- comparator_: KeyComparator&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- arena_: Arena&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- table_: Talbe&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ Ref(): void&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ UnRef(): void&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ Add(SequenceNumber, ValueType, Slice, Slice): void&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ Get(LookupKey, string, Status*): bool&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;...&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="720" y="460" width="300" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-61" value="" style="endArrow=diamondThin;endFill=0;endSize=24;html=1;rounded=0;fontFamily=Comic Sans MS;" edge="1" parent="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="584.5" y="440" as="sourcePoint" />
+            <mxPoint x="584.5" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-64" value="聚合" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Comic Sans MS;" vertex="1" connectable="0" parent="ZAFrgoKh-T77m-U7ydel-61">
+          <mxGeometry x="-0.1856" y="-1" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-62" value="" style="endArrow=diamondThin;endFill=0;endSize=24;html=1;rounded=0;entryX=0.995;entryY=0.938;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontFamily=Comic Sans MS;" edge="1" parent="1" source="ZAFrgoKh-T77m-U7ydel-60" target="ZAFrgoKh-T77m-U7ydel-22">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="710" y="460" as="sourcePoint" />
+            <mxPoint x="710" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="870" y="362" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-63" value="聚合" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Comic Sans MS;" vertex="1" connectable="0" parent="ZAFrgoKh-T77m-U7ydel-62">
+          <mxGeometry x="-0.1719" y="1" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-65" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;FileLock&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="600" y="460" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-66" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;WritableFile&lt;/b&gt;&lt;br&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="460" y="540" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-67" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;SnapshotList&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="490" y="680" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-68" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;log::Writer&lt;/b&gt;&lt;br&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="550" y="540" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-69" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;WriterBatch&lt;/b&gt;&lt;br&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="460" y="610" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-70" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;ManualCompaction&lt;/b&gt;&lt;br&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="560" y="610" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZAFrgoKh-T77m-U7ydel-71" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;VersionSet&lt;/b&gt;&lt;/p&gt;&lt;hr style=&quot;border-style:solid;&quot; size=&quot;1&quot;&gt;&lt;div style=&quot;height:2px;&quot;&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Comic Sans MS;" vertex="1" parent="1">
+          <mxGeometry x="630" y="540" width="70" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
