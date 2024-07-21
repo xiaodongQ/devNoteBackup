@@ -1087,7 +1087,7 @@ std::mutex foo,bar;
 void task_a () {
     // simultaneous lock (prevents deadlock) 同时加锁，避免死锁
     std::lock (foo,bar);
-    // 创建unique_lock并接管锁foo，创建前已经获取了两个锁
+    // 创建unique_lock并接管锁foo，创建前已经获取了两个锁 （或者指定`std::defer_lock`，而后调用`std::lock(lck1, lck2)`同时加锁，效果一样）
     std::unique_lock<std::mutex> lck1 (foo,std::adopt_lock);
     // 创建unique_lock并接管锁bar
     std::unique_lock<std::mutex> lck2 (bar,std::adopt_lock);
@@ -2600,18 +2600,22 @@ void producer_thread(int thread_id)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         //加锁
+        // 等待时需要使用 std::unique_lock <std::mutex>，而不是std::lock_guard<std::mutex>，因为条件变量的等待操作需要在等待的过程中解锁互斥锁。
         std::unique_lock <std::mutex> lk(g_cvMutex);
          //当队列未满时，继续添加数据
         // while(g_data_deque.size() >= MAX_NUM)
         // {
         //     g_cv_produce.wait(lk);
         // }
+        // 条件变量的等待可能会被虚假唤醒（spurious wakeup），即在没有通知的情况下被唤醒。
+        // 因此，等待时通常需要使用谓词（Predicate）或循环检查条件是否满足。
         g_cv_produce.wait(lk, [](){ return g_data_deque.size() < MAX_NUM; });  //lambda表达式
         g_next_index++;
         g_data_deque.push_back(g_next_index);
         std::cout << "producer_thread: " << thread_id << " producer data: " << g_next_index;
         std::cout << " queue size: " << g_data_deque.size() << std::endl;
         //唤醒其他线程 
+        // `notify_one()` 只通知一个等待线程，而 `notify_all()` 则通知所有等待线程。选择合适的通知方式可以提高程序效率。
         g_cv_consume.notify_all();
         //自动释放锁
      }
