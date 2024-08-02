@@ -252,3 +252,140 @@ Polynomial /ˌpɒlɪ'nəʊmɪəl/ 多项式；多项式的
 
 设想一下 , 如果没有模运算的话，计算结果的大小会给找出原始值提供一些线索。
 
+## 基础电路
+
+[ZK Shanghai 基础电路教学](https://www.youtube.com/watch?v=CTJ1JkYLiyw)
+
+编辑器：[zkREPL](https://zkrepl.dev/)
+
+### 视频中的第一个示例：
+
+```c
+pragma circom 2.1.4;
+
+template Main () {
+    signal input x1;
+    signal input x2;
+    signal input x3;
+    signal input x4;
+
+    signal y1;
+    signal y2;
+    signal output out;
+
+    // f(x) = (x1+x2)/x3 - x4
+    y1 <==  x1 + x2;
+    y2 <== y1 / x3;
+    out <== y2 - x4;
+
+}
+
+component main = Main();
+
+/* INPUT = {
+    "x1": "4",
+    "x2": "6",
+    "x3": "2",
+    "x4": "1"
+} */
+```
+
+保存报错（提示github访问，可点取消）：
+
+quadratic /kwɒ'drætɪk/ 二次的；二次方程式  
+constraints /kən'streint/ 约束条件
+
+```sh
+stderr: 
+error[T3001]: Non quadratic constraints are not allowed!
+   ┌─ "main.circom":15:5
+   │
+15 │     y2 <== y1 / x3;
+   │     ^^^^^^^^^^^^^^ found here
+   │
+   = call trace:
+     ->Main
+
+previous errors were found
+stdout: 
+Compiled in 4.87s
+fail: 
+ENOENT: no such file or directory, open 'main_js/main.wasm'
+```
+
+改成：
+
+```c
+pragma circom 2.1.4;
+
+template Main () {
+    signal input x1;
+    signal input x2;
+    signal input x3;
+    signal input x4;
+
+    signal y1;
+    signal y2;
+    signal output out;
+
+    // f(x) = (x1+x2)/x3 - x4
+    y1 <==  x1 + x2;
+
+    // y2 <== y1 / x3;
+    // 改成如下
+    y2 <-- y1 / x3;
+    // === 是约束
+    y1 === y2 * x3;
+
+    out <== y2 - x4;
+}
+
+component main = Main();
+
+/* INPUT = {
+    "x1": "4",
+    "x2": "6",
+    "x3": "2",
+    "x4": "1"
+} */
+```
+
+### 算术电路
+
+算术电路：
+
+* 是`计算复杂性理论`中的概念，和电子电路无关
+* 有向无环图
+* 输入节点：x1, ..., xn
+* 内部节点：+, -, *
+* 每个内部节点也成为`门(gate)`
+
+计算复杂性理论（Computational Complexity Theory）是一门研究计算机算法的效率和限制的理论。它关注的是计算机能够解决的问题的难易程度，以及解决这些问题所需的计算资源（如时间和空间）的数量。
+
+#### 零知识证明电路常见设计方法
+
+* 提示
+    * 由于算术电路的约束性，每个门电路的计算都会转换为`约束`，进而增加证明和验证的工作量
+    * 我们可以将复杂的计算过程转换为预先计算的`提示值`，在电路中`对提示值进行验证`，从而降低证明和验证的工作量。
+* 判零函数
+    * 示例：`let y = input > 0 ? 0 : 1;`
+* 选择
+    * 示例：`let y = s ? (a+b) : (a*b);`
+* 二进制化
+    * 示例：`5 -> 101`
+* 比较
+    * `let y = s1 > s2 ? 1 : 0;`
+    * 转换关系：y = s1 - s2 + 2^n，其中2^n是数的最大值，然后取y二进制化的最高位，即符号位
+* 循环
+    * 注意：由于算术电路的固定性，电路只能设计成支持最大数量
+    * `for(let i = 0; i < N; i++)`，N是某个最大值
+* 交换
+* 逻辑
+    * &、|、!
+
+理解各方法背后对应的数学运算
+
+* 排序：实现冒泡排序
+    1) 在算术电路上做排序，可借助`排序网络`的概念
+    2) 利用多个比较器形成排序网络进行排序
+
