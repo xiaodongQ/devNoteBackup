@@ -360,7 +360,15 @@ component main = Main();
 * 内部节点：+, -, *
 * 每个内部节点也成为`门(gate)`
 
+算术电路（Arithmetic Circuit）是一种计算模型，用于研究算术运算的复杂性和效率。它是一种抽象的电路模型，用于模拟算术运算的计算过程。
+
+Arithmetic /ə'rɪθmətɪk/ 计算；算术  
+Circuit /'sɜːkɪt/ 电路；环行
+
 计算复杂性理论（Computational Complexity Theory）是一门研究计算机算法的效率和限制的理论。它关注的是计算机能够解决的问题的难易程度，以及解决这些问题所需的计算资源（如时间和空间）的数量。
+
+Computational /ˌkɑmpju'teʃənl/  
+Complexity /kəm'pleksətɪ/
 
 #### 零知识证明电路常见设计方法
 
