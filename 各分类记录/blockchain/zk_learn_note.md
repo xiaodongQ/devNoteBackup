@@ -196,6 +196,16 @@ Argument 参数；论证
 * 多项式承诺：通过多项式承诺方案来确保计算的正确性。
 * 算术电路：复杂的计算被转化为`算术电路`，使得验证者可以通过简单的代数运算验证计算结果。
 
+SNARK相关数学知识：
+
+* [1-Polynomial-Interaction-and-Proof](https://learn.z2o-k7e.world/zk-snarks/1-Polynomial-Interaction-and-Proof.html)
+* [2-Non-interactivity&Distributed-Setup](https://learn.z2o-k7e.world/zk-snarks/2-Non-interactivity&Distributed-Setup.html)
+* [3-General-Purpose-Computation](https://learn.z2o-k7e.world/zk-snarks/3-General-Purpose-Computation.html)
+* [4-Construction-Properties.md](https://learn.z2o-k7e.world/zk-snarks/4-Construction-Properties.html)
+* [5-Pinocchio-Protocol](https://learn.z2o-k7e.world/zk-snarks/5-Pinocchio-Protocol.html)
+
+第一篇还能大概跟上，剩下的大概浏览了下，理解还是比较费劲。
+
 ### [1-Polynomial-Interaction-and-Proof](https://learn.z2o-k7e.world/zk-snarks/1-Polynomial-Interaction-and-Proof.html)
 
 Polynomial-Interaction-and-Proof：多项式交互和证明
