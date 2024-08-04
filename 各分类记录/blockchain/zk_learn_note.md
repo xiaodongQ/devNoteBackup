@@ -397,3 +397,36 @@ Complexity /kəm'pleksətɪ/
     1) 在算术电路上做排序，可借助`排序网络`的概念
     2) 利用多个比较器形成排序网络进行排序
 
+#### Circom
+
+可以参考：
+
+* 语法：[circom语言中文教程](https://suyanlong.github.io/circom-language-ch/)
+* 安装和示例：[Circom 语言教程与 circomlib 演示](https://learnblockchain.cn/article/6811)
+
+Circom 是学习 zk-snarks 的绝佳工具。
+
+Circom是一种新颖的领域特定语言，用于定义可用于生成零知识证明的算术电路。Circom compiler是一个用 Rust 编写的 circom 语言编译器，可用于生成带有一组关联约束的 `R1CS` 文件和一个程序（用 C++ 或 WebAssembly 编写），以有效计算对电路所有线路的有效分配。
+
+* 它的主要特点之一circom是它的模块化，它允许程序员定义称为模板的可参数化电路，可以将其实例化以形成更大的电路。
+* 利用小型独立组件构建电路的想法使得测试、审查、审计或正式验证大型复杂circom电路变得更加容易
+* Circcom 旨在为开发人员提供一个整体框架，通过易于使用的接口构建算术电路，并抽象化证明机制的复杂性。
+
+`circomLib`是一个公开可用的库，带有数百个电路，例如比较器、哈希函数、数字签名、二进制和十进制转换器等等。
+
+`R1CS（Rank-1 Constraint System）`是一种用于构建零知识证明的数学模型，广泛应用于 zk-SNARKs（零知识简洁非交互式论证系统）。它为证明计算的正确性提供了一个有效的方法，并且有助于实现高效的零知识证明。
+
+相关语法：
+
+* `信号`：信号可以定义为输入或输出，否则被视为中间信号。
+
+```rust
+// 声明了一个带有标识符的输入信号in
+signal input in;
+// 一个带有标识符的输出信号的N维数组out
+signal output out[N];
+// 一个带有标识符的中间信号inter
+signal inter;
+```
+
+* `===` 电路约束
