@@ -457,9 +457,11 @@ template Num2Bites (nBits) {
 
     // 先计算 in 的二进制表达
     for (var i = 0; i < nBits; i++) {
+        // `\` 是整数除法，此处为 in \ (2^i)，然后再 mod 2，判断是取1还是取0
         b[i] <-- (in \ 2 ** i) % 2;
     }
 
+    // 对信号赋值后，检查约束
     // 约束：确保 b 是 in 的二进制表达
     var accm = 0; // 可变变量，累加
     for (var i = 0; i < nBits; i++) {
@@ -467,6 +469,7 @@ template Num2Bites (nBits) {
     }
     accm === in; // 约束
 
+    // 每位也得满足约束
     // 约束：b的每一位是二进制，也就是 0 / 1
     for (var i = 0; i < nBits; i++) {
         0 === b[i] * (1 - b[i]);
