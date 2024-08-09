@@ -445,7 +445,7 @@ signal inter;
 
 忘记打引号是测试失败的常见原因。
 
-#### 转换为bit位 Num2Bits
+#### 算术电路：转换为bit位 Num2Bits
 
 ```c
 pragma circom 2.1.4;
@@ -503,4 +503,109 @@ component main = Num2Bites(5);
 约束中只允许包含`二次表达式`。比如 `out === 1 – a*b;`，而 ~~`out <== in*in2*in3;`~~ 是不允许的
 
 开始用circom写程序时，容易误用`<--`，它会分配一个二次表达式**并且不会添加约束**，一般情况需要使用`<===`。
+
+#### 算术电路：判零 IsZero
+
+要求：如果in为零，out应为1。 如果in不为零，out应为0。
+
+初步看起来很简单，if else分支处理（**有坑**）
+
+```c
+pragma circom 2.0.0;
+
+template IsZero() {
+    signal input in;
+    signal inv;
+
+    if (in == 0) {
+        inv <-- 0;
+    } else {
+        inv <-- 1 / in;
+    }
+}
+
+component main = IsZero();
+
+/* INPUT = {
+    "in": "10"
+} */
+```
+
+放到 [zkREPL](https://zkrepl.dev/) 里运行测试（刷新即会重新编译运行），**报错：**
+
+```sh
+stderr: 
+error[T3001]: Exception caused by invalid assignment: signal already assigned
+   ┌─ "main.circom":10:9
+   │
+10 │         inv <-- 1 / in;
+   │         ^^^^^^^^^^^^^^ found here
+   │
+   = call trace:
+     ->IsZero
+
+previous errors were found
+```
+
+原因：所有signal都是Unknown的，包括in，编译时会看到inv有两个赋值语句，而**signal只能赋值一次**（无论分支是否只走一次），因此会出现编译错误。
+
+详情可参考circom文档：[signals](https://docs.circom.io/circom-language/signals/#public-and-private-signals)，里面有示例，并且有其他几种限制情况说明。
+
+> Signals are immutable, which means that once they have a value assigned, this value cannot be changed any more. Hence, if a signal is assigned twice, a compilation error is generateds
+
+修改：inv直接用`条件表达式`进行赋值，如下
+
+```c
+pragma circom 2.0.0;
+
+template IsZero() {
+    signal input in;
+    signal output out;
+
+    signal inv;
+
+    inv <-- in!=0 ? 1/in : 0;
+
+    out <== -in*inv +1;
+    // 加了一个约束（测试时不加也可通过）
+    in*out === 0;
+}
+
+component main = IsZero();
+
+// 若这里缺少，测试也会报错
+/* INPUT = {
+    "in": "10"
+} */
+```
+
+结果：
+
+```sh
+stdout: 
+    template instances: 1
+    non-linear constraints: 2
+    linear constraints: 0
+    public inputs: 0
+    public outputs: 1
+    private inputs: 1
+    private outputs: 0
+    wires: 4
+    labels: 4
+    Written successfully: ./main.r1cs
+    Written successfully: ./main.sym
+    Written successfully: ./main_js/main.wasm
+    Everything went okay, circom safe
+    Compiled in 1.96s
+Output: 
+    out = 0
+Artifacts: 
+    Finished in 2.45s
+    main.wasm (34.52KB)
+    main.js (9.18KB)
+    main.wtns (0.20KB)
+    main.r1cs (0.38KB)
+    main.sym (0.04KB)
+```
+
 
