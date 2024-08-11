@@ -417,7 +417,7 @@ Circom是一种新颖的领域特定语言，用于定义可用于生成零知�
 
 `R1CS（Rank-1 Constraint System）`是一种用于构建零知识证明的数学模型，广泛应用于 zk-SNARKs（零知识简洁非交互式论证系统）。它为证明计算的正确性提供了一个有效的方法，并且有助于实现高效的零知识证明。
 
-相关语法：
+#### 3.4.1. 相关语法：
 
 * `信号`：信号可以定义为输入或输出，否则被视为中间信号。
 
@@ -430,7 +430,62 @@ signal output out[N];
 signal inter;
 ```
 
-* `===` 电路约束
+* `===`：指定一个约束，对给定的等式创建一个简化形式的约束
+    * 示例：`a*(a-1) === 0;` 表示约束a取值0或者1
+    * **相当于加了一个`assert`断言**
+* `<--`、`-->`：用于给`signal`变量赋值
+    * 给`signal`赋值一般需要用`===`添加约束，描述赋了什么值
+    * 示例：`out <-- 1 - a*b;`
+* `<==` 等价于`<--`后再`===`进行约束判断
+    * `out <== 1 - a*b;`，相当于
+        * `out <-- 1 - a*b`
+        * `out === 1 - a*b`
+
+在构造阶段，变量可以包含使用`乘法`、`加法`和其他变量或信号和字段值构造的算术表达式
+
+约束中只允许包含`二次表达式`。比如 `out === 1 – a*b;`，而 ~~`out <== in*in2*in3;`~~ 是不允许的
+
+开始用circom写程序时，容易误用`<--`，它会分配一个二次表达式**并且不会添加约束**，一般情况需要使用`<===`。
+
+template 和 component：
+
+* template
+    * 详情参考[circom docs-templates](https://docs.circom.io/circom-language/templates-and-components/#templates)
+    * 在 Circom 创建通用电路的机制是所谓的`模板`(template)
+    * 模板实例化为一个新的电路对象，可以用来组合成更大的电路。每个模板有它自己的信号，比如input、outpput
+    * 模板里不能包含其他模板或者函数的定义
+* component
+    * 组件(component)定义了一个算术电路，接收`N`个input信号，并产生`M`个output信号和`K`个中间信号，另外还能产生一系列约束。
+    * 可使用`.`访问组件里的input和output信号，其他信号则在组件外不可见
+    * 只有所有的input信号都分配了具体值，component才会触发实例化。因此component的创建指令并不意味着执行对象实例化，可能会延迟实例化。
+    * ouput信号也需要在所有input都设置值之后才能使用，否则编译器会报错
+    * component是不可变的（immutable）
+    * 若多个component是独立的，那么各部分可以并发执行，添加`parallel`标签：`template parallel NameTemplate(...){...}`
+
+下面是一个示例说明：
+
+```c
+pragma circom 2.0.0;
+
+template Internal() {
+   signal input in[2];
+   signal output out;
+   out <== in[0]*in[1];
+}
+
+template Main() {
+   signal input in[2];
+   signal output out;
+   // 定义了一个component组件，可以基于template创建
+   component c = Internal ();
+   c.in[0] <== in[0];
+   // 这里编译器会报错，因为component c里面的input信号还没全部设置具体值
+   c.out ==> out;  // c.in[1] is not assigned yet
+   c.in[1] <== in[1];  // this line should be placed before calling c.out
+}
+
+component main = Main();
+```
 
 ### 3.5. 基础电路练习
 
@@ -445,7 +500,7 @@ signal inter;
 
 忘记打引号是测试失败的常见原因。
 
-#### 算术电路：转换为bit位 Num2Bits
+#### 3.5.1. 算术电路：转换为bit位 Num2Bits
 
 ```c
 pragma circom 2.1.4;
@@ -504,7 +559,7 @@ component main = Num2Bites(5);
 
 开始用circom写程序时，容易误用`<--`，它会分配一个二次表达式**并且不会添加约束**，一般情况需要使用`<===`。
 
-#### 算术电路：判零 IsZero
+#### 3.5.2. 算术电路：判零 IsZero
 
 要求：如果in为零，out应为1。 如果in不为零，out应为0。
 
@@ -608,4 +663,211 @@ Artifacts:
     main.sym (0.04KB)
 ```
 
+#### 3.5.3. 算术电路：相等 IsEqual
+
+要求：如果 in[0] 等于 in[1]，则 out 应为 1。 否则，out 应该是 0。
+
+```c
+template IsEqual() {
+    signal input in[2];
+    signal output out;
+
+    // 通过template创建一个component
+    component isz = IsZero();
+
+    in[1] - in[0] ==> isz.in;
+
+    isz.out ==> out;
+}
+```
+
+`==>` 的作用和用法，具体见：[signals](https://docs.circom.io/circom-language/signals/#types-of-signal-assignments)
+
+* 信号（signal）变量只能由`<--`、`<==`和`-->`、`==>`赋值，这些操作都会被编译器转换成见证生成代码中的赋值操作
+    * 双箭头(`==`)和单箭头(`--`)的关键差别是，双箭头会在`R1CS`系统添加一个约束：信号和赋值表达式的值是相等的
+
+在 Circom 语言中，这些符号是用来表示约束（constraints）和连接（wires）的
+
+* `-->`：表示一个信号或变量的输出到另一个信号或变量的输入。它可以用来定义一个 wire 的方向。
+* `<--`：类似于 `-->`，但表示信号或变量的输入到输出的方向，往往用在更复杂的信号流动中。
+
+#### 3.5.4. 选择器 Selector
+
+要求：输出out应该等于in[index]。 如果 index 越界（不在 [0, nChoices) 中），out 应该是 0。
+
+比较复杂：思路是循环遍历下标，用i和index是否相等作选择器，如果i和index相等，选择器置1，不等置0。
+
+```c
+// 求和
+template CalculateTotal(n) {
+    signal input in[n];
+    signal output out;
+
+    signal sums[n];
+
+    sums[0] <== in[0];
+
+    for (var i = 1; i < n; i++) {
+        sums[i] <== sums[i-1] + in[i]
+    }
+
+    out <== sums[n-1];
+}
+
+// 实现的功能即 根据位数组各位0/1进行过滤，并求和
+template QuinSelector(choices) {
+    signal input in[choices];
+    signal input index;
+    signal output out;
+    
+    // Ensure that index < choices
+    // 校验小于关系
+    component lessThan = LessThan(4);
+    lessThan.in[0] <== index;
+    // 两个input变量都设置后，component才真正完成了实例化
+    lessThan.in[1] <== choices;
+    lessThan.out === 1;
+
+    // 求和组件
+    component calcTotal = CalculateTotal(choices);
+    component eqs[choices];
+
+    // For each item, check whether its index equals the input index.
+    for (var i = 0; i < choices; i ++) {
+        eqs[i] = IsEqual();
+        eqs[i].in[0] <== i;
+        // 这里也校验约束
+        eqs[i].in[1] <== index;
+
+        // eqs[i].out is 1 if the index matches. As such, at most one input to
+        // calcTotal is not 0.
+        // 初始化上面 calcTotal 组件里的input变量（是个数组）
+        calcTotal.in[i] <== eqs[i].out * in[i];
+    }
+
+    // Returns 0 + 0 + 0 + item
+    out <== calcTotal.out;
+}
+```
+
+#### 3.5.5. 判负 IsNegative
+
+要求：如果根据我们的约定，in 为负数，则 out 应为 1。 否则，out 应该是 0。
+
+示例有点复杂：
+[lecture2/IsNegative.circom](https://github.com/wenjin1997/zkshanghai-workshop/blob/main/lecture2/IsNegative.circom)
+
+```c
+pragma circom 2.1.4;
+
+// 整数转换成二进制形式，并输出一个二进制位数组
+template Num2Bits(n) {
+    signal input in;
+    signal output out[n];
+    var lc1=0;
+
+    var e2=1;
+    for (var i = 0; i<n; i++) {
+        // 将输入 in 的第 i 位提取出来
+        out[i] <-- (in >> i) & 1;
+        // 约束：确保 out[i] 只能是 0 或 1
+        out[i] * (out[i] -1 ) === 0;
+        lc1 += out[i] * e2;
+        // *2，作为二进制每位的值
+        e2 = e2+e2;
+    }
+
+    // 确保转换后的二进制数与原始输入相等
+    lc1 === in;
+}
+
+
+// Returns 1 if in (in binary) > ct
+// 比较输入 in 和常数 ct 的大小，它计算出 in 是否大于 ct
+// CompConstant 模板通过逐位比较的方式，确定输入 in 是否大于常数 ct。每个位的比较结果都会根据 ct 的值进行不同的计算，然后累加起来形成最终的结果。最终的布尔值由 sout 的最高位决定，如果 sout 大于等于 0，则输出 1 表示 in 大于 ct；否则输出 0 表示 in 不大于 ct。
+template CompConstant(ct) {
+    // 输入是一个包含 254 个元素的二进制位数组，表示要比较的数字。
+    signal input in[254];
+    // 返回一个布尔值，表示输入是否大于常数 ct
+    signal output out;
+
+    // 用于存储每个位比较的结果
+    signal parts[127];
+    // 最终的累加比较结果
+    signal sout;
+
+    // 分别表示常数 ct 的低位和高位以及输入 in 的低位和高位
+    var clsb;
+    var cmsb;
+    var slsb;
+    var smsb;
+
+    var sum=0;
+
+    // 初始化一个大的负数，用于后续的比较
+    var b = (1 << 128) -1;
+    // 用于计算正数的比较
+    var a = 1;
+    // 用于更新 b 和 a 的值
+    var e = 1;
+    var i;
+
+    for (i=0;i<127; i++) {
+        clsb = (ct >> (i*2)) & 1;
+        cmsb = (ct >> (i*2+1)) & 1;
+        slsb = in[i*2];
+        smsb = in[i*2+1];
+
+        if ((cmsb==0)&&(clsb==0)) {
+            parts[i] <== -b*smsb*slsb + b*smsb + b*slsb;
+        } else if ((cmsb==0)&&(clsb==1)) {
+            parts[i] <== a*smsb*slsb - a*slsb + b*smsb - a*smsb + a;
+        } else if ((cmsb==1)&&(clsb==0)) {
+            parts[i] <== b*smsb*slsb - a*smsb + a;
+        } else {
+            parts[i] <== -a*smsb*slsb + a;
+        }
+
+        sum = sum + parts[i];
+
+        b = b -e;
+        a = a +e;
+        e = e*2;
+    }
+
+    sout <== sum;
+
+    // 调用 Num2Bits 模板将比较结果转换成二进制形式
+    component num2bits = Num2Bits(135);
+
+    num2bits.in <== sout;
+
+    // 输出最左边的位作为结果
+    out <== num2bits.out[127];
+}
+
+
+template IsNegative() {
+    signal input in;
+    signal output out;
+
+    // 这个值在零知识证明和相关的密码学应用中非常重要，因为它是一个大素数，通常被用作椭圆曲线加密（ECC）或其它密码学算法中的模数。
+    // 在 Circom 中，这个数字经常出现，因为它与用于构建零知识证明的安全参数有关。
+    // 在 Circom 的文档中，这个数值通常被称为 p，并且它代表了一个特定的素数，所有的信号计算都在模 p 的有限域中进行。
+    var p = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    // (p - 1) \ 2 = 10944121435919637611123202872628637544274182200208017171849102093287904247808
+    component num2bits = Num2Bits(254);
+    component compconstant = CompConstant((p - 1) \ 2);
+    num2bits.in <== in;
+    compconstant.in <== num2bits.out; 
+    out <== compconstant.out;
+
+}
+
+component main = IsNegative(); 
+
+/* INPUT = {
+    "in": "21888242871839275222246405745257275088548364400416034343698204186575808495616"
+} */
+```
 
