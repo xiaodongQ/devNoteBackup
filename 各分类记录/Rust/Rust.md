@@ -13,7 +13,8 @@
     - 安装Rust
     - 会提示安装 RLS(Rust Language Server)
     - 参考：https://time.geekbang.org/column/article/411632
-        + rust-analyzer：它会实时编译和分析你的 Rust 代码，提示代码中的错误，并对类型进行标注。你也可以使用官方的 Rust 插件取代。rust syntax：为代码提供语法高亮。
+        + rust-analyzer：它会实时编译和分析你的 Rust 代码，提示代码中的错误，并对类型进行标注。你也可以使用官方的 Rust 插件取代。
+        + rust syntax：为代码提供语法高亮。
         + crates：帮助你分析当前项目的依赖是否是最新的版本。
         + better toml：Rust 使用 toml 做项目的配置管理。better toml 可以帮你语法高亮，并展示 toml 文件中的错误。
         + rust test lens：可以帮你快速运行某个 Rust 测试。
@@ -30,7 +31,7 @@
 
 * 《Rust 程序设计语言》
     - [The Rust Programming Language](https://doc.rust-lang.org/book/title-page.html)
-    - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn/#rust-%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80)
+    - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn/)
 * 介绍
     - 在 Rust 中，编译器充当了守门员的角色，它拒绝编译存在这些难以捕获的 bug 的代码，这其中包括并发 bug
     - 开发工具
