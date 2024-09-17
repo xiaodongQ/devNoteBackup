@@ -1,0 +1,48 @@
+# Rust relearn
+
+之前学过基本使用，间隔时间有点长且实践较少，遗忘了很多，重新学习一下。
+
+实践环境说明：
+
+* Mac：原来是`rustc 1.44.0`，升级一下：`rustup update`，升级后当前版本为`rustc 1.81.0`（2024-09-04）
+* CentOS8：之前重装过系统，这次安装下rust
+    * `curl https://sh.rustup.rs -sSf | sh`，安装的版本也是当前最新的stable版本：`rust version 1.81.0 (eeb90cda1 2024-09-04)`
+
+## 学习资料
+
+网站：
+
+* [官网](https://www.rust-lang.org/zh-CN/)
+* [官方GitHub](https://github.com/rust-lang)
+* [学习Rust](https://www.rust-lang.org/zh-CN/learn) 里面推荐了一些开源学习资料，包括下面的一些开源书籍
+    * 核心文档
+        * [标准库](https://doc.rust-lang.org/std/index.html)：详尽的 Rust 标准库 API 手册
+        * [Rust 版本指南](https://doc.rust-lang.org/edition-guide/index.html)：介绍各版本特性及兼容性说明
+        * [Cargo手册](https://doc.rust-lang.org/cargo/index.html)：Rust包管理器使用指南
+        * [rustdoc手册](https://doc.rust-lang.org/rustdoc/index.html)：编写规范的Rust项目文档
+        * [rustc手册](https://doc.rust-lang.org/rustc/index.html)：Rust编译器使用指南，理解各选项含义
+        * [编译错误索引表](https://doc.rust-lang.org/error_codes/error-index.html)：可能会遇到的编译错误
+
+一、基础内容
+
+* [The Rust Programming Language](https://doc.rust-lang.org/book/)
+    * 中文版：[Rust 程序设计语言](https://kaisery.github.io/trpl-zh-cn/title-page.html)
+    * 《Rust 程序设计语言》被亲切地称为“圣经”
+* [Rust开源教程](https://course.rs/about-book.html)
+* [Rust Cookbook](https://rust-lang-nursery.github.io/rust-cookbook/)
+    * [中文版](https://rustwiki.org/zh-CN/rust-cookbook/)
+
+* 极客时间：[陈天 · Rust 编程第一课](https://time.geekbang.org/column/article/408400)
+* [rust常用的crates](https://github.com/daheige/rs-cookbook?tab=readme-ov-file#rust%E5%B8%B8%E7%94%A8%E7%9A%84crates)
+
+二、进阶
+
+* [The Rustonomicon](https://doc.rust-lang.org/nomicon/)
+    * 中文版：[Rust 秘典（死灵书）](https://nomicon.purewhite.io/intro.html)
+    * 《Rust 秘典》是 Unsafe Rust 的黑魔法指南。它有时被称作“死灵书”
+* [Rust官方RFC文档](https://github.com/rust-lang/rfcs)
+* [Rust设计模式](https://rust-unofficial.github.io/patterns/)
+    * [中文版](https://chuxiuhong.com/chuxiuhong-rust-patterns-zh/)
+
+## 语言基础
+
