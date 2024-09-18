@@ -64,3 +64,129 @@
         + `rust test lens`：rust test lens：可以帮你快速运行某个 Rust 测试（也不维护了）
         + `Tabnine`：基于 AI 的自动补全，可以帮助你更快地撰写代码（暂时用的`CodeGeeX`，当作`Copilot`平替）
 
+### 基础语法
+
+
+* 变量绑定：`let a = "hello world"`，其他语言里叫赋值
+    * Rust 的变量在默认情况下是不可变的，通过 `mut` 关键字让变量变为可变
+    * 创建了一个变量却不在任何地方使用它，Rust通常会给一个警告，可以用下划线作为变量名的开头来消除警告：`let _x = 5;`
+
+* 整型：`i8`/`u8`、`i16`/`u16`、`i32`/`u32`、`i64`/`u64`、`i128`/`u128`、`isize`/`usize`
+    * 不指定则默认`i32`
+* 浮点型：`f32`/`f64`
+* 序列(Range)：`1..5`表示`1, 2, 3, 4`，`1..=5`表示`1, 2, 3, 4, 5`
+    * `for i in 1..5`：`i`是`1..5`的迭代器
+    * 序列只允许用于`数字`或`字符`类型
+* 单元类型：只有一个，唯一的值就是 `()`，是一个零长度的元组
+    * 例如常见的 `println!()` 的返回值也是单元类型 `()`
+    * 比如，可以用 `()` 作为 `map` 的值，表示我们不关注具体的值，只关注 `key`。 这种用法和 Go 语言的 `struct{}` 类似，可以作为一个值用来占位，但是完全不占用任何内存。
+* 语句（`statement`）和表达式（`expression`）
+    * 语句会执行一些操作但是不会返回一个值，而表达式会在求值后**总有一个返回值**
+    * 表达式不能包含分号，否则就变成一条语句
+    * 表达式如果不返回任何值，会隐式地返回一个 `()` 单元类型
+
+关于语句和表达式，需要能区分开。示例：使用一个语句块表达式将值赋给`y`变量
+
+```rust
+fn main() {
+    let y = {
+        let x = 3;
+        x + 1
+    };
+
+    println!("The value of y is: {}", y);
+}
+```
+
+**注意**：`x + 1`不能以分号结尾，否则就会从表达式变成语句， **表达式不能包含分号**。这一点非常重要，一旦在表达式后加上分号，它就会变成一条语句，再也不会返回一个值。
+
+* 函数
+    * 函数命名规则：蛇形命名法(snake case)，即小写字母，单词之间用**下划线**连接，比如`fn add_two() -> i32 {}`
+    * 函数的位置可以随便放，Rust 不关心我们在哪里定义了函数，只要有定义即可（不像C/C++，需要声明在前）
+    * 每个函数参数都需要标注类型
+    * 返回值：
+        * 表达一个函数没有返回值：`fn test(i: i32) {}` 或者 `fn test(i: i32) -> () {}`，返回值类型都是单元类型 `()`
+        * `fn dead_end() -> ! { xxx }`，`!` 是一个特殊的类型，表示函数永不返回(diverge function)，这种语法往往用做会导致程序崩溃的函数：
+            * `fn dead_end() -> ! { panic!("This call never returns") }`
+            * `fn forever() -> ! { loop {} }`
+
+示例：
+
+```rust
+fn add(i: i32, j: i32) -> i32 {
+    // 这里没有分号，是一个表达式，返回值就是 i + j；也可以用return语句显式返回
+    i + j
+}
+```
+
+Rust函数构成示意图：  
+![Rust函数构成示意图](/images/2024-09-18-rust-function.png)
+
+在这里进行找错练习，直接网页上可修改运行：[Rust By Practice](https://practice-zh.course.rs/basic-types/functions.html)
+
+### 3.3. 流程控制
+
+* 分支控制（`if`/`else if`/`else`）
+    * if 语句块是表达式，因此可以赋值给变量：`let number = if condition { 5 } else { 6 };`
+
+```rust
+fn main() {
+    let n = 6;
+
+    if n % 4 == 0 {
+        println!("number is divisible by 4");
+    } else if n % 3 == 0 {
+        println!("number is divisible by 3");
+    } else if n % 2 == 0 {
+        println!("number is divisible by 2");
+    } else {
+        println!("number is not divisible by 4, 3, or 2");
+    }
+}
+```
+
+* 3种循环控制方式：`for`、`while` 和 `loop`
+    * break 可以单独使用，也可以带一个返回值，有些类似 return
+    * loop 是一个表达式，因此可以返回一个值
+    * 相对而言，`for`比`while`和`loop`更常用，因为`for`可以遍历序列，而`while`和`loop`需要手动控制循环条件
+
+```rust
+fn test_for() {
+    // 从1到5，包含5
+    for i in 1..=5 {
+        println!("{}", i);
+    }
+
+    // 若不需要使用控制变量，可以用 _ 来忽略变量，否则定义了不使用会有编译警告
+    for _ in 1..=5 {
+        println!("loop again");
+    }
+}
+
+fn test_while() {
+    let mut n = 0;
+
+    while n <= 5  {
+        println!("{}!", n);
+
+        n = n + 1;
+    }
+
+    println!("test_while end！");
+}
+
+fn test_loop() {
+    let mut n = 0;
+
+    loop {
+        if n > 5 {
+            // 加不加分号都可以，因为loop是一个表达式，可以返回值
+            break
+        }
+        println!("{}", n);
+        n+=1;
+    }
+
+    println!("test_loop end！");
+}
+```
