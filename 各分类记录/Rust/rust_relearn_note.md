@@ -1,4 +1,4 @@
-# Rust relearn
+# 1. Rust relearn
 
 之前学过基本使用，间隔时间有点长且实践较少，遗忘了很多，重新学习一下。
 
@@ -8,7 +8,7 @@
 * CentOS8：之前重装过系统，这次安装下rust
     * `curl https://sh.rustup.rs -sSf | sh`，安装的版本也是当前最新的stable版本：`rust version 1.81.0 (eeb90cda1 2024-09-04)`
 
-## 学习参考资料
+## 1.1. 学习参考资料
 
 **网站：**
 
@@ -45,7 +45,7 @@
 * [Rust设计模式](https://rust-unofficial.github.io/patterns/)
     * [中文版](https://chuxiuhong.com/chuxiuhong-rust-patterns-zh/)
 
-## 语言基础
+## 1.2. 语言基础
 
 前置说明：
 
@@ -64,8 +64,7 @@
         + `rust test lens`：rust test lens：可以帮你快速运行某个 Rust 测试（也不维护了）
         + `Tabnine`：基于 AI 的自动补全，可以帮助你更快地撰写代码（暂时用的`CodeGeeX`，当作`Copilot`平替）
 
-### 基础语法
-
+### 1.2.1. 基础语法
 
 * 变量绑定：`let a = "hello world"`，其他语言里叫赋值
     * Rust 的变量在默认情况下是不可变的，通过 `mut` 关键字让变量变为可变
@@ -124,7 +123,7 @@ Rust函数构成示意图：
 
 在这里进行找错练习，直接网页上可修改运行：[Rust By Practice](https://practice-zh.course.rs/basic-types/functions.html)
 
-### 3.3. 流程控制
+### 1.2.2. 流程控制
 
 * 分支控制（`if`/`else if`/`else`）
     * if 语句块是表达式，因此可以赋值给变量：`let number = if condition { 5 } else { 6 };`
@@ -190,3 +189,76 @@ fn test_loop() {
     println!("test_loop end！");
 }
 ```
+
+### 1.2.3. 所有权和借用
+
+所有权（`ownership`）的规则：
+
+* Rust 中每一个值都被一个变量所拥有，该变量被称为值的`所有者`
+* 一个值同时只能被一个变量所拥有，或者说一个值只能拥有一个所有者
+* 当所有者(变量)离开作用域范围时，这个值将被丢弃(drop)
+
+基本类型（比如整型）在编译时是已知大小的，会被存储在栈上，不会发生`所有权转移（transfer ownership）`。比如如下示例：
+
+```rust
+fn test_owner_ship() {
+    let s = String::from("hello");
+    // 所有权转移，会影响s的生命周期；若需要拷贝，则可以使用 s.clone()
+    // let s2 = s;
+    println!("{}", s);
+    task_ownership(s);
+    // 这里所有权转移到task_ownership后，已经释放了s，所以这里会报错
+    // println!("{}", s);
+
+    println!("===============");
+    let n = 888;
+    // 这里不影响n的所有权，基本类型不会发生所有权转移
+    let n2 = n;
+    println!("n: {}, n2: {}", n, n2);
+}
+
+fn task_ownership( s : String ) {
+    println!("input string: {}", s);
+    // 调用结束后，s移出作用域，被释放
+}
+```
+
+Rust有一个叫做`Copy`的特征，可以用在类似整型这样在`栈`中存储的类型，不会发生所有权转移。`Copy`特征判断规则：任何**基本类型**的组合可以`Copy`，不需要分配内存或某种形式资源的类型是可以`Copy`的。
+
+下面都是具有`Copy`特征的类型：
+
+* 所有整数类型、bool、浮点数类型、字符类型`char`
+* 元组且其成员都是`Copy`的，比如：`(i32, i32)` 是 Copy 的，但 `(i32, String)` 就不是
+* 不可变引用 `&T`
+    * 比如：`let x: &str = "hello, world";`，而后`let y = x;`，此处的`x`只是引用，所以不会发生所有权转移，此时 `y` 和 `x` 都引用了同一个字符串
+
+上面的`let x: &str = "hello, world";`示例，此处的`&str`其实是`借用`。
+
+**借用(Borrowing)**：获取变量的引用，称之为`借用(borrowing)`。
+
+* `&`表示借用，`*`表示解引用（dereference）。
+    * 比如：`let x = 5; let y = &x`，`*y`就是5
+* 引用指向的值**默认是不可变（immutable）**的
+    * `fn change(some_string: &String) { some_string.push_str(", world"); }`，这里`some_string`是借用，不能修改，**会报错**
+
+**可变引用（mutable reference）**：
+
+* `可变引用`可以解决上述问题，可修改引用指向的值
+    * `fn change(some_string: &mut String) { some_string.push_str(", world"); }`，这里`some_string`是可变借用，可以修改
+    * 需要在定义时指定`mut`，传参时也指定`mut`。定义：`let mut s = String::from("hello");`，调用：`change(&mut s);`，否则会报错
+* 同一**作用域**，特定数据只能有一个可变引用（脱离作用域后，引用失效，再进行可变引用不会报错）。编译器会进行借用检查（borrow checker），确保引用有效性，在**编译器**就避免数据竞争（data race）
+    * 数据竞争可能由下述行为造成
+        * 两个或更多的指针同时访问同一数据
+        * 至少有一个指针被用来写入数据
+        * 没有同步数据访问的机制
+    * 可通过大括号`{}`手动限定变量的作用域，从而解决编译器借用检查的问题
+* `可变引用`与`不可变引用`不能同时存在
+    * Rust 的编译器一直在优化，早期的（`Rust 1.31 前`）编译器，引用的作用域跟`变量作用域`是一致的，这对日常使用带来了很大的困扰
+    * 但是在新的编译器中，引用作用域的结束位置从花括号变成`最后一次使用的位置`
+    * 对于这种编译器优化行为，Rust 专门起了一个名字 —— `Non-Lexical Lifetimes(NLL)`，专门用于找到某个引用在作用域(`}`)结束前就不再被使用的代码位置。
+
+**悬垂引用（dangling reference）**：
+
+`悬垂引用`也叫做`悬垂指针`：指针指向某个值后，这个值被释放掉了，而指针仍然存在，其`指向的内存`可能 `不存在任何值` 或 `已被其它变量重新使用`。
+
+Rust编译器中可以确保引用**永远也不会变成悬垂状态**。
