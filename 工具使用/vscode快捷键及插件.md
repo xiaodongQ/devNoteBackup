@@ -510,3 +510,10 @@ go install github.com/go-delve/delve/cmd/dlv
         * **使用方式**
             * 命令：Paste Image
             * 快捷键：Cmd+Alt+V
+
+## gitlens
+
+去掉开头的author和日期提示，容易误点
+
+"gitlens.codeLens.authors.enabled": false,
+"gitlens.codeLens.enabled": false
