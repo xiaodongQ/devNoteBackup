@@ -71,3 +71,8 @@ boost的TR1：
 * C++筑基
     - [C++11 并发指南系列](https://www.cnblogs.com/haippy/p/3284540.html)
 
+## Rust开源项目
+
+[Cloudflare 开源基于 Rust 语言的 Pingora 框架](https://www.infoq.cn/article/RUxJrOykuSXwPxFZY3yR?utm_campaign=geektime_search&utm_content=geektime_search&utm_medium=geektime_search&utm_source=geektime_search&utm_term=geektime_search)
+
+Pingora 项目地址：https://github.com/cloudflare/pingora
