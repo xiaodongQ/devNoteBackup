@@ -67,6 +67,3 @@ Development notes record and backup
 │   └── 数据结构与算法.md                // 数据结构和算法学习实践笔记
 └── 开发相关笔记记录.md // 各类开发中的学习笔记记录(包括systemd、firewall-cmd、sysctl、perf、sar、mpstat等各类Linux命令；YAML、TOML语法；火焰图...等等)
 ```
-
-> `tree -N`生成
-

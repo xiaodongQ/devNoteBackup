@@ -80,3 +80,34 @@ Pingora 项目地址：https://github.com/cloudflare/pingora
 ## 各程序语言的学习路径
 
 https://roadmap.sh/
+
+## 优质博客
+
+* 开发内功修炼--公众号，张彦飞，干货
+    * [网络篇](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MjM5Njg5NDgwNA==&action=getalbum&album_id=1532487451997454337#wechat_redirect)
+    * [磁盘篇](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MjM5Njg5NDgwNA==&action=getalbum&album_id=1371808335259090944#wechat_redirect)
+    * [内存篇](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MjM5Njg5NDgwNA==&action=getalbum&album_id=1372637854236786689#wechat_redirect)
+    * [CPU篇](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MjM5Njg5NDgwNA==&action=getalbum&album_id=1372643250460540932#wechat_redirect)
+* [ArthurChiao's Blog](https://arthurchiao.art/index.html)，
+    * 主要研究方向为网络，云，BPF，容器，虚拟化，分布式存储等。高质量译文
+    * 赵亚楠，曾供职爱立信，现为携程高级架构师，技术专家。他还是《云安全实用指南》和《携程架构实践》两本书的译者和联合作者。
+* [plantegg](https://plantegg.github.io/)
+    * 内功修炼，方法论
+* [木鸟杂记](https://www.qtmuniao.com/)
+    * 分布式系统，数据库，存储
+* [卡瓦邦噶！](https://www.kawabangga.com/)
+    * 计算机网络，内功、SRE
+* [小林coding](https://www.xiaolincoding.com/)
+    * 刷题，计算机、网络基础
+* [代码随想录](https://www.programmercarl.com/)
+    * 刷题
+* [王盼](http://aspirer.wang/)
+    * 之前网易opencurve存储 PL
+* [draveness](https://draveness.me/)
+    * 《Go 语言设计与实现》作者，OKR自我管理
+* [文先生的博客](https://wenfh2020.com/)
+    * 博客风格参考，kernel、画图
+* [峰云就她了](https://xiaorui.cc/)
+    * 专注于Golang、Kubernetes、Nosql、Istio
+* [谭新宇](https://tanxinyu.work/)
+    * 清华本硕，分布式系统和性能优化。6.824论文学习时参考过好几篇博文
