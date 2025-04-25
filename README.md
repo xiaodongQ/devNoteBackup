@@ -1,6 +1,8 @@
 # devNoteBackup
 Development notes record and backup
 
+2025更新：随着AI大模型越来越强大，本历史笔记效用越来越小，本仓库本就比较杂，后续用于归档一些偶尔会用到的记录，需要提炼的内容则以博客的形式整理输出。
+
 ## 章节目录概览
 
 
@@ -66,4 +68,5 @@ Development notes record and backup
 │   ├── 四次挥手.png                     // 四次挥手图示
 │   └── 数据结构与算法.md                // 数据结构和算法学习实践笔记
 └── 开发相关笔记记录.md // 各类开发中的学习笔记记录(包括systemd、firewall-cmd、sysctl、perf、sar、mpstat等各类Linux命令；YAML、TOML语法；火焰图...等等)
+...
 ```
