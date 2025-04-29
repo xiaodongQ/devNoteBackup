@@ -33,7 +33,7 @@ draw.io默认配置修改：
   ],
   "defaultVertexStyle": {
     "strokeWidth": 2,
-    "fontSize": 16,
+    "fontSize": 14,
     "fontFamily": "Inter",
     "fontColor": "#1f1f1f",
     "strokeColor": "#295FF3",
@@ -49,8 +49,7 @@ draw.io默认配置修改：
     "strokeColor": "#1f1f1f",
     "rounded": 1,
     "curved": 1,
-    "fontStyle": "1",
-    "flowAnimation": 1
+    "fontStyle": "1"
   },
   "customPresetColors": [
     "1F1F1F",
