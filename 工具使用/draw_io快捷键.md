@@ -18,15 +18,18 @@ draw.io默认配置修改：
 
 博主的配置项：（自己改完设置默认后，新页面又不生效了，导入博主的配置后是生效的）
 
-自己加了个flowAnimation，流动箭头：
+可以加`flowAnimation`，流动箭头，也可需要时手动启用部分箭头动画
 "defaultEdgeStyle": {
   "flowAnimation": 1
 },
+
+以及 `"enableLightDarkColors": false,` 避免导出svg时light-dark模式影响手机端的外观显示（背景会显示黑色）
 
 ```json
 {
   "defaultGridEnabled": false,
   "defaultPageVisible": false,
+  "enableLightDarkColors": false,
   "customFonts": [
     "Inter",
     "pingfang sc"
