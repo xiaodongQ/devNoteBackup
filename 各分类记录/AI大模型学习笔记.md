@@ -108,7 +108,7 @@ tcp6       0      0 :::11434                :::*                    LISTEN      
 复制提示的命令，此处为`ollama run qwen2:1.5b`，到linux终端运行，其会自动先`ollama pull qwen2:1.5b`再`run`
 
 
-## Claude code
+## Claude Code
 
 ### 安装
 
@@ -119,7 +119,7 @@ tcp6       0      0 :::11434                :::*                    LISTEN      
 * 可能会被墙导致下载不到脚本，报错：`bash: line 1: syntax error near unexpected token <'`
 
 2、方式2：使用npm安装（推荐）
-* 先安装Node.js，Node.js 18 或更新版本环境
+* 先安装Node.js，Node.js 18 或更新版本环境（OpenClaw需要v22.0 或更高版本，还是尽量安装新一些的版本）
     * node.js官网下载二进制包 -> 解压 -> 添加PATH环境变量。
     * `node -v`检查，如`v24.13.0`
     * `npm -v`检查，如`11.6.2`
@@ -235,3 +235,27 @@ cd到项目目录，启动`claude`，即可通过终端方式进行交互。
 ──────────────────────────────────────────────────────────────────────────────────────────
 ❯  
 ```
+
+
+### 常见命令
+
+也可见阿里云上的[常见命令](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023078)
+
+* `/init`：在项目根目录生成 CLAUDE.md 文件，用于定义项目级指令和上下文。
+* `/status`：查看当前模型、API Key、Base URL 等配置状态
+* `/clear`：清除对话历史，开始全新对话
+* `/plan`：进入规划模式，仅分析和讨论方案，不修改代码
+* `/compact`：压缩对话历史，释放上下文窗口空间
+* `/config`：打开配置菜单，可设置语言、主题等
+
+## OpenClaw
+
+### 安装
+
+方式1：`curl -fsSL https://openclaw.ai/install.sh | bash`
+
+方式2：`npm install -g openclaw@latest`
+
+参考：
+* [阿里云百炼 -- 接入OpenClaw](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023085)
+* [OpenClaw (Clawdbot) 教程](https://www.runoob.com/ai-agent/openclaw-clawdbot-tutorial.html)
