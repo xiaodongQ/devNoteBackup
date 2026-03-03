@@ -107,3 +107,131 @@ tcp6       0      0 :::11434                :::*                    LISTEN      
 
 复制提示的命令，此处为`ollama run qwen2:1.5b`，到linux终端运行，其会自动先`ollama pull qwen2:1.5b`再`run`
 
+
+## Claude code
+
+### 安装
+
+[Claude Code 安装与使用](https://www.runoob.com/claude-code/claude-code-install.html)
+
+安装方式：
+1、方式1：官网脚本 `curl -fsSL https://claude.ai/install.sh | bash`
+* 可能会被墙导致下载不到脚本，报错：`bash: line 1: syntax error near unexpected token <'`
+
+2、方式2：使用npm安装（推荐）
+* 先安装Node.js，Node.js 18 或更新版本环境
+    * node.js官网下载二进制包 -> 解压 -> 添加PATH环境变量。
+    * `node -v`检查，如`v24.13.0`
+    * `npm -v`检查，如`11.6.2`
+    * 设置npm国内镜像：`npm config set registry https://registry.npmmirror.com/`
+
+* npm安装claude code： `npm install -g @anthropic-ai/claude-code`
+
+```sh
+[root@xdlinux ➜ /home ]$ npm install -g @anthropic-ai/claude-code
+changed 3 packages in 591ms
+2 packages are looking for funding
+  run `npm fund` for details
+```
+
+安装后查看`claude`是否安装正常
+
+```sh
+[root@xdlinux ➜ /home ]$ claude --version
+2.1.63 (Claude Code)
+```
+
+### 登录Claude Code（默认连接官网）
+
+第一次启动 Claude Code 时,需要登录账号：执行`claude`，会默认连`Anthropic`官方API，但是国内网络不通。
+* 不使用`Claude`自家模型的话，可以通过`Anthropic Messages`协议（`LLM Gateway`模式+`base_url`），指定第三方模型，比如千问、deepseek等
+    * 配置方式可参考：[Claude Code API 配置](https://www.runoob.com/claude-code/claude-code-setup.html)
+
+下面是默认情况下连接`Anthropic`官方报错：
+
+```sh
+[root@xdlinux ➜ /home ]$ claude
+Welcome to Claude Code v2.1.63
+…………………………………………………………………………………………………………………………………………………………
+
+     *                                       █████▓▓░
+                                 *         ███▓░     ░░
+            ░░░░░░                        ███▓░
+    ░░░   ░░░░░░░░░░                      ███▓░
+   ░░░░░░░░░░░░░░░░░░░    *                ██▓░░      ▓
+                                             ░▓▓███▓▓░
+ *                                 ░░░░
+                                 ░░░░░░░░
+                               ░░░░░░░░░░░░░░░░
+       █████████                                        *
+      ██▄█████▄██                        *
+       █████████      *
+…………………█ █   █ █………………………………………………………………………………………………………………
+
+ Unable to connect to Anthropic services
+
+ Failed to connect to api.anthropic.com: ERR_BAD_REQUEST
+
+ Please check your internet connection and network settings.
+
+ Note: Claude Code might not be available in your country. Check supported countries at https://anthropic.com/supported-countries
+[<u]9;4;0;#                    
+```
+
+### Claude Code API 配置
+
+可见：[Claude Code API 配置](https://www.runoob.com/claude-code/claude-code-setup.html)
+
+以阿里百炼为例，比如我使用的是`Coding Plan`套餐
+* 需要配置的环境变量：
+    * `ANTHROPIC_BASE_URL`，配置为：`https://coding.dashscope.aliyuncs.com/apps/anthropic`
+    * `ANTHROPIC_AUTH_TOKEN`，配置为所购买套餐对应的API Key
+    * `ANTHROPIC_MODEL`，设置为 Coding Plan [支持的模型](https://help.aliyun.com/zh/model-studio/coding-plan?spm=0.0.0.i5)。
+        * 推荐模型：qwen3.5-plus（支持图片理解）、kimi-k2.5（支持图片理解）、glm-5、MiniMax-M2.5
+        * 更多模型：qwen3-max-2026-01-23、qwen3-coder-next、qwen3-coder-plus、glm-4.7
+* 详情可见百炼官网上API接入各工具的说明：[Coding Plan -- 接入AI工具](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023078)
+
+1、在`claude`的配置文件里进行持久化设置，没有则新建`~/.claude/settings.json`：
+
+```sh
+{
+    "env": {
+        "ANTHROPIC_AUTH_TOKEN": "sk-sp-10faxxxxxxxxxxxx",
+        "ANTHROPIC_BASE_URL": "https://coding.dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3.5-plus"
+    }
+}
+```
+
+2、编辑或新增 `~/.claude.json` 文件，将`hasCompletedOnboarding` 字段的值设置为`true`并保存文件
+
+该步骤可避免启动Claude Code时报错：`Unable to connect to Anthropic services`
+
+```sh
+{
+  "hasCompletedOnboarding": true
+}
+```
+
+### 运行
+
+cd到项目目录，启动`claude`，即可通过终端方式进行交互。
+
+```sh
+╭─── Claude Code v2.1.63 ──────────────────────────────────────────────────────────────────────────────────╮
+│                                      │ Tips for getting started                                          │
+│             Welcome back!            │ Run /init to create a CLAUDE.md file with instructions for Claude │
+│                                      │ ───────────────────────────────────────────────────────────────── │
+│                ▐▛███▜▌               │ Recent activity                                                   │
+│               ▝▜█████▛▘              │ No recent activity                                                │
+│                 ▘▘ ▝▝                │                                                                   │
+│                                      │                                                                   │
+│   qwen3.5-plus · API Usage Billing   │                                                                   │
+│                /home                 │                                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+  /model to try Opus 4.6
+
+──────────────────────────────────────────────────────────────────────────────────────────
+❯  
+```
