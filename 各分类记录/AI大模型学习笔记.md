@@ -252,14 +252,89 @@ cd到项目目录，启动`claude`，即可通过终端方式进行交互。
 
 ### 安装
 
-方式1：`curl -fsSL https://openclaw.ai/install.sh | bash`
-
-方式2：`npm install -g openclaw@latest`
-
 参考：
 * [阿里云百炼 -- 接入OpenClaw](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023085)
 * [OpenClaw (Clawdbot) 教程](https://www.runoob.com/ai-agent/openclaw-clawdbot-tutorial.html)
 
+方式1：`curl -fsSL https://openclaw.ai/install.sh | bash`
+方式2：`npm install -g openclaw@latest`
+
+```sh
+[root@xdlinux ➜ ~ ]$ openclaw -v
+2026.3.2
+
+[root@xdlinux ➜ ~ ]$ npm list -g openclaw
+/home/workspace/local/node-v24.13.0-linux-x64/lib
+└── openclaw@2026.3.2
+```
+
+### 初始化OpenClaw并配置API
+
+1、初始化并安装后台服务：`openclaw onboard --install-daemon`
+
+按照提示选择，可见：[阿里云百炼 -- 接入OpenClaw](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023085)
+
+2、配置模型API，此处用的百炼Coding Plan
+
+1）启动web页面：`openclaw dashboard`
+
+```sh
+[root@xdlinux ➜ ~ ]$ openclaw dashboard
+
+🦞 OpenClaw 2026.3.2 (85377a2) — Your config is valid, your assumptions are not.
+
+Dashboard URL: http://127.0.0.1:18789/#token=1d0acfe9d056923f0539098763ae5a2a3c0ca6a719c4fdb8
+Copy to clipboard unavailable.
+No GUI detected. Open from your computer:
+ssh -N -L 18789:127.0.0.1:18789 root@192.168.1.150
+Then open:
+http://localhost:18789/
+http://localhost:18789/#token=1d0acfe9d056923f0539098763ae5a2a3c0ca6a719c4fdb8
+Docs:
+https://docs.openclaw.ai/gateway/remote
+https://docs.openclaw.ai/web/control-ui
+```
+
+2）并在笔记本上（MacOS）创建本地端口转发（SSH 隧道）：`ssh -N -L 18789:127.0.0.1:18789 root@192.168.1.150`
+* `-N`：不执行远程命令，只建立隧道（不分配终端）
+* `-L`：本地端口转发参数
+* `18789:127.0.0.1:18789`端口转发规则
+
+```sh
+# 数据流向：
+# 当你的本地程序访问 localhost:18789，SSH 会通过加密隧道，将数据转发到远程服务器的 127.0.0.1:18789
+# 远程服务器上的服务（如 OpenClaw）处理请求，响应数据通过同样的加密隧道返回
+你的电脑 (本地)               远程服务器 (192.168.1.150)
+    |                               |
+本地端口:18789 <---- SSH隧道 ----> 远程端口:18789
+    |                               |
+    |                            (运行着服务)
+你的应用                         localhost:18789
+(浏览器/客户端)                   (如 OpenClaw)
+```
+
+3）笔记本就可连接了：`http://localhost:18789/`
+
+试过`http://192.168.1.150:18789/`方式访问，加了白名单还是不通，所以还是用上面的SSH隧道方式
+```sh
+[root@xdlinux ➜ ~ ]$ firewall-cmd --permanent --add-port=18789/tcp
+[root@xdlinux ➜ ~ ]$ firewall-cmd --permanent --add-port=18789/udp
+[root@xdlinux ➜ ~ ]$ firewall-cmd --reload
+```
+
+4）按上面百炼的说明步骤：修改Raw JSON配置，注意找到对应的Json Key替换。然后点击`Save` -> `Update`。
+
+然后就可以开始聊天了。可以在上面的网页链接；也可以在终端。
+
+### 接入飞书
+
+电报、Slack可能要梯子，先用飞书。
+网上教程很多，可参考：[保姆级教程】手把手教你安装OpenClaw并接入飞书](https://cloud.tencent.com/developer/article/2626160)
+
+1、到飞书上创建机器人并发布应用
+2、OpenClaw安装飞书插件：`openclaw plugins install @m1heng-clawd/feishu`
+
+## 文档学习
 
 [awesome-openclaw-usecases](https://github.com/hesamsheikh/awesome-openclaw-usecases)
     https://github.com/cogine-ai/awesome-openclaw-zh/tree/main
