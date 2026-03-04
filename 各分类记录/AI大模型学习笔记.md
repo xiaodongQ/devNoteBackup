@@ -259,3 +259,10 @@ cd到项目目录，启动`claude`，即可通过终端方式进行交互。
 参考：
 * [阿里云百炼 -- 接入OpenClaw](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3023085)
 * [OpenClaw (Clawdbot) 教程](https://www.runoob.com/ai-agent/openclaw-clawdbot-tutorial.html)
+
+
+[awesome-openclaw-usecases](https://github.com/hesamsheikh/awesome-openclaw-usecases)
+    https://github.com/cogine-ai/awesome-openclaw-zh/tree/main
+[awesome-openclaw-skills](https://github.com/VoltAgent/awesome-openclaw-skills)
+[微软：ai-agents-for-beginners](https://github.com/microsoft/ai-agents-for-beginners)
+
