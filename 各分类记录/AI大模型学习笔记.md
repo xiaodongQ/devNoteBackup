@@ -351,6 +351,7 @@ https://docs.openclaw.ai/web/control-ui
     }
     ...
 ```
+貌似没用，需要curl手动指定头`Authorization: Bearer`，浏览器没办法指定
 
 有问题可以使用 doctor 命令修复配置并重启：`openclaw doctor --fix` （善用doctor）
 
