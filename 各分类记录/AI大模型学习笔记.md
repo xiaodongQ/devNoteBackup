@@ -322,6 +322,39 @@ https://docs.openclaw.ai/web/control-ui
 [root@xdlinux ➜ ~ ]$ firewall-cmd --reload
 ```
 
+更新：原因是gateway监听模式是`loopback`，只监听了localhost
+
+```sh
+"gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "__OPENCLAW_REDACTED__"
+    },
+    ...
+```
+调整`bind`为`lan`模式，并设置校验token（比如admin@1234），然后重启gateway服务：`openclaw gateway restart`
+```sh
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "enabled": true,
+      "allowInsecureAuth": true
+    },
+    "auth": { 
+      "mode": "token",
+      "token": "admin@1234"
+    }
+    ...
+```
+
+有问题可以使用 doctor 命令修复配置并重启：`openclaw doctor --fix` （善用doctor）
+
+
 4）按上面百炼的说明步骤：修改Raw JSON配置，注意找到对应的Json Key替换。然后点击`Save` -> `Update`。
 
 然后就可以开始聊天了。可以在上面的网页链接；也可以在终端。
@@ -333,6 +366,12 @@ https://docs.openclaw.ai/web/control-ui
 
 1、到飞书上创建机器人并发布应用
 2、OpenClaw安装飞书插件：`openclaw plugins install @m1heng-clawd/feishu`
+
+### 设置权限
+
+`openclaw 2026.3.2`的版本中，OpenClaw 默认的权限策略发生了变化：默认情况下，Agent只允许进行纯对话。
+
+
 
 ## 文档学习
 
