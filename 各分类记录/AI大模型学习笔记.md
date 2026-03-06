@@ -375,13 +375,34 @@ https://docs.openclaw.ai/web/control-ui
 
 `openclaw 2026.3.2`的版本中，OpenClaw 默认的权限策略发生了变化：默认情况下，Agent只允许进行纯对话。出于安全考量，3.2版本将工具执行权限与聊天能力彻底隔离。
 
+**Profile（配置/档案）**：OpenClaw的Profile是一个用来管理和切换不同身份、权限、运行环境或行为模式的核心概念。它允许你为不同的使用场景创建独立的“配置快照”，从而在多任务、多身份、多权限级别之间灵活切换，同时保证隔离性和安全性。
+  Profile让你可以“精养”多只不同性格、不同能力、不同权限的“龙虾”，让它们各司其职，共同为你服务，同时避免互相干扰和越权操作。
+
 可以进行调整，可参考：[OpenClaw 2026.3.2 版本权限隔离导致工具失效，两招教你满血复活！](https://www.xmsumi.com/detail/2625)
 
 步骤：
 * 查看当前的`Profile`状态，`openclaw config get tools`
 
-**概念：Profile（配置/档案）**：OpenClaw的Profile是一个用来管理和切换不同身份、权限、运行环境或行为模式的核心概念。它允许你为不同的使用场景创建独立的“配置快照”，从而在多任务、多身份、多权限级别之间灵活切换，同时保证隔离性和安全性。
-  Profile让你可以“精养”多只不同性格、不同能力、不同权限的“龙虾”，让它们各司其职，共同为你服务，同时避免互相干扰和越权操作。
+```sh
+[root@xdlinux ➜ tmpdir ]$ openclaw config get tools
+🦞 OpenClaw 2026.3.2 (85377a2) — Your second brain, except this one actually remembers where you left things.
+{
+  "profile": "messaging"
+}
+```
+
+修改`~/.openclaw/openclaw.json`：
+
+```sh
+"tools": {
+    "profile": "full"
+  },
+```
+
+```sh
+openclaw config get tools
+```
+
 
 ### 安装Skills（技能）
 
