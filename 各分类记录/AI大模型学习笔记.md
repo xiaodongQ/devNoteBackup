@@ -279,7 +279,7 @@ cd到项目目录，启动`claude`，即可通过终端方式进行交互。
 
 2、配置模型API，此处用的百炼Coding Plan
 
-1）启动web页面：`openclaw dashboard`
+1）启动web页面：`openclaw dashboard` （`openclaw tui`则可启动终端页面连接到gateway）
 
 ```sh
 [root@xdlinux ➜ ~ ]$ openclaw dashboard
