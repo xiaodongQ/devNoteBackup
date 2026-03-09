@@ -366,10 +366,10 @@ https://docs.openclaw.ai/web/control-ui
 ### 接入飞书
 
 电报、Slack可能要梯子，先用飞书。
-网上教程很多，可参考：[保姆级教程】手把手教你安装OpenClaw并接入飞书](https://cloud.tencent.com/developer/article/2626160)
+网上教程很多，可参考：[保姆级教程】手把手教你安装OpenClaw并接入飞书](https://cloud.tencent.com/developer/article/2626160)、[史上星标增速最快的open claw安装详细教程](https://mp.weixin.qq.com/s/YZNvu9kIpkCHZb1Cyz93gA)
 
 1、到飞书上创建机器人并发布应用
-2、OpenClaw安装飞书插件：`openclaw plugins install @m1heng-clawd/feishu`
+~~2、OpenClaw安装飞书插件：`openclaw plugins install @m1heng-clawd/feishu`~~ 自带了不用手动装了？没启用的话可以`openclaw plugins enable feishu`
 
 ### 设置权限
 
@@ -419,8 +419,12 @@ openclaw config get tools
 
 ## 文档学习
 
-[awesome-openclaw-usecases](https://github.com/hesamsheikh/awesome-openclaw-usecases)
-    https://github.com/cogine-ai/awesome-openclaw-zh/tree/main
-[awesome-openclaw-skills](https://github.com/VoltAgent/awesome-openclaw-skills)
-[微软：ai-agents-for-beginners](https://github.com/microsoft/ai-agents-for-beginners)
+[awesome-openclaw-usecases](https://github.com/hesamsheikh/awesome-openclaw-usecases)  
+    https://github.com/cogine-ai/awesome-openclaw-zh/tree/main  
+[awesome-openclaw-skills](https://github.com/VoltAgent/awesome-openclaw-skills)  
+[微软：ai-agents-for-beginners](https://github.com/microsoft/ai-agents-for-beginners)  
+
+### agent
+
+[baby-agent: 后端工程师的 AI Agent 教学项目](https://github.com/baby-llm/baby-agent/tree/main)
 
