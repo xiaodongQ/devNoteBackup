@@ -2,6 +2,9 @@
 
 配置可以参考：[wezterm-config](https://github.com/QianSong1/wezterm-config)，使用了一下，快捷键和样式都挺好，也[fork](https://github.com/xiaodongQ/wezterm-config)了一份。
 
+进一步提升体验：安装`PowerShell 7`，并且`wezterm`脚本里配置，可体验新版本PowerShell带来的效率提升（如自动补全）
+- 比如这里的配置：[wezterm配置分享](https://zhuanlan.zhihu.com/p/1973514411802108537)
+
 # QianSong1/wezterm-config 配置速查（快捷键+技巧）
 本文基于 https://github.com/QianSong1/wezterm-config 整理，仅提取仓库内原生快捷键与配置技巧。
 
