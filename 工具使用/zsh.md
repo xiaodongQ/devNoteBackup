@@ -178,6 +178,14 @@ export LESS_TERMCAP_ue=$'\E[0m'
 # 不要设置PS1，会与PROMPT冲突
 # PS1="\[\e[32m\][\u@\h \w]$\[\e[m\] "
 export HISTTIMEFORMAT="%F %T `whoami` "
+
+# 性能优化，加快zsh启动速度
+# 禁用 git 未跟踪文件检查，在大型 git 仓库中显著提升提示符渲染速度
+DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_GIT_AUTO_ADD_STATUS="true"
+# 启用 oh-my-zsh 完成缓存，显著提升启动速度
+zstyle ':completion::complete:*' use-cache on
+zstyle ':completion::complete:*' cache-path "$ZSH_CACHE_DIR"
 ```
 
 ## 卸载方法
