@@ -31,10 +31,9 @@
 
 * data-files-editor：增加了在黑曜石中创建和编辑.txt, .json, .xml 类型文件的能力
 * number-headings-obsidian：给笔记中的标题自动编号，以及动态目录
-* open-editors-obsidian-plugin：添加一个视图，可以整个仓库当前打开的窗口、标签组，使管理工作区和笔记更容易。
+* obsidian-opener：默认在新标签页中打开 md 笔记，如果已经打开了该 md，就会直接切换到该标签页
 * excalidraw 画图
 * drawio 画图
 * claudian，打开claude code
     * terminal，打开终端（在mac上还可以，开启claude code，在windows上就不好用了）
-* obsidian-opener
-* 
+* control characters，展示空格和tab
