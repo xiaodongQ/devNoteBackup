@@ -31,9 +31,17 @@
 
 * data-files-editor：增加了在黑曜石中创建和编辑.txt, .json, .xml 类型文件的能力
 * number-headings-obsidian：给笔记中的标题自动编号，以及动态目录
-* obsidian-opener：默认在新标签页中打开 md 笔记，如果已经打开了该 md，就会直接切换到该标签页
+* open tab setting：自定义 Obsidian 打开选项卡和在文件之间导航的方式，在新标签页打开文件以及避免重复标签页
 * excalidraw 画图
+    * data.json里可修改默认存放位置，比如`"folder": "01_sources/_Excalidraw",`
+    * 默认保存的文件名格式修改：保存->文件名
 * drawio 画图
 * claudian，打开claude code
     * terminal，打开终端（在mac上还可以，开启claude code，在windows上就不好用了）
 * control characters，展示空格和tab
+
+### 浏览器插件
+
+* obsidian web clipper：在浏览器快捷保存内容到Obsidian知识库
+    * default里面的Note location可以设置保存路径
+    * `cmd + shift + o`快捷键，保存页面内容到obsidian
