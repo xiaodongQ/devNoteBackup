@@ -13,6 +13,49 @@ Alt+R 显示历史
 Ctrl+Shift+w 关闭标签
 Alt+W, Alt+M 隐藏/显示菜单栏
 
+### 自定义快捷键
+
+配置文件：WindTerm目录下，`global\wind.keymaps`
+
+快捷键      Action                           功能
+Ctrl+Alt+/  Window.SplitViewVertically      垂直分割（上下分屏）
+Ctrl+Alt+\  Window.SplitViewHorizontally    水平分割（左右分屏）
+Ctrl+Alt+K  Window.ActivatePreviousView     切换到上一个视图
+Ctrl+Alt+J  Window.ActivateNextView         切换到下一个视图
+Ctrl+Alt+H  script                          切换到上一个视图
+Ctrl+Alt+L  script                          切换到下一个视图
+Ctrl+W      Window.CloseActiveView          关闭当前视图
+Ctrl+Shift+T - 复制ssh通道
+Ctrl+Alt+T - 也是复制ssh通道
+
+```sh
+  { "keys": "<Ctrl+Alt+/>",
+    "action": "Window.SplitViewVertically"
+  },
+  { "keys": "<Ctrl+Alt+\\>",
+    "action": "Window.SplitViewHorizontally"
+  },
+  { "keys": "<Ctrl+Alt+K>",
+    "action": "Window.ActivatePreviousView"
+  },
+  { "keys": "<Ctrl+Alt+J>",
+    "action": "Window.ActivateNextView"
+  },
+  { "keys": "<Ctrl+Alt+H>",
+    "script": "() => { window.activeKit.activatePreviousView() }"
+  },
+  { "keys": "<Ctrl+Alt+L>",
+    "script": "() => { window.activeKit.activateNextView() }"
+  },
+  { "keys": "<Ctrl+W>",
+    "action": "Window.CloseActiveView"
+  },
+    { "keys": "<Ctrl+Alt+T>",
+    "when": "window.isScope('terminal.*')",
+    "action": "Terminal.DuplicateSSHChannel"
+  }
+```
+
 ## 简化使用
 
 * 终端左侧边缘位置，右键可以隐藏日期、行号

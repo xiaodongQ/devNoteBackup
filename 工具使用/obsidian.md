@@ -40,6 +40,19 @@
     * terminal，打开终端（在mac上还可以，开启claude code，在windows上就不好用了）
 * control characters，展示空格和tab
 
+vim插件：配置文件为`.obsidian.vimrc`（vault仓库那级，而不是`.obsidian`目录），禁用vim模式下的复制粘贴等键，避免影响windows下的`ctrl+c/v`等快捷键功能。
+
+```sh
+" vim模式下禁用Ctrl-A、Ctrl-V、Ctrl-c、Ctrl-x
+unmap <C-a>
+unmap <C-x>
+unmap <C-c>
+unmap <C-v>
+unmap v
+```
+
+另外，建议取消ctrl+enter快捷键，否则占用了跳到下一行的功能
+
 ### 浏览器插件
 
 * obsidian web clipper：在浏览器快捷保存内容到Obsidian知识库
