@@ -83,6 +83,7 @@ UI页面可以进行各类设置。
 cat settings.toml：
 
 ```sh
+cat settings.toml
 [appearance]
 
 [appearance.themes]
@@ -140,6 +141,9 @@ is_any_ai_enabled = true
 show_agent_notifications = true
 show_conversation_history = true
 
+[agents.warp_agent.input]
+ai_auto_detection_enabled = true
+
 [code]
 
 [code.editor]
@@ -165,6 +169,12 @@ honor_ps1 = false
 
 [keys]
 ctrl_tab_behavior_setting = "cycle_most_recent_session"
+
+[privacy]
+telemetry_enabled = false
+
+[privacy.secret_redaction]
+enabled = false
 ```
 
 ## 4. 我的keybindings.yaml
