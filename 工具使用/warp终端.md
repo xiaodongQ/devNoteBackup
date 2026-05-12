@@ -43,6 +43,7 @@ warp终端能比较好解决这个问题。
 1、可以自定义设置快捷tab入口，指定标题、颜色、打开时的默认目录、要执行什么命令
 
 tab配置文件所在目录 `~/.warp/tab_configs/`
+* 颜色支持：`red`、`green`、`yellow`、`blue`、`magenta`品红色、`cyan`青色
 
 示例：
 
@@ -61,7 +62,7 @@ directory = "/Users/xd/Documents/note/obsidian_xd"
 commands = []
 ```
 
-### 2.2. 设置
+### 2.2. 表现设置
 
 UI页面可以进行各类设置。
 * `Features->Session`里，可设置历史保留行数、创建新Session的目录行为等
@@ -70,7 +71,15 @@ UI页面可以进行各类设置。
 
 对默认做了一些调整，主要涉及显示样式，配置文件在：`~/.warp/settings.toml`。可查看下面“我的配置文件”
 
-### 2.3. 右键行为
+### 2.3. VIM操作
+
+`Settings > Features > Text Editing`中，启用`“Edit commands with Vim keybindings”`
+
+### 2.4. alias 快捷行为
+
+终端输入`alias`，会展示在`~/.zshrc`里自己设置的alias，**以及终端自带的一些快捷命令**
+
+### 2.5. 右键行为
 
 1、warp终端里，每次命令+结果，都是一个 `块`/`block`，点击是按block为粒度，可以`cmd+c`（mac下）复制整个块；可以`cmd+f`块内搜索
 
@@ -78,7 +87,13 @@ UI页面可以进行各类设置。
 
 3、**菜单栏**还提供了不同分类的快捷功能，如果忘记快捷键，也可以看菜单里提示的快捷键。
 
-## 3. 我的配置文件
+## 3. AI agent特性
+
+使用其自带的AI Agent特性，需要注册并登录账号；启用后在终端`shift+enter`进入`agent模式`，可以自然语言交互。
+
+表现和手动启用`Claude Code`等CLI差不多。点击`Rich Input`方式，跟上面体验差不多，可以像终端一样`ctrl+r`查找历史记录。`Rich Input`时输入`/command`形式的提示不如原生CLI体验好。
+
+## 4. 我的配置文件
 
 cat settings.toml：
 
@@ -177,7 +192,7 @@ telemetry_enabled = false
 enabled = false
 ```
 
-## 4. 我的keybindings.yaml
+## 5. 我的keybindings.yaml
 
 cat keybindings.yaml：
 
