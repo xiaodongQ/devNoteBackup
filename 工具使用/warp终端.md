@@ -93,12 +93,75 @@ UI页面可以进行各类设置。
 
 表现和手动启用`Claude Code`等CLI差不多。点击`Rich Input`方式，跟上面体验差不多，可以像终端一样`ctrl+r`查找历史记录。`Rich Input`时输入`/command`形式的提示不如原生CLI体验好。
 
-## 4. 我的配置文件
+## 4. warpify功能
+
+### 4.1. Warpify 是什么
+
+Warpify 是一个"让 Warp 在非原生支持的 shell 中也能工作"的功能。
+
+打个比方
+
+Warp 正常工作时，终端里能看到带颜色的块（blocks）、可以输入命令等。但有些
+shell 环境 Warp 一开始"看不懂"。
+
+Warpify 的作用：检测到你进入了这些特殊环境时，帮你"翻译"一下，让 Warp
+重新能正常工作。
+
+实际例子
+
+1. SSH 到远程服务器：你 ssh user@server 进去后，远程服务器上原来的终端没有
+Warp 的增强功能。Warpify 会问你要不要"开启 Warp 模式"。
+2. 进入子 shell：你运行 poetry shell 或 docker exec -it container
+bash，进入了一个嵌套的 shell。Warpify 会提示你启用增强功能。
+
+┌──────────────────┬──────────────────┬───────────────┐
+│       场景        │   没有 Warpify    │  有 Warpify   │
+├──────────────────┼──────────────────┼───────────────┤
+│ SSH 到远程        │ 远程终端是"裸"的   │ Warp 自动增强  │
+├──────────────────┼──────────────────┼───────────────┤
+│ poetry shell     │ 看不到 block      │ 提示开启增强   │
+├──────────────────┼──────────────────┼───────────────┤
+│ Docker 里开 bash  │ 功能受限          │ Warp 正常工作 │
+└──────────────────┴──────────────────┴───────────────┘
+
+就像给 Warp 装了一个"适配器"，让它能在更多环境中发挥能力。
+
+### 4.2. Warp 的增强功能是什么
+
+Block（块）概念
+
+Warp 的核心功能是把终端输出组织成块（Blocks）：
+
+┌──────────────────────────┬──────────────────────────────────┐
+│         传统终端          │               Warp               │
+├──────────────────────────┼──────────────────────────────────┤
+│ 命令和输出混在一起滚动       │ 每条命令 + 输出 = 一个独立的"块"     │
+├──────────────────────────┼──────────────────────────────────┤
+│ 复制麻烦，要选中滚动文本     │ 点击块就能复制整个区块               │
+├──────────────────────────┼──────────────────────────────────┤
+│ 分享只能截图               │ 可以分享单个区块的链接               │
+├──────────────────────────┼──────────────────────────────────┤
+│ 历史记录混乱               │ 每个块有清晰边界，方便回溯            │
+└──────────────────────────┴──────────────────────────────────┘
+
+Warpify 之前
+
+当 SSH 到远程服务器或进入子 shell 时，远程环境不认得 Warp 的块结构，终端会退化成传统终端的样子。
+
+Warpify 之后
+
+Warp 会"询问"要不要帮你开启增强模式。开启后，远程/子 shell 环境也能用 Warp 的块功能。
+
+简单总结
+
+Warpify = 让 Warp 在 SSH 远程会话、子 shell 等"非原生"环境中也能正常工作（启用 Block 等功能）。
+
+## 5. 我的配置文件
 
 cat settings.toml：
 
 ```sh
-cat settings.toml
+cat settings.toml 
 [appearance]
 
 [appearance.themes]
@@ -131,10 +194,15 @@ focus_pane_on_hover = false
 [appearance.cursor]
 cursor_display_type = "bar"
 
+[appearance.tabs]
+directory_tab_colors = { "/Users/xd/Documents/workspace/repo/learn-claude-code" = { color = "yellow" } }
+
 [general]
-default_session_mode = "agent"
+default_session_mode = "tab_config"
+default_tab_config_path = "/Users/xd/.warp/tab_configs/workspace_tab_config.toml"
 
 [agents]
+cloud_conversation_storage_enabled = true
 
 [agents.third_party]
 should_render_cli_agent_toolbar = true
@@ -158,6 +226,10 @@ show_conversation_history = true
 
 [agents.warp_agent.input]
 ai_auto_detection_enabled = true
+nld_in_terminal_enabled = false
+
+[agents.voice]
+voice_input_enabled = false
 
 [code]
 
@@ -187,17 +259,24 @@ ctrl_tab_behavior_setting = "cycle_most_recent_session"
 
 [privacy]
 telemetry_enabled = false
+crash_reporting_enabled = false
 
 [privacy.secret_redaction]
 enabled = false
+
+[account]
+is_settings_sync_enabled = false
+
+[text_editing]
+vim_mode_enabled = true
 ```
 
-## 5. 我的keybindings.yaml
+## 6. 我的keybindings.yaml
 
 cat keybindings.yaml：
 
-```sh
+```yaml
 ---
-"editor_view:insert_autosuggestion": tab
-"input:open_completion_suggestions": ctrl-space
+# 还是不设置更好，默认用->，否则换成tab补全提示（warp自带提示），会影响补全当前终端的内容
+# "editor_view:insert_autosuggestion": tab
 ```
