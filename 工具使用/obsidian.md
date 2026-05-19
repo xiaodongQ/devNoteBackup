@@ -58,3 +58,51 @@ unmap v
 * obsidian web clipper：在浏览器快捷保存内容到Obsidian知识库
     * default里面的Note location可以设置保存路径
     * `cmd + shift + o`快捷键，保存页面内容到obsidian
+
+
+### obsidian 里关于mermaid的渲染方式调整
+
+.obsidian\snippets\mermaid-auto-fit.css
+
+```css
+/* Mermaid 图表自适应宽度 + 缩小显示 */
+.mermaid svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Mermaid 容器居中 */
+.mermaid {
+  overflow-x: auto !important;
+  text-align: center !important;
+}
+
+/* 预览模式下自适应 */
+.markdown-preview-view .mermaid svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* 阅读模式下自适应 + 缩小 */
+.markdown-rendered .mermaid svg {
+  max-width: 100% !important;
+  height: auto !important;
+  transform: scale(0.9) !important;
+  transform-origin: top center !important;
+}
+
+/* 缩小 Mermaid 字体 */
+.mermaid .nodeLabel,
+.mermaid .edgeLabel {
+  font-size: 12px !important;
+}
+
+/* 确保文本不被裁剪 */
+.mermaid svg {
+  overflow: visible !important;
+}
+
+.mermaid .node foreignObject {
+  overflow: visible !important;
+}
+```
