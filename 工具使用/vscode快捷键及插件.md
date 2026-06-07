@@ -517,3 +517,11 @@ go install github.com/go-delve/delve/cmd/dlv
 
 "gitlens.codeLens.authors.enabled": false,
 "gitlens.codeLens.enabled": false
+
+## 复制图片默认路径
+
+搜索：Markdown> Copy Files:Destination
+
+增加一项，key：`**/*.md`，value：`/images/${unixTime}-${fileName}`
+
+可参考：[如何设置VS Code 中 Markdown粘贴图片的位置](https://www.cnblogs.com/xbotter/p/17528063.html)
